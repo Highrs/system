@@ -1,0 +1,22 @@
+html, body {
+  background: #1a1a1a;
+  height: 100%;
+  margin:0;
+}
+#content {
+  height: 100%;
+  margin: 0;
+}
+.panel {
+  display: block;
+  margin: auto;
+  top: 50%;
+  position: relative;
+  transform: translateY(-50%);
+  background: #363636;
+}
+.majorObject {
+  fill: #1a1a1a;
+  stroke-width: 5px;
+  stroke: #00ff66ff;
+}
