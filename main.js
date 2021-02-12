@@ -15,9 +15,12 @@ const renderer = root => ml => {
 };
 
 const main = () => {
+
+  let time = 0;
+
   const render = renderer(document.getElementById('content'));
 
-  render(draw.drawMap());
+  render(draw.drawMap(time));
 }
 
 window.onload = main;
