@@ -195,7 +195,7 @@ const main = async () => {
     planets.push(makePlanet('planet3', 80, 0.8, t));
     render(draw.drawMap(planets));
     t += 1;
-    await delay(100);
+    await delay(10);
   }
   return;
 }
