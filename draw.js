@@ -16,22 +16,29 @@ const centerY = pageH/2;
 const starRadius = 15;
 //--------------------------------
 
-const drawPlanet = (planet) => {
-  return ['g', {},
-    ['ellipse', {
-      cx: - planet.focalShift / Math.pow(10, 9),
-      cy: 0,
-      rx: planet.a / Math.pow(10, 9),
-      ry: planet.b / Math.pow(10, 9),
-      class: 'majorOrbit'
-    }],
-    ['g', tt(planet.x, planet.y),
-      ['circle', { r: planet.objectRadius, class: 'majorObject'}]
-    ]
-  ];
+const drawPlanet = (planets) => {
+  let drawnPlanets = ['g', {}];
+  for (let i = 0; i < planets.length; i++) {
+    console.log('here');
+    drawnPlanets.push(
+      ['g', {},
+        ['ellipse', {
+          cx: - planets[i].focalShift / Math.pow(10, 9),
+          cy: 0,
+          rx: planets[i].a / Math.pow(10, 9),
+          ry: planets[i].b / Math.pow(10, 9),
+          class: 'majorOrbit'
+        }],
+        ['g', tt(planets[i].x, planets[i].y),
+          ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
+        ]
+      ]
+    )
+  }
+  return drawnPlanets;
 }
 
-exports.drawMap = (planet1) => {
+exports.drawMap = (planets) => {
   const star = ['g', {},
     ['circle', { r: starRadius, class: 'majorObject'}]
   ];
@@ -39,7 +46,7 @@ exports.drawMap = (planet1) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
       star,
-      drawPlanet(planet1),
+      drawPlanet(planets),
     ]
   ]);
 }

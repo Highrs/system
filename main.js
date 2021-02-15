@@ -37,7 +37,7 @@ const makePlanet = (name, a, e) => {
   const maz = 0; // Mean anomaly at t=0 (given)
 
   const epoch = 0; //epoch (given) (days)
-  const t = 50; // time of calculation (days)
+  const t = 100; // time of calculation (days)
   console.log('Epoch (days): ' + epoch);
   console.log('Time (days): ' + t);
 
@@ -119,7 +119,11 @@ const main = () => {
   const render = renderer(document.getElementById('content'));
 
   // 1 AU = 150 million km
-  render(draw.drawMap(makePlanet('planet1', 150, 0.6)));
+  const planets = [];
+  planets.push(makePlanet('planet1', 150, 0.6));
+  planets.push(makePlanet('planet2', 100, 0));
+  planets.push(makePlanet('planet3', 80, 0.8));
+  render(draw.drawMap(planets));
 }
 
 window.onload = main;
