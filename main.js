@@ -16,7 +16,7 @@ const renderer = root => ml => {
 
 
 
-const makePlanet = (name, a, e) => {
+const makePlanet = (name, a, e, t) => {
   a = a * Math.pow(10, 9);
   console.log('Semi-major axis (mill km): ' + a / Math.pow(10, 9));
   const calcFocalShift = (a, b) => {return ( Math.sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );}
@@ -37,7 +37,7 @@ const makePlanet = (name, a, e) => {
   const maz = 0; // Mean anomaly at t=0 (given)
 
   const epoch = 0; //epoch (given) (days)
-  const t = 100; // time of calculation (days)
+  // const t = 100; // time of calculation (days)
   console.log('Epoch (days): ' + epoch);
   console.log('Time (days): ' + t);
 
@@ -90,7 +90,7 @@ const makePlanet = (name, a, e) => {
 
   const planet = {
     name: name,
-    objectRadius: 10,
+    objectRadius: 5,
 
     a: a, // semiMajorAxis a[m] (given)
     e: e, // eccentricity e[1] (given)
@@ -109,21 +109,25 @@ const makePlanet = (name, a, e) => {
   return planet;
 }
 
+async function delay(ms) {
+  return await new Promise(resolve => setTimeout(resolve, ms));
+}
 
-
-
-const main = () => {
-
-  // let t = 0; // Time of drawing from zero
-
+const main = async () => {
   const render = renderer(document.getElementById('content'));
 
   // 1 AU = 150 million km
-  const planets = [];
-  planets.push(makePlanet('planet1', 150, 0.6));
-  planets.push(makePlanet('planet2', 100, 0));
-  planets.push(makePlanet('planet3', 80, 0.8));
-  render(draw.drawMap(planets));
+  let t = 0;
+
+  while (t < 1000) {
+    const planets = [];
+    planets.push(makePlanet('planet1', 150, 0.6, t));
+    planets.push(makePlanet('planet2', 200, 0, t));
+    planets.push(makePlanet('planet3', 80, 0.8, t));
+    render(draw.drawMap(planets));
+    t += 1
+    await delay(100);
+  }
 }
 
 window.onload = main;

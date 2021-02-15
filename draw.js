@@ -13,7 +13,7 @@ const centerY = pageH/2;
 //-----------------------
 
 //Artistic properties-------------
-const starRadius = 15;
+const starRadius = 10;
 //--------------------------------
 
 const drawPlanet = (planets) => {
