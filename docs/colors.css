@@ -17,12 +17,12 @@ html, body {
 }
 .majorObject {
   fill: #1a1a1a;
-  stroke-width: 5px;
+  stroke-width: 3px;
   stroke: #00ff66ff;
 }
 .majorOrbit {
   fill: none;
   stroke-width: 1px;
   stroke: #00ff66ff;
-  stroke-dasharray: 10 20;
+  stroke-dasharray: 5 5;
 }

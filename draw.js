@@ -12,33 +12,26 @@ const centerX = pageW/2;
 const centerY = pageH/2;
 //-----------------------
 
-//properties-------------
-const starRadius = 20;
-//-----------------------
+//Artistic properties-------------
+const starRadius = 15;
+//--------------------------------
 
-const coordConv = (altitude, degrees, letter) => {
-  if (letter === 'x') {
-    let x = altitude * (Math.sin(degrees * Math.PI / 180));
-    return x;
-  } else {
-    let y = altitude * (Math.cos(degrees * Math.PI / 180));
-    return y;
-  }
-}
-
-const drawPlanet = (altitude, degrees, objectRadius) => {
-  let x = coordConv(altitude, degrees, 'x');
-  let y = coordConv(altitude, degrees, 'y');
+const drawPlanet = (planet) => {
   return ['g', {},
-    ['circle', { r: altitude, class: 'majorOrbit'}],
-    ['g', tt(x, y),
-      ['circle', { r: objectRadius, class: 'majorObject'}]
+    ['ellipse', {
+      cx: - planet.focalShift / Math.pow(10, 9),
+      cy: 0,
+      rx: planet.a / Math.pow(10, 9),
+      ry: planet.b / Math.pow(10, 9),
+      class: 'majorOrbit'
+    }],
+    ['g', tt(planet.x, planet.y),
+      ['circle', { r: planet.objectRadius, class: 'majorObject'}]
     ]
-
   ];
 }
 
-exports.drawMap = () => {
+exports.drawMap = (planet1) => {
   const star = ['g', {},
     ['circle', { r: starRadius, class: 'majorObject'}]
   ];
@@ -46,8 +39,7 @@ exports.drawMap = () => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
       star,
-      drawPlanet(150, 80, 10),
-      drawPlanet(250, 20, 10)
+      drawPlanet(planet1),
     ]
   ]);
 }
