@@ -31,7 +31,6 @@ const drawGrid = () => {
 
 const orbitCoords = (a, e, mat, w, lang, inc) => {
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
-  console.log(a, e, mat, w, lang, inc);
   const itter = 3;
   const calcEAT = (e, mat) => {
     let eat = mat;
@@ -64,7 +63,6 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
   const y = ( ox * ( (Math.cos(w) * Math.sin(lang)) + (Math.sin(w) * Math.cos(inc) * Math.cos(lang)) ) + oy * ( (Math.cos(w) * Math.cos(inc) * Math.cos(lang)) - (Math.sin(w) * Math.sin(lang)) ) );
   const z = ( ox * ( Math.sin(w) * Math.sin(inc) ) + oy * ( Math.cos(w) * Math.sin(inc) ) );
 
-  console.log(x, y, z);
   return { x: x, y: y, z: z};
 }
 
