@@ -237,7 +237,7 @@ const main = async () => {
   // 1 AU = 150 million km
   let t = 0;
 
-  while (t < 1000) {
+  while (true) {
     const planets = [];
     // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
     planets.push(
@@ -276,7 +276,7 @@ const main = async () => {
     t += 1;
     await delay(10);
   }
-  return;
+  // return;
 }
 
 window.onload = main;
