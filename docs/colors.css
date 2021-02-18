@@ -26,3 +26,7 @@ html, body {
   stroke: #00ff66ff;
   stroke-dasharray: 5 5;
 }
+.grid {
+  stroke-width: 0.5px;
+  stroke: #00ff66ff;
+}

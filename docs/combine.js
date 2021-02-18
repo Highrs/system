@@ -5,7 +5,6 @@ const getSvg = require('./get-svg.js');
 const tt = (x, y) => Object.assign({transform:
   'translate(' + x + ', ' + y + ')'});
 
-
 //properties-------------
 const pageW = 700;
 const pageH = 700;
@@ -17,25 +16,85 @@ const centerY = pageH/2;
 const starRadius = 10;
 //--------------------------------
 
+const drawGrid = () => {
+  let grid = ['g', {}];
+  for (let x = -pageW / 2 + 50; x < 700 / 2; x += 50) {
+    for (let y = -pageH / 2 + 50; y < 700 / 2; y += 50) {
+      grid.push(
+        ['line', { x1: x - 1, y1: y, x2: x + 1, y2: y, class: 'grid'}],
+        ['line', { x1: x, y1: y + 1, x2: x, y2: y - 1, class: 'grid'}]
+      );
+    }
+  }
+  return grid;
+}
+
+const orbitCoords = (a, e, mat, w, lang, inc) => {
+  // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
+  console.log(a, e, mat, w, lang, inc);
+  const itter = 3;
+  const calcEAT = (e, mat) => {
+    let eat = mat;
+    for (let i = 0; i < itter; i++) {
+      eat = eat - ( (eat - ( e * Math.sin(eat) ) - mat) / ( 1 - e * Math.cos(eat) ) );
+    }
+    return eat;
+  } // Eccentric anomaly at time E(t)
+  const eat = calcEAT(e, mat); // Eccentric anomaly at time
+
+  const calcTAT = (e, eat) => {
+    return ( 2 * Math.atan2(
+      ( Math.sqrt(1 + e) * Math.sin(eat / 2) ),
+      ( Math.sqrt(1 - e) * Math.cos(eat / 2) )
+    ) );
+  } // True Anomaly at Time v(t)
+  const tat = calcTAT(e, eat);
+
+  const calcDisanceToCentral = (a, e, eat) => {
+    return ( a * ( 1 - ( e * Math.cos(eat) ) ) );
+  }
+  const dist = calcDisanceToCentral(a, e, eat);
+
+  // Positional vectors in orbital frame o(t)
+  const ox = dist * Math.cos(tat);
+  const oy = dist * Math.sin(tat);
+  // const oz = 0;
+
+  const x = ( ox * ( (Math.cos(w) * Math.cos(lang)) - (Math.sin(w) * Math.cos(inc) * Math.sin(lang)) ) - oy * ( (Math.sin(w) * Math.cos(lang)) + (Math.cos(w) * Math.cos(inc) * Math.sin(lang)) ) );
+  const y = ( ox * ( (Math.cos(w) * Math.sin(lang)) + (Math.sin(w) * Math.cos(inc) * Math.cos(lang)) ) + oy * ( (Math.cos(w) * Math.cos(inc) * Math.cos(lang)) - (Math.sin(w) * Math.sin(lang)) ) );
+  const z = ( ox * ( Math.sin(w) * Math.sin(inc) ) + oy * ( Math.cos(w) * Math.sin(inc) ) );
+
+  console.log(x, y, z);
+  return { x: x, y: y, z: z};
+}
+
+
+
+const drawOrbit = (planet) => {
+  let coords = 'M ';
+  let points = 64;
+  for (let i = 0; i < points; i++) {
+    let currCoord = orbitCoords(planet.a, planet.e, (i * 2 * Math.PI)/points, planet.w, planet.lang, planet.inc);
+    coords += currCoord.x;
+    coords += ',';
+    coords += currCoord.y;
+    if (i === points - 1) {
+      coords += 'Z';
+    } else {
+      coords += 'L';
+    }
+  }
+  return ['path', { d: coords, class: 'majorOrbit' }];
+}
+
 const drawPlanet = (planets) => {
   let drawnPlanets = ['g', {}];
   for (let i = 0; i < planets.length; i++) {
-    console.log('here');
     drawnPlanets.push(
-      // ['g', {transform: 'rotate(' + ( planets[i].w * 180 / Math.PI ) + ')'},
-      //   ['ellipse', {
-      //     transform: 'rotate(' + ( planets[i].w * 180 / Math.PI ) + ')',
-      //     cx: - planets[i].focalShift / Math.pow(10, 9),
-      //     cy: 0,
-      //     rx: ( planets[i].a / Math.pow(10, 9) ),
-      //     ry: ( planets[i].b / Math.pow(10, 9) ),
-      //     class: 'majorOrbit',
-      //   }]
-      // ],
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
       ],
-      ['circle', { r: 240, class: 'majorOrbit'}]
+      drawOrbit(planets[i])
     )
   }
   return drawnPlanets;
@@ -48,6 +107,7 @@ exports.drawMap = (planets) => {
 
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
+      drawGrid(),
       star,
       drawPlanet(planets),
     ]
@@ -74,8 +134,6 @@ module.exports = cfg => {
 const draw = require('./draw.js');
 const onml = require('onml');
 
-
-
 const renderer = root => ml => {
   try {
     const html = onml.stringify(ml);
@@ -85,33 +143,19 @@ const renderer = root => ml => {
   }
 };
 
-
-
-const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
+const kepCalc = (a, e, t, w, lang, inc, maz) => {
   a = a * Math.pow(10, 9);
-  // console.log('Semi-major axis (mill km): ' + a / Math.pow(10, 9));
-  const calcFocalShift = (a, b) => {return ( Math.sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );}
-  const calcMinorAxis = (a, e) => {return ( a * Math.sqrt(1 - e * e) );}
   const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
   const mass = 2 * Math.pow(10, 30); // Central object mass, approximately sol
   const u = g * mass; // Standard gravitational parameter u
-  console.log(u);
-  // console.log('Standard gravitational parameter: ' + u);
 
+  const calcMinorAxis = (a, e) => {return ( a * Math.sqrt(1 - e * e) );}
   const b = (calcMinorAxis(a, e)); // minorAxis b[m]
-  // console.log('Minor axis (mill km): ' + b / Math.pow(10, 9));
-  const focalShift = (calcFocalShift(a, b)); // distance of focus from elypse center
-  // console.log('Focal shift (mill km): ' + focalShift / Math.pow(10, 9));
 
-  // const w = 0; // Argument of periapsis w[rad] (given)
-  // const lang = 0; // Longitude of ascending node (LAN)[rad] (given)
-  // const inc = 0; // Inclination i[rad] (given)
-  // const maz = 0; // Mean anomaly at t=0 (given)
+  const calcFocalShift = (a, b) => {return ( Math.sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );}
+  const focalShift = (calcFocalShift(a, b)); // distance of focus from elypse center
 
   const epoch = 0; //epoch (given) (days)
-  // const t = 100; // time of calculation (days)
-  // console.log('Epoch (days): ' + epoch);
-  // console.log('Time (days): ' + t);
 
   const calcMat = (t, epoch) => {
     let tdiff = ( 86400 * ( t - epoch ) );
@@ -120,11 +164,9 @@ const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
       mat += Math.PI * 2;
     }
     mat = mat % (Math.PI * 2)
-    // console.log(mat);
     return mat;
   } // Mean anomaly at epoch M(t)
   const mat = calcMat(t, epoch); // Mean Anomaly at Time
-  // console.log('Mean anomaly at time ' + mat);
 
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
   const itter = 3;
@@ -132,12 +174,10 @@ const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
     let eat = mat;
     for (let i = 0; i < itter; i++) {
       eat = eat - ( (eat - ( e * Math.sin(eat) ) - mat) / ( 1 - e * Math.cos(eat) ) );
-      // console.log(eat);
     }
     return eat;
   } // Eccentric anomaly at time E(t)
   const eat = calcEAT(e, mat); // Eccentric anomaly at time
-  // console.log('Eccentric anomaly at time: ' + eat);
 
   const calcTAT = (e, eat) => {
     return ( 2 * Math.atan2(
@@ -146,13 +186,11 @@ const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
     ) );
   } // True Anomaly at Time v(t)
   const tat = calcTAT(e, eat);
-  // console.log('True anomaly at time: ' + tat);
 
   const calcDisanceToCentral = (a, e, eat) => {
     return ( a * ( 1 - ( e * Math.cos(eat) ) ) );
   }
   const dist = calcDisanceToCentral(a, e, eat);
-  // console.log('Distance to star (mill km): ' + dist / Math.pow(10, 9));
 
   // Positional vectors in orbital frame o(t)
   const ox = dist * Math.cos(tat);
@@ -163,23 +201,30 @@ const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
   const y = ( ox * ( (Math.cos(w) * Math.sin(lang)) + (Math.sin(w) * Math.cos(inc) * Math.cos(lang)) ) + oy * ( (Math.cos(w) * Math.cos(inc) * Math.cos(lang)) - (Math.sin(w) * Math.sin(lang)) ) );
   const z = ( ox * ( Math.sin(w) * Math.sin(inc) ) + oy * ( Math.cos(w) * Math.sin(inc) ) );
 
+  return { x: x, y: y, z: z, focalShift: focalShift };
+}
+
+const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
+
+  const planDat = kepCalc(a, e, t, w, lang, inc, maz);
+
   const planet = {
     name: name,
     objectRadius: 5,
 
     a: a, // semiMajorAxis a[m] (given)
     e: e, // eccentricity e[1] (given)
-    b: b,
+    // b: b,
     w: w,
     lang: lang,
     inc: inc,
     maz: maz,
-    epoch: epoch,
+    // epoch: epoch,
 
-    focalShift: focalShift,
-    x: x,
-    y: y,
-    z: z,
+    focalShift: planDat.focalShift,
+    x: planDat.x,
+    y: planDat.y,
+    z: planDat.z,
   }
   return planet;
 }
@@ -194,24 +239,44 @@ const main = async () => {
   // 1 AU = 150 million km
   let t = 0;
 
-  while (t < 10) {
+  while (t < 500) {
     const planets = [];
-    for (let i = 0; i < 360; i += 10) {
-      // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
-      planets.push(makePlanet(
+    // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
+    planets.push(
+      makePlanet(
         'planet1', // name
         150,    // semi-major axis (a)
         0.6,    // eccentricity (e)
-        t + i,  // time (t)
-        1,      // argument of periapsis (w)
-        1,      // longitude of ascention node (lang)
-        1,      // inclanation (inc)
+        t,  // time (t)
+        2,      // argument of periapsis (w)
+        0,      // longitude of ascention node (lang)
+        0,      // inclanation (inc)
         0       // mean anomaly at zero (maz)
-      ));
-    }
+      ),
+      makePlanet(
+        'planet2', // name
+        200,    // semi-major axis (a)
+        0.4,    // eccentricity (e)
+        t,  // time (t)
+        1,      // argument of periapsis (w)
+        0,      // longitude of ascention node (lang)
+        0,      // inclanation (inc)
+        0       // mean anomaly at zero (maz)
+      ),
+      makePlanet(
+        'planet3', // name
+        300,    // semi-major axis (a)
+        0.0,    // eccentricity (e)
+        t,  // time (t)
+        0,      // argument of periapsis (w)
+        0,      // longitude of ascention node (lang)
+        0,      // inclanation (inc)
+        0       // mean anomaly at zero (maz)
+      )
+    );
     render(draw.drawMap(planets));
     t += 1;
-    await delay(100);
+    await delay(10);
   }
   return;
 }
