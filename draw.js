@@ -6,8 +6,8 @@ const tt = (x, y) => Object.assign({transform:
 
 
 //properties-------------
-const pageW = 600;
-const pageH = 600;
+const pageW = 700;
+const pageH = 700;
 const centerX = pageW/2;
 const centerY = pageH/2;
 //-----------------------
@@ -21,18 +21,20 @@ const drawPlanet = (planets) => {
   for (let i = 0; i < planets.length; i++) {
     console.log('here');
     drawnPlanets.push(
-      ['g', {},
-        ['ellipse', {
-          cx: - planets[i].focalShift / Math.pow(10, 9),
-          cy: 0,
-          rx: planets[i].a / Math.pow(10, 9),
-          ry: planets[i].b / Math.pow(10, 9),
-          class: 'majorOrbit'
-        }],
-        ['g', tt(planets[i].x, planets[i].y),
-          ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
-        ]
-      ]
+      // ['g', {transform: 'rotate(' + ( planets[i].w * 180 / Math.PI ) + ')'},
+      //   ['ellipse', {
+      //     transform: 'rotate(' + ( planets[i].w * 180 / Math.PI ) + ')',
+      //     cx: - planets[i].focalShift / Math.pow(10, 9),
+      //     cy: 0,
+      //     rx: ( planets[i].a / Math.pow(10, 9) ),
+      //     ry: ( planets[i].b / Math.pow(10, 9) ),
+      //     class: 'majorOrbit',
+      //   }]
+      // ],
+      ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
+        ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
+      ],
+      ['circle', { r: 240, class: 'majorOrbit'}]
     )
   }
   return drawnPlanets;
