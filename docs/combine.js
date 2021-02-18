@@ -18,11 +18,12 @@ const starRadius = 10;
 
 const drawGrid = () => {
   let grid = ['g', {}];
+  let crossSize = 5;
   for (let x = -pageW / 2 + 50; x < 700 / 2; x += 50) {
     for (let y = -pageH / 2 + 50; y < 700 / 2; y += 50) {
       grid.push(
-        ['line', { x1: x - 1, y1: y, x2: x + 1, y2: y, class: 'grid'}],
-        ['line', { x1: x, y1: y + 1, x2: x, y2: y - 1, class: 'grid'}]
+        ['line', { x1: x - crossSize, y1: y, x2: x + crossSize, y2: y, class: 'grid'}],
+        ['line', { x1: x, y1: y + crossSize, x2: x, y2: y - crossSize, class: 'grid'}]
       );
     }
   }
@@ -70,7 +71,7 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
 
 const drawOrbit = (planet) => {
   let coords = 'M ';
-  let points = 64;
+  let points = 128;
   for (let i = 0; i < points; i++) {
     let currCoord = orbitCoords(planet.a, planet.e, (i * 2 * Math.PI)/points, planet.w, planet.lang, planet.inc);
     coords += currCoord.x;
@@ -89,10 +90,10 @@ const drawPlanet = (planets) => {
   let drawnPlanets = ['g', {}];
   for (let i = 0; i < planets.length; i++) {
     drawnPlanets.push(
+      drawOrbit(planets[i]),
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
-      ],
-      drawOrbit(planets[i])
+      ]
     )
   }
   return drawnPlanets;
