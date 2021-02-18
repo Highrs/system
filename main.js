@@ -108,18 +108,18 @@ const main = async () => {
   // 1 AU = 150 million km
   let t = 0;
 
-  while (t < 500) {
+  while (t < 1000) {
     const planets = [];
     // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
     planets.push(
       makePlanet(
         'planet1', // name
         150,    // semi-major axis (a)
-        0.6,    // eccentricity (e)
+        0.8,    // eccentricity (e)
         t,  // time (t)
         2,      // argument of periapsis (w)
         0,      // longitude of ascention node (lang)
-        0,      // inclanation (inc)
+        1,      // inclanation (inc)
         0       // mean anomaly at zero (maz)
       ),
       makePlanet(
@@ -128,8 +128,8 @@ const main = async () => {
         0.4,    // eccentricity (e)
         t,  // time (t)
         1,      // argument of periapsis (w)
-        0,      // longitude of ascention node (lang)
-        0,      // inclanation (inc)
+        2,      // longitude of ascention node (lang)
+        1,      // inclanation (inc)
         0       // mean anomaly at zero (maz)
       ),
       makePlanet(
