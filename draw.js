@@ -82,10 +82,13 @@ const drawOrbits = (planets) => {
   return retGroup;
 }
 
-const drawMoving = (planets) => {
+const drawMoving = (planets, t) => {
   let drawn = ['g', {}];
   drawn.push(
-    ['circle', {cx: -325, cy: -325, r: 20, class: 'updateIcon'}]
+    ['g', tt( -centerX, -centerY ),
+      ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
+      ['text', {x: 55, y: 15, class: 'dataText'}, t]
+    ]
   )
   for (let i = 0; i < planets.length; i++) {
     let xWindShift = 0;
@@ -126,12 +129,12 @@ const drawStatic = (planets) => {
   ]
 }
 
-exports.drawMap = (planets) => {
+exports.drawMap = (planets, t) => {
 
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
       drawStatic(planets),
-      drawMoving(planets)
+      drawMoving(planets, t)
     ]
   ]);
 }

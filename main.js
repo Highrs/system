@@ -111,7 +111,11 @@ const main = async () => {
 
 
   while (true) {
-    let t = Date.now() / Math.pow(10, 3);
+    let clock = Date.now()
+    let t = clock / Math.pow(10, 3);
+
+    clock = Date(clock);
+
     const planets = [];
     // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
     planets.push(
@@ -149,7 +153,7 @@ const main = async () => {
         0       // mean anomaly at zero (maz)
       )
     );
-    render(draw.drawMap(planets));
+    render(draw.drawMap(planets, clock));
     // t += 0.1;
     await delay(2000);
   }
