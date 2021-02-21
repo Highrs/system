@@ -12,7 +12,7 @@ const renderer = root => ml => {
   }
 };
 
-const kepCalc = (a, e, t, w, lang, inc, maz) => {
+const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   a = a * Math.pow(10, 9);
   const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
   const mass = 2 * Math.pow(10, 30); // Central object mass, approximately sol
@@ -24,7 +24,7 @@ const kepCalc = (a, e, t, w, lang, inc, maz) => {
   const calcFocalShift = (a, b) => {return ( Math.sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );}
   const focalShift = (calcFocalShift(a, b)); // distance of focus from elypse center
 
-  const epoch = 0; //epoch (given) (days)
+  const epoch = t0; //epoch (given) (days)
 
   const calcMat = (t, epoch) => {
     let tdiff = ( 86400 * ( t - epoch ) );
@@ -73,9 +73,9 @@ const kepCalc = (a, e, t, w, lang, inc, maz) => {
   return { x: x, y: y, z: z, focalShift: focalShift };
 }
 
-const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
+const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
 
-  const planDat = kepCalc(a, e, t, w, lang, inc, maz);
+  const planDat = kepCalc(a, e, t, t0, w, lang, inc, maz);
 
   const planet = {
     name: name,
@@ -84,6 +84,7 @@ const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
     a: a, // semiMajorAxis a[m] (given)
     e: e, // eccentricity e[1] (given)
     // b: b,
+    t0: t0,
     w: w,
     lang: lang,
     inc: inc,
@@ -113,30 +114,33 @@ const main = async () => {
     // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
     planets.push(
       makePlanet(
-        'planet1', // name
+        'Alpha', // name
         150,    // semi-major axis (a)
         0.8,    // eccentricity (e)
-        t,  // time (t)
+        t,      // time (t)
+        0,      // epoch (days)
         2,      // argument of periapsis (w)
         0,      // longitude of ascention node (lang)
         1,      // inclanation (inc)
         0       // mean anomaly at zero (maz)
       ),
       makePlanet(
-        'planet2', // name
+        'Beta', // name
         200,    // semi-major axis (a)
-        0.4,    // eccentricity (e)
-        t,  // time (t)
-        1,      // argument of periapsis (w)
+        0.2,    // eccentricity (e)
+        t,      // time (t)
+        0,      // epoch (days)
+        4,      // argument of periapsis (w)
         2,      // longitude of ascention node (lang)
-        1,      // inclanation (inc)
+        0.5,    // inclanation (inc)
         0       // mean anomaly at zero (maz)
       ),
       makePlanet(
-        'planet3', // name
+        'Gamma', // name
         300,    // semi-major axis (a)
         0.0,    // eccentricity (e)
-        t,  // time (t)
+        t,      // time (t)
+        0,      // epoch (days)
         0,      // argument of periapsis (w)
         0,      // longitude of ascention node (lang)
         0,      // inclanation (inc)
@@ -144,8 +148,8 @@ const main = async () => {
       )
     );
     render(draw.drawMap(planets));
-    t += 1;
-    await delay(10);
+    t += 0.1;
+    await delay(50);
   }
   // return;
 }

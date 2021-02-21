@@ -42,18 +42,12 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
   } // Eccentric anomaly at time E(t)
   const eat = calcEAT(e, mat); // Eccentric anomaly at time
 
-  const calcTAT = (e, eat) => {
-    return ( 2 * Math.atan2(
-      ( Math.sqrt(1 + e) * Math.sin(eat / 2) ),
-      ( Math.sqrt(1 - e) * Math.cos(eat / 2) )
-    ) );
-  } // True Anomaly at Time v(t)
-  const tat = calcTAT(e, eat);
+  const tat = ( 2 * Math.atan2(
+    ( Math.sqrt(1 + e) * Math.sin(eat / 2) ),
+    ( Math.sqrt(1 - e) * Math.cos(eat / 2) )
+  ) );
 
-  const calcDisanceToCentral = (a, e, eat) => {
-    return ( a * ( 1 - ( e * Math.cos(eat) ) ) );
-  }
-  const dist = calcDisanceToCentral(a, e, eat);
+  const dist = ( a * ( 1 - ( e * Math.cos(eat) ) ) );
 
   // Positional vectors in orbital frame o(t)
   const ox = dist * Math.cos(tat);
@@ -67,31 +61,50 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
   return { x: x, y: y, z: z};
 }
 
-
-
-const drawOrbit = (planet) => {
-  let coords = 'M ';
-  let points = 128;
-  for (let i = 0; i < points; i++) {
-    let currCoord = orbitCoords(planet.a, planet.e, (i * 2 * Math.PI)/points, planet.w, planet.lang, planet.inc);
-    coords += currCoord.x;
-    coords += ',';
-    coords += currCoord.y;
-    if (i === points - 1) {
-      coords += 'Z';
-    } else {
-      coords += 'L';
+const drawOrbits = (planets) => {
+  let retGroup = ['g', {}];
+  for (let i = 0; i < planets.length; i++) {
+    let planet = planets[i];
+    let coords = 'M ';
+    let points = 128;
+    for (let i = 0; i < points; i++) {
+      let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * Math.PI)/points, planet.w, planet.lang, planet.inc );
+      coords += currCoord.x;
+      coords += ',';
+      coords += currCoord.y;
+      if (i === points - 1) {
+        coords += 'Z';
+      } else {
+        coords += 'L';
+      }
     }
+    retGroup.push(['path', { d: coords, class: 'majorOrbit' }]);
   }
-  return ['path', { d: coords, class: 'majorOrbit' }];
+  return retGroup;
 }
 
-const drawPlanet = (planets) => {
+const drawPlanets = (planets) => {
   let drawnPlanets = ['g', {}];
   for (let i = 0; i < planets.length; i++) {
+    let xWindShift = 0;
+    if (planets[i].x / Math.pow(10, 9) > 250) {
+      xWindShift = -70;
+    }
     drawnPlanets.push(
-      drawOrbit(planets[i]),
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
+        ['g', tt(xWindShift, 0),
+          ['rect', {width: 70, height: 45, class: 'dataWindow'}],
+          ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
+          ['text', {x: 3, y: 20, class: 'dataText'},
+            'X:' + (planets[i].x / Math.pow(10, 9)).toFixed(2)
+          ],
+          ['text', {x: 3, y: 30, class: 'dataText'},
+            'Y:' + (planets[i].y / Math.pow(10, 9)).toFixed(2)
+          ],
+          ['text', {x: 3, y: 40, class: 'dataText'},
+            'Z:' + (planets[i].z / Math.pow(10, 9)).toFixed(2)
+          ]
+        ],
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
       ]
     )
@@ -99,16 +112,24 @@ const drawPlanet = (planets) => {
   return drawnPlanets;
 }
 
+const star = ['g', {},
+  ['circle', { r: starRadius, class: 'majorObject'}]
+];
+
+const drawStatic = (planets) => {
+  return ['g', {},
+    drawGrid(),
+    star,
+    drawOrbits(planets)
+  ]
+}
+
 exports.drawMap = (planets) => {
-  const star = ['g', {},
-    ['circle', { r: starRadius, class: 'majorObject'}]
-  ];
 
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
-      drawGrid(),
-      star,
-      drawPlanet(planets),
+      drawStatic(planets),
+      drawPlanets(planets)
     ]
   ]);
 }
@@ -142,7 +163,7 @@ const renderer = root => ml => {
   }
 };
 
-const kepCalc = (a, e, t, w, lang, inc, maz) => {
+const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   a = a * Math.pow(10, 9);
   const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
   const mass = 2 * Math.pow(10, 30); // Central object mass, approximately sol
@@ -154,7 +175,7 @@ const kepCalc = (a, e, t, w, lang, inc, maz) => {
   const calcFocalShift = (a, b) => {return ( Math.sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );}
   const focalShift = (calcFocalShift(a, b)); // distance of focus from elypse center
 
-  const epoch = 0; //epoch (given) (days)
+  const epoch = t0; //epoch (given) (days)
 
   const calcMat = (t, epoch) => {
     let tdiff = ( 86400 * ( t - epoch ) );
@@ -203,9 +224,9 @@ const kepCalc = (a, e, t, w, lang, inc, maz) => {
   return { x: x, y: y, z: z, focalShift: focalShift };
 }
 
-const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
+const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
 
-  const planDat = kepCalc(a, e, t, w, lang, inc, maz);
+  const planDat = kepCalc(a, e, t, t0, w, lang, inc, maz);
 
   const planet = {
     name: name,
@@ -214,6 +235,7 @@ const makePlanet = (name, a, e, t, w, lang, inc, maz) => {
     a: a, // semiMajorAxis a[m] (given)
     e: e, // eccentricity e[1] (given)
     // b: b,
+    t0: t0,
     w: w,
     lang: lang,
     inc: inc,
@@ -243,30 +265,33 @@ const main = async () => {
     // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
     planets.push(
       makePlanet(
-        'planet1', // name
+        'Alpha', // name
         150,    // semi-major axis (a)
         0.8,    // eccentricity (e)
-        t,  // time (t)
+        t,      // time (t)
+        0,      // epoch (days)
         2,      // argument of periapsis (w)
         0,      // longitude of ascention node (lang)
         1,      // inclanation (inc)
         0       // mean anomaly at zero (maz)
       ),
       makePlanet(
-        'planet2', // name
+        'Beta', // name
         200,    // semi-major axis (a)
-        0.4,    // eccentricity (e)
-        t,  // time (t)
-        1,      // argument of periapsis (w)
+        0.2,    // eccentricity (e)
+        t,      // time (t)
+        0,      // epoch (days)
+        4,      // argument of periapsis (w)
         2,      // longitude of ascention node (lang)
-        1,      // inclanation (inc)
+        0.5,    // inclanation (inc)
         0       // mean anomaly at zero (maz)
       ),
       makePlanet(
-        'planet3', // name
+        'Gamma', // name
         300,    // semi-major axis (a)
         0.0,    // eccentricity (e)
-        t,  // time (t)
+        t,      // time (t)
+        0,      // epoch (days)
         0,      // argument of periapsis (w)
         0,      // longitude of ascention node (lang)
         0,      // inclanation (inc)
@@ -274,8 +299,8 @@ const main = async () => {
       )
     );
     render(draw.drawMap(planets));
-    t += 1;
-    await delay(10);
+    t += 0.1;
+    await delay(50);
   }
   // return;
 }

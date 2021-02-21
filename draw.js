@@ -41,18 +41,12 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
   } // Eccentric anomaly at time E(t)
   const eat = calcEAT(e, mat); // Eccentric anomaly at time
 
-  const calcTAT = (e, eat) => {
-    return ( 2 * Math.atan2(
-      ( Math.sqrt(1 + e) * Math.sin(eat / 2) ),
-      ( Math.sqrt(1 - e) * Math.cos(eat / 2) )
-    ) );
-  } // True Anomaly at Time v(t)
-  const tat = calcTAT(e, eat);
+  const tat = ( 2 * Math.atan2(
+    ( Math.sqrt(1 + e) * Math.sin(eat / 2) ),
+    ( Math.sqrt(1 - e) * Math.cos(eat / 2) )
+  ) );
 
-  const calcDisanceToCentral = (a, e, eat) => {
-    return ( a * ( 1 - ( e * Math.cos(eat) ) ) );
-  }
-  const dist = calcDisanceToCentral(a, e, eat);
+  const dist = ( a * ( 1 - ( e * Math.cos(eat) ) ) );
 
   // Positional vectors in orbital frame o(t)
   const ox = dist * Math.cos(tat);
@@ -66,31 +60,50 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
   return { x: x, y: y, z: z};
 }
 
-
-
-const drawOrbit = (planet) => {
-  let coords = 'M ';
-  let points = 128;
-  for (let i = 0; i < points; i++) {
-    let currCoord = orbitCoords(planet.a, planet.e, (i * 2 * Math.PI)/points, planet.w, planet.lang, planet.inc);
-    coords += currCoord.x;
-    coords += ',';
-    coords += currCoord.y;
-    if (i === points - 1) {
-      coords += 'Z';
-    } else {
-      coords += 'L';
+const drawOrbits = (planets) => {
+  let retGroup = ['g', {}];
+  for (let i = 0; i < planets.length; i++) {
+    let planet = planets[i];
+    let coords = 'M ';
+    let points = 128;
+    for (let i = 0; i < points; i++) {
+      let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * Math.PI)/points, planet.w, planet.lang, planet.inc );
+      coords += currCoord.x;
+      coords += ',';
+      coords += currCoord.y;
+      if (i === points - 1) {
+        coords += 'Z';
+      } else {
+        coords += 'L';
+      }
     }
+    retGroup.push(['path', { d: coords, class: 'majorOrbit' }]);
   }
-  return ['path', { d: coords, class: 'majorOrbit' }];
+  return retGroup;
 }
 
-const drawPlanet = (planets) => {
+const drawPlanets = (planets) => {
   let drawnPlanets = ['g', {}];
   for (let i = 0; i < planets.length; i++) {
+    let xWindShift = 0;
+    if (planets[i].x / Math.pow(10, 9) > 250) {
+      xWindShift = -70;
+    }
     drawnPlanets.push(
-      drawOrbit(planets[i]),
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
+        ['g', tt(xWindShift, 0),
+          ['rect', {width: 70, height: 45, class: 'dataWindow'}],
+          ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
+          ['text', {x: 3, y: 20, class: 'dataText'},
+            'X:' + (planets[i].x / Math.pow(10, 9)).toFixed(2)
+          ],
+          ['text', {x: 3, y: 30, class: 'dataText'},
+            'Y:' + (planets[i].y / Math.pow(10, 9)).toFixed(2)
+          ],
+          ['text', {x: 3, y: 40, class: 'dataText'},
+            'Z:' + (planets[i].z / Math.pow(10, 9)).toFixed(2)
+          ]
+        ],
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
       ]
     )
@@ -98,16 +111,24 @@ const drawPlanet = (planets) => {
   return drawnPlanets;
 }
 
+const star = ['g', {},
+  ['circle', { r: starRadius, class: 'majorObject'}]
+];
+
+const drawStatic = (planets) => {
+  return ['g', {},
+    drawGrid(),
+    star,
+    drawOrbits(planets)
+  ]
+}
+
 exports.drawMap = (planets) => {
-  const star = ['g', {},
-    ['circle', { r: starRadius, class: 'majorObject'}]
-  ];
 
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
-      drawGrid(),
-      star,
-      drawPlanet(planets),
+      drawStatic(planets),
+      drawPlanets(planets)
     ]
   ]);
 }

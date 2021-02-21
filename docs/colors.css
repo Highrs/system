@@ -30,3 +30,12 @@ html, body {
   stroke-width: 0.2px;
   stroke: #00ff66ff;
 }
+.dataWindow {
+  stroke-width: 1px;
+  stroke: #00ff66ff;
+  fill: #363636;
+}
+.dataText {
+  font: 10px B612 Mono;
+  fill: #00ff66ff;
+}
