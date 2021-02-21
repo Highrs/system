@@ -83,14 +83,17 @@ const drawOrbits = (planets) => {
   return retGroup;
 }
 
-const drawPlanets = (planets) => {
-  let drawnPlanets = ['g', {}];
+const drawMoving = (planets) => {
+  let drawn = ['g', {}];
+  drawn.push(
+    ['circle', {cx: -325, cy: -325, r: 20, class: 'updateIcon'}]
+  )
   for (let i = 0; i < planets.length; i++) {
     let xWindShift = 0;
     if (planets[i].x / Math.pow(10, 9) > 250) {
       xWindShift = -70;
     }
-    drawnPlanets.push(
+    drawn.push(
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['g', tt(xWindShift, 0),
           ['rect', {width: 70, height: 45, class: 'dataWindow'}],
@@ -109,7 +112,7 @@ const drawPlanets = (planets) => {
       ]
     )
   }
-  return drawnPlanets;
+  return drawn;
 }
 
 const star = ['g', {},
@@ -129,7 +132,7 @@ exports.drawMap = (planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
       drawStatic(planets),
-      drawPlanets(planets)
+      drawMoving(planets)
     ]
   ]);
 }
@@ -258,9 +261,11 @@ const main = async () => {
   const render = renderer(document.getElementById('content'));
 
   // 1 AU = 150 million km
-  let t = 0;
+  // let t = 0;
+
 
   while (true) {
+    let t = Date.now() / Math.pow(10, 3);
     const planets = [];
     // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
     planets.push(
@@ -299,8 +304,8 @@ const main = async () => {
       )
     );
     render(draw.drawMap(planets));
-    t += 0.1;
-    await delay(50);
+    // t += 0.1;
+    await delay(2000);
   }
   // return;
 }

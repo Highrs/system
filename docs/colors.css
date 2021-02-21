@@ -39,3 +39,16 @@ html, body {
   font: 10px B612 Mono;
   fill: #00ff66ff;
 }
+.updateIcon {
+  stroke-width: 3px;
+  stroke: #00ff66ff;
+  fill: none;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: stroke 25s ease-out forwards;
+}
+@keyframes stroke {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

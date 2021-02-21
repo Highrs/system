@@ -107,9 +107,11 @@ const main = async () => {
   const render = renderer(document.getElementById('content'));
 
   // 1 AU = 150 million km
-  let t = 0;
+  // let t = 0;
+
 
   while (true) {
+    let t = Date.now() / Math.pow(10, 3);
     const planets = [];
     // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
     planets.push(
@@ -148,8 +150,8 @@ const main = async () => {
       )
     );
     render(draw.drawMap(planets));
-    t += 0.1;
-    await delay(50);
+    // t += 0.1;
+    await delay(2000);
   }
   // return;
 }

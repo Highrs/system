@@ -82,14 +82,17 @@ const drawOrbits = (planets) => {
   return retGroup;
 }
 
-const drawPlanets = (planets) => {
-  let drawnPlanets = ['g', {}];
+const drawMoving = (planets) => {
+  let drawn = ['g', {}];
+  drawn.push(
+    ['circle', {cx: -325, cy: -325, r: 20, class: 'updateIcon'}]
+  )
   for (let i = 0; i < planets.length; i++) {
     let xWindShift = 0;
     if (planets[i].x / Math.pow(10, 9) > 250) {
       xWindShift = -70;
     }
-    drawnPlanets.push(
+    drawn.push(
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['g', tt(xWindShift, 0),
           ['rect', {width: 70, height: 45, class: 'dataWindow'}],
@@ -108,7 +111,7 @@ const drawPlanets = (planets) => {
       ]
     )
   }
-  return drawnPlanets;
+  return drawn;
 }
 
 const star = ['g', {},
@@ -128,7 +131,7 @@ exports.drawMap = (planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
       drawStatic(planets),
-      drawPlanets(planets)
+      drawMoving(planets)
     ]
   ]);
 }
