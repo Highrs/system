@@ -1,8 +1,7 @@
 'use strict';
 
 const getSvg = require('./get-svg.js');
-const tt = (x, y) => Object.assign({transform:
-  'translate(' + x + ', ' + y + ')'});
+const onml = require('onml');
 
 //properties-------------
 const pageW = 700;
@@ -27,7 +26,7 @@ const drawGrid = () => {
     }
   }
   return grid;
-}
+};
 
 const orbitCoords = (a, e, mat, w, lang, inc) => {
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
@@ -58,7 +57,7 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
   const z = ( ox * ( Math.sin(w) * Math.sin(inc) ) + oy * ( Math.cos(w) * Math.sin(inc) ) );
 
   return { x: x, y: y, z: z};
-}
+};
 
 const drawOrbits = (planets) => {
   let divline1;
@@ -90,14 +89,18 @@ const drawOrbits = (planets) => {
     retGroup.push(['path', { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)  + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}])
   }
   return retGroup;
-}
+};
 
-const drawMoving = (planets, t) => {
-  let drawn = ['g', {}];
+const calcDist = (planet1, planet2) => {
+  return Math.sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
+};
+
+exports.drawMoving = (planets, clock) => {
+  const drawn = ['g', {}];
   drawn.push(
-    ['g', tt( -centerX, -centerY ),
+    ['g', onml.tt( -centerX, -centerY ),
       ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
-      ['text', {x: 55, y: 15, class: 'dataText'}, t]
+      ['text', {x: 55, y: 15, class: 'dataText'}, clock]
     ]
   )
   for (let i = 0; i < planets.length; i++) {
@@ -107,8 +110,8 @@ const drawMoving = (planets, t) => {
       xWindShift = -windowWidth;
     }
     drawn.push(
-      ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
-        ['g', tt(xWindShift, 0),
+      ['g', onml.tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
+        ['g', onml.tt(xWindShift, 0),
           ['rect', {width: windowWidth, height: 45, class: 'dataWindow'}],
           ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
           ['text', {x: 3, y: 20, class: 'dataText'},
@@ -138,14 +141,15 @@ const drawStatic = (planets) => {
     drawOrbits(planets),
     star
   ]
-}
+};
 
-exports.drawMap = (planets, t) => {
+exports.drawMap = (planets) => {
 
   return getSvg({w:pageW, h:pageH}).concat([
-    ['g', tt(centerX, centerY),
+    ['g', onml.tt(centerX, centerY),
       drawStatic(planets),
-      drawMoving(planets, t)
+      ['g', {id: 'moving'}]
+      // drawMoving(planets, t)
     ]
   ]);
-}
+};

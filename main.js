@@ -3,15 +3,6 @@
 const draw = require('./draw.js');
 const onml = require('onml');
 
-const renderer = root => ml => {
-  try {
-    const html = onml.stringify(ml);
-    root.innerHTML = html;
-  } catch (err) {
-    console.error(ml);
-  }
-};
-
 const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   a = a * Math.pow(10, 9);
   const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
@@ -84,6 +75,7 @@ const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
     a: a, // semiMajorAxis a[m] (given)
     e: e, // eccentricity e[1] (given)
     // b: b,
+    t: t,
     t0: t0,
     w: w,
     lang: lang,
@@ -104,56 +96,65 @@ async function delay(ms) {
 }
 
 const main = async () => {
-  const render = renderer(document.getElementById('content'));
 
   // 1 AU = 150 million km
   // let t = 0;
 
-
+  const planets = [];
+  // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
+  planets.push(
+    makePlanet(
+      'Alpha', // name
+      150,    // semi-major axis (a)
+      0.8,    // eccentricity (e)
+      0,      // time (days) (t)
+      0,      // epoch (days) (t0)
+      2,      // argument of periapsis (w)
+      0,      // longitude of ascention node (lang)
+      1,      // inclanation (inc)
+      0       // mean anomaly at zero (maz)
+    ),
+    makePlanet(
+      'Beta', // name
+      200,    // semi-major axis (a)
+      0.2,    // eccentricity (e)
+      0,      // time (t)
+      0,      // epoch (days)
+      4,      // argument of periapsis (w)
+      1.6,      // longitude of ascention node (lang)
+      0.5,    // inclanation (inc)
+      0       // mean anomaly at zero (maz)
+    ),
+    makePlanet(
+      'Gamma', // name
+      300,    // semi-major axis (a)
+      0.0,    // eccentricity (e)
+      0,      // time (t)
+      0,      // epoch (days)
+      0,      // argument of periapsis (w)
+      0,      // longitude of ascention node (lang)
+      0,      // inclanation (inc)
+      0       // mean anomaly at zero (maz)
+    )
+  );
+  onml.renderer(document.getElementById('content'))(draw.drawMap(planets));
+  const render2 = onml.renderer(document.getElementById('moving'));
   while (true) {
-    let clock = Date.now()
-    let t = clock / Math.pow(10, 3);
+    const clock = Date.now();
+    const t = clock / Math.pow(10, 3);
 
-    clock = Date(clock);
+    const clock2 = Date(clock);
 
-    const planets = [];
-    // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
-    planets.push(
-      makePlanet(
-        'Alpha', // name
-        150,    // semi-major axis (a)
-        0.8,    // eccentricity (e)
-        t,      // time (t)
-        0,      // epoch (days)
-        2,      // argument of periapsis (w)
-        0,      // longitude of ascention node (lang)
-        1,      // inclanation (inc)
-        0       // mean anomaly at zero (maz)
-      ),
-      makePlanet(
-        'Beta', // name
-        200,    // semi-major axis (a)
-        0.2,    // eccentricity (e)
-        t,      // time (t)
-        0,      // epoch (days)
-        4,      // argument of periapsis (w)
-        1.6,      // longitude of ascention node (lang)
-        0.5,    // inclanation (inc)
-        0       // mean anomaly at zero (maz)
-      ),
-      makePlanet(
-        'Gamma', // name
-        300,    // semi-major axis (a)
-        0.0,    // eccentricity (e)
-        t,      // time (t)
-        0,      // epoch (days)
-        0,      // argument of periapsis (w)
-        0,      // longitude of ascention node (lang)
-        0,      // inclanation (inc)
-        0       // mean anomaly at zero (maz)
-      )
-    );
-    render(draw.drawMap(planets, clock));
+
+    for (let i = 0; i < planets.length; i++) {
+      let newData = kepCalc(planets[i].a, planets[i].e, t, planets[i].t0, planets[i].w, planets[i].lang, planets[i].inc, planets[i].maz);
+      planets[i].x = newData.x;
+      planets[i].y = newData.y;
+      planets[i].z = newData.z;
+      // console.log(planets[i]);
+    }
+
+    render2(draw.drawMoving(planets, clock2));
     // t += 0.1;
     await delay(2000);
   }

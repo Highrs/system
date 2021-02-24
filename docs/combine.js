@@ -2,8 +2,7 @@
 'use strict';
 
 const getSvg = require('./get-svg.js');
-const tt = (x, y) => Object.assign({transform:
-  'translate(' + x + ', ' + y + ')'});
+const onml = require('onml');
 
 //properties-------------
 const pageW = 700;
@@ -28,7 +27,7 @@ const drawGrid = () => {
     }
   }
   return grid;
-}
+};
 
 const orbitCoords = (a, e, mat, w, lang, inc) => {
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
@@ -59,7 +58,7 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
   const z = ( ox * ( Math.sin(w) * Math.sin(inc) ) + oy * ( Math.cos(w) * Math.sin(inc) ) );
 
   return { x: x, y: y, z: z};
-}
+};
 
 const drawOrbits = (planets) => {
   let divline1;
@@ -91,14 +90,18 @@ const drawOrbits = (planets) => {
     retGroup.push(['path', { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)  + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}])
   }
   return retGroup;
-}
+};
 
-const drawMoving = (planets, t) => {
-  let drawn = ['g', {}];
+const calcDist = (planet1, planet2) => {
+  return Math.sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
+};
+
+exports.drawMoving = (planets, clock) => {
+  const drawn = ['g', {}];
   drawn.push(
-    ['g', tt( -centerX, -centerY ),
+    ['g', onml.tt( -centerX, -centerY ),
       ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
-      ['text', {x: 55, y: 15, class: 'dataText'}, t]
+      ['text', {x: 55, y: 15, class: 'dataText'}, clock]
     ]
   )
   for (let i = 0; i < planets.length; i++) {
@@ -108,8 +111,8 @@ const drawMoving = (planets, t) => {
       xWindShift = -windowWidth;
     }
     drawn.push(
-      ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
-        ['g', tt(xWindShift, 0),
+      ['g', onml.tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
+        ['g', onml.tt(xWindShift, 0),
           ['rect', {width: windowWidth, height: 45, class: 'dataWindow'}],
           ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
           ['text', {x: 3, y: 20, class: 'dataText'},
@@ -139,19 +142,20 @@ const drawStatic = (planets) => {
     drawOrbits(planets),
     star
   ]
-}
+};
 
-exports.drawMap = (planets, t) => {
+exports.drawMap = (planets) => {
 
   return getSvg({w:pageW, h:pageH}).concat([
-    ['g', tt(centerX, centerY),
+    ['g', onml.tt(centerX, centerY),
       drawStatic(planets),
-      drawMoving(planets, t)
+      ['g', {id: 'moving'}]
+      // drawMoving(planets, t)
     ]
   ]);
-}
+};
 
-},{"./get-svg.js":2}],2:[function(require,module,exports){
+},{"./get-svg.js":2,"onml":13}],2:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -170,15 +174,6 @@ module.exports = cfg => {
 
 const draw = require('./draw.js');
 const onml = require('onml');
-
-const renderer = root => ml => {
-  try {
-    const html = onml.stringify(ml);
-    root.innerHTML = html;
-  } catch (err) {
-    console.error(ml);
-  }
-};
 
 const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   a = a * Math.pow(10, 9);
@@ -252,6 +247,7 @@ const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
     a: a, // semiMajorAxis a[m] (given)
     e: e, // eccentricity e[1] (given)
     // b: b,
+    t: t,
     t0: t0,
     w: w,
     lang: lang,
@@ -272,56 +268,65 @@ async function delay(ms) {
 }
 
 const main = async () => {
-  const render = renderer(document.getElementById('content'));
 
   // 1 AU = 150 million km
   // let t = 0;
 
-
+  const planets = [];
+  // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
+  planets.push(
+    makePlanet(
+      'Alpha', // name
+      150,    // semi-major axis (a)
+      0.8,    // eccentricity (e)
+      0,      // time (days) (t)
+      0,      // epoch (days) (t0)
+      2,      // argument of periapsis (w)
+      0,      // longitude of ascention node (lang)
+      1,      // inclanation (inc)
+      0       // mean anomaly at zero (maz)
+    ),
+    makePlanet(
+      'Beta', // name
+      200,    // semi-major axis (a)
+      0.2,    // eccentricity (e)
+      0,      // time (t)
+      0,      // epoch (days)
+      4,      // argument of periapsis (w)
+      1.6,      // longitude of ascention node (lang)
+      0.5,    // inclanation (inc)
+      0       // mean anomaly at zero (maz)
+    ),
+    makePlanet(
+      'Gamma', // name
+      300,    // semi-major axis (a)
+      0.0,    // eccentricity (e)
+      0,      // time (t)
+      0,      // epoch (days)
+      0,      // argument of periapsis (w)
+      0,      // longitude of ascention node (lang)
+      0,      // inclanation (inc)
+      0       // mean anomaly at zero (maz)
+    )
+  );
+  onml.renderer(document.getElementById('content'))(draw.drawMap(planets));
+  const render2 = onml.renderer(document.getElementById('moving'));
   while (true) {
-    let clock = Date.now()
-    let t = clock / Math.pow(10, 3);
+    const clock = Date.now();
+    const t = clock / Math.pow(10, 3);
 
-    clock = Date(clock);
+    const clock2 = Date(clock);
 
-    const planets = [];
-    // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
-    planets.push(
-      makePlanet(
-        'Alpha', // name
-        150,    // semi-major axis (a)
-        0.8,    // eccentricity (e)
-        t,      // time (t)
-        0,      // epoch (days)
-        2,      // argument of periapsis (w)
-        0,      // longitude of ascention node (lang)
-        1,      // inclanation (inc)
-        0       // mean anomaly at zero (maz)
-      ),
-      makePlanet(
-        'Beta', // name
-        200,    // semi-major axis (a)
-        0.2,    // eccentricity (e)
-        t,      // time (t)
-        0,      // epoch (days)
-        4,      // argument of periapsis (w)
-        1.6,      // longitude of ascention node (lang)
-        0.5,    // inclanation (inc)
-        0       // mean anomaly at zero (maz)
-      ),
-      makePlanet(
-        'Gamma', // name
-        300,    // semi-major axis (a)
-        0.0,    // eccentricity (e)
-        t,      // time (t)
-        0,      // epoch (days)
-        0,      // argument of periapsis (w)
-        0,      // longitude of ascention node (lang)
-        0,      // inclanation (inc)
-        0       // mean anomaly at zero (maz)
-      )
-    );
-    render(draw.drawMap(planets, clock));
+
+    for (let i = 0; i < planets.length; i++) {
+      let newData = kepCalc(planets[i].a, planets[i].e, t, planets[i].t0, planets[i].w, planets[i].lang, planets[i].inc, planets[i].maz);
+      planets[i].x = newData.x;
+      planets[i].y = newData.y;
+      planets[i].z = newData.z;
+      // console.log(planets[i]);
+    }
+
+    render2(draw.drawMoving(planets, clock2));
     // t += 0.1;
     await delay(2000);
   }
@@ -330,7 +335,7 @@ const main = async () => {
 
 window.onload = main;
 
-},{"./draw.js":1,"onml":12}],4:[function(require,module,exports){
+},{"./draw.js":1,"onml":13}],4:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -2525,20 +2530,43 @@ module.exports = Array.isArray || function (arr) {
 },{}],12:[function(require,module,exports){
 'use strict';
 
+const w3 = {
+  svg: 'http://www.w3.org/2000/svg',
+  xlink: 'http://www.w3.org/1999/xlink',
+  xmlns: 'http://www.w3.org/XML/1998/namespace'
+};
+
+module.exports = (w, h) => ['svg', {
+  xmlns: w3.svg, 'xmlns:xlink': w3.xlink,
+  width: w, height: h,
+  viewBox: '0 0 ' + w + ' ' + h
+}];
+
+},{}],13:[function(require,module,exports){
+'use strict';
+
 const parse = require('./parse.js');
 const stringify = require('./stringify.js');
 const traverse = require('./traverse.js');
 const renderer = require('./renderer.js');
+const tt = require('./tt.js');
+const genSvg = require('./gen-svg.js');
 
 exports.renderer = renderer;
 exports.parse = parse;
 exports.stringify = stringify;
 exports.traverse = traverse;
+exports.tt = tt;
+
+exports.gen = {
+  svg: genSvg
+};
+
 exports.p = parse;
 exports.s = stringify;
 exports.t = traverse;
 
-},{"./parse.js":13,"./renderer.js":14,"./stringify.js":15,"./traverse.js":16}],13:[function(require,module,exports){
+},{"./gen-svg.js":12,"./parse.js":14,"./renderer.js":15,"./stringify.js":16,"./traverse.js":17,"./tt.js":18}],14:[function(require,module,exports){
 'use strict';
 
 const parser = require('sax').parser;
@@ -2591,7 +2619,7 @@ function parse(data, config) {
 
 module.exports = parse;
 
-},{"sax":35}],14:[function(require,module,exports){
+},{"sax":37}],15:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');
@@ -2616,7 +2644,7 @@ module.exports = renderer;
 
 /* eslint-env browser */
 
-},{"./stringify.js":15}],15:[function(require,module,exports){
+},{"./stringify.js":16}],16:[function(require,module,exports){
 'use strict';
 
 const isObject = o => o && Object.prototype.toString.call(o) === '[object Object]';
@@ -2709,7 +2737,7 @@ function stringify (a, indentation) {
 
 module.exports = stringify;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 function skipFn() {
@@ -2837,7 +2865,20 @@ module.exports = traverse;
 
 /* eslint complexity: 0 */
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
+'use strict';
+
+module.exports = (x, y, obj) => {
+  let objt = {};
+  if (x || y) {
+    const tt = [x || 0].concat(y ? [y] : []);
+    objt = {transform: 'translate(' + tt.join(',') + ')'};
+  }
+  obj = (typeof obj === 'object') ? obj : {};
+  return Object.assign(objt, obj);
+};
+
+},{}],19:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -2886,7 +2927,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 
 
 }).call(this)}).call(this,require('_process'))
-},{"_process":18}],18:[function(require,module,exports){
+},{"_process":20}],20:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -3072,10 +3113,10 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],19:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 module.exports = require('./lib/_stream_duplex.js');
 
-},{"./lib/_stream_duplex.js":20}],20:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":22}],22:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3207,7 +3248,7 @@ Duplex.prototype._destroy = function (err, cb) {
 
   pna.nextTick(cb, err);
 };
-},{"./_stream_readable":22,"./_stream_writable":24,"core-util-is":7,"inherits":9,"process-nextick-args":17}],21:[function(require,module,exports){
+},{"./_stream_readable":24,"./_stream_writable":26,"core-util-is":7,"inherits":9,"process-nextick-args":19}],23:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3255,7 +3296,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":23,"core-util-is":7,"inherits":9}],22:[function(require,module,exports){
+},{"./_stream_transform":25,"core-util-is":7,"inherits":9}],24:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -4277,7 +4318,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./_stream_duplex":20,"./internal/streams/BufferList":25,"./internal/streams/destroy":26,"./internal/streams/stream":27,"_process":18,"core-util-is":7,"events":39,"inherits":9,"isarray":11,"process-nextick-args":17,"safe-buffer":28,"string_decoder/":29,"util":5}],23:[function(require,module,exports){
+},{"./_stream_duplex":22,"./internal/streams/BufferList":27,"./internal/streams/destroy":28,"./internal/streams/stream":29,"_process":20,"core-util-is":7,"events":41,"inherits":9,"isarray":11,"process-nextick-args":19,"safe-buffer":30,"string_decoder/":31,"util":5}],25:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4492,7 +4533,7 @@ function done(stream, er, data) {
 
   return stream.push(null);
 }
-},{"./_stream_duplex":20,"core-util-is":7,"inherits":9}],24:[function(require,module,exports){
+},{"./_stream_duplex":22,"core-util-is":7,"inherits":9}],26:[function(require,module,exports){
 (function (process,global,setImmediate){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -5182,7 +5223,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"./_stream_duplex":20,"./internal/streams/destroy":26,"./internal/streams/stream":27,"_process":18,"core-util-is":7,"inherits":9,"process-nextick-args":17,"safe-buffer":28,"timers":37,"util-deprecate":38}],25:[function(require,module,exports){
+},{"./_stream_duplex":22,"./internal/streams/destroy":28,"./internal/streams/stream":29,"_process":20,"core-util-is":7,"inherits":9,"process-nextick-args":19,"safe-buffer":30,"timers":39,"util-deprecate":40}],27:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -5262,7 +5303,7 @@ if (util && util.inspect && util.inspect.custom) {
     return this.constructor.name + ' ' + obj;
   };
 }
-},{"safe-buffer":28,"util":5}],26:[function(require,module,exports){
+},{"safe-buffer":30,"util":5}],28:[function(require,module,exports){
 'use strict';
 
 /*<replacement>*/
@@ -5337,10 +5378,10 @@ module.exports = {
   destroy: destroy,
   undestroy: undestroy
 };
-},{"process-nextick-args":17}],27:[function(require,module,exports){
+},{"process-nextick-args":19}],29:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":39}],28:[function(require,module,exports){
+},{"events":41}],30:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -5404,7 +5445,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":6}],29:[function(require,module,exports){
+},{"buffer":6}],31:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5701,10 +5742,10 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":28}],30:[function(require,module,exports){
+},{"safe-buffer":30}],32:[function(require,module,exports){
 module.exports = require('./readable').PassThrough
 
-},{"./readable":31}],31:[function(require,module,exports){
+},{"./readable":33}],33:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -5713,13 +5754,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":20,"./lib/_stream_passthrough.js":21,"./lib/_stream_readable.js":22,"./lib/_stream_transform.js":23,"./lib/_stream_writable.js":24}],32:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":22,"./lib/_stream_passthrough.js":23,"./lib/_stream_readable.js":24,"./lib/_stream_transform.js":25,"./lib/_stream_writable.js":26}],34:[function(require,module,exports){
 module.exports = require('./readable').Transform
 
-},{"./readable":31}],33:[function(require,module,exports){
+},{"./readable":33}],35:[function(require,module,exports){
 module.exports = require('./lib/_stream_writable.js');
 
-},{"./lib/_stream_writable.js":24}],34:[function(require,module,exports){
+},{"./lib/_stream_writable.js":26}],36:[function(require,module,exports){
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
@@ -5786,7 +5827,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":6}],35:[function(require,module,exports){
+},{"buffer":6}],37:[function(require,module,exports){
 (function (Buffer){(function (){
 ;(function (sax) { // wrapper for non-node envs
   sax.parser = function (strict, opt) { return new SAXParser(strict, opt) }
@@ -7355,9 +7396,9 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 })(typeof exports === 'undefined' ? this.sax = {} : exports)
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":6,"stream":40,"string_decoder":36}],36:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29,"safe-buffer":34}],37:[function(require,module,exports){
+},{"buffer":6,"stream":42,"string_decoder":38}],38:[function(require,module,exports){
+arguments[4][31][0].apply(exports,arguments)
+},{"dup":31,"safe-buffer":36}],39:[function(require,module,exports){
 (function (setImmediate,clearImmediate){(function (){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -7436,7 +7477,7 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this)}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":18,"timers":37}],38:[function(require,module,exports){
+},{"process/browser.js":20,"timers":39}],40:[function(require,module,exports){
 (function (global){(function (){
 
 /**
@@ -7507,7 +7548,7 @@ function config (name) {
 }
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],39:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8032,7 +8073,7 @@ function functionBindPolyfill(context) {
   };
 }
 
-},{}],40:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -8161,4 +8202,4 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":39,"inherits":9,"readable-stream/duplex.js":19,"readable-stream/passthrough.js":30,"readable-stream/readable.js":31,"readable-stream/transform.js":32,"readable-stream/writable.js":33}]},{},[3]);
+},{"events":41,"inherits":9,"readable-stream/duplex.js":21,"readable-stream/passthrough.js":32,"readable-stream/readable.js":33,"readable-stream/transform.js":34,"readable-stream/writable.js":35}]},{},[3]);
