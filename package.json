@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "browserify ./main.js > docs/combine.js",
-    "watch": "watchify ./main.js -o docs/combine.js -v"
+    "watch": "watchify ./main.js -o docs/combine.js -v",
+    "dist.min": "terser --compress --mengle -- docs/combine.js > docs/combine.min.js"
   },
   "keywords": [],
   "author": "",
@@ -16,19 +17,20 @@
     "tspan": "^0.4.0"
   },
   "devDependencies": {
-    "eslint": "^7.20.0",
     "browserify": "^17.0.0",
+    "eslint": "^7.20.0",
+    "terser": "^5.6.0",
     "watchify": "^3.11.1"
   },
   "eslintConfig": {
     "env": {
-        "browser": true,
-        "commonjs": true,
-        "es2021": true
+      "browser": true,
+      "commonjs": true,
+      "es2021": true
     },
     "extends": "eslint:recommended",
     "parserOptions": {
-        "ecmaVersion": 12
+      "ecmaVersion": 12
     },
     "rules": {
       "semi": 1

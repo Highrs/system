@@ -3,6 +3,10 @@
 
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
+const cos = Math.cos;
+const sin = Math.sin;
+const PI = Math.PI;
+const sqrt = Math.sqrt;
 
 //properties-------------
 const pageW = 700;
@@ -13,6 +17,7 @@ const centerY = pageH/2;
 
 //Artistic properties-------------
 const starRadius = 10;
+let windowWidth = 70; // width of planet data rectangles
 //--------------------------------
 
 const drawGrid = () => {
@@ -35,27 +40,27 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
   const calcEAT = (e, mat) => {
     let eat = mat;
     for (let i = 0; i < itter; i++) {
-      eat = eat - ( (eat - ( e * Math.sin(eat) ) - mat) / ( 1 - e * Math.cos(eat) ) );
+      eat = eat - ( (eat - ( e * sin(eat) ) - mat) / ( 1 - e * cos(eat) ) );
     }
     return eat;
   }; // Eccentric anomaly at time E(t)
   const eat = calcEAT(e, mat); // Eccentric anomaly at time
 
   const tat = ( 2 * Math.atan2(
-    ( Math.sqrt(1 + e) * Math.sin(eat / 2) ),
-    ( Math.sqrt(1 - e) * Math.cos(eat / 2) )
+    ( sqrt(1 + e) * sin(eat / 2) ),
+    ( sqrt(1 - e) * cos(eat / 2) )
   ) );
 
-  const dist = ( a * ( 1 - ( e * Math.cos(eat) ) ) );
+  const dist = ( a * ( 1 - ( e * cos(eat) ) ) );
 
   // Positional vectors in orbital frame o(t)
-  const ox = dist * Math.cos(tat);
-  const oy = dist * Math.sin(tat);
+  const ox = dist * cos(tat);
+  const oy = dist * sin(tat);
   // const oz = 0;
 
-  const x = ( ox * ( (Math.cos(w) * Math.cos(lang)) - (Math.sin(w) * Math.cos(inc) * Math.sin(lang)) ) - oy * ( (Math.sin(w) * Math.cos(lang)) + (Math.cos(w) * Math.cos(inc) * Math.sin(lang)) ) );
-  const y = ( ox * ( (Math.cos(w) * Math.sin(lang)) + (Math.sin(w) * Math.cos(inc) * Math.cos(lang)) ) + oy * ( (Math.cos(w) * Math.cos(inc) * Math.cos(lang)) - (Math.sin(w) * Math.sin(lang)) ) );
-  const z = ( ox * ( Math.sin(w) * Math.sin(inc) ) + oy * ( Math.cos(w) * Math.sin(inc) ) );
+  const x = ( ox * ( (cos(w) * cos(lang)) - (sin(w) * cos(inc) * sin(lang)) ) - oy * ( (sin(w) * cos(lang)) + (cos(w) * cos(inc) * sin(lang)) ) );
+  const y = ( ox * ( (cos(w) * sin(lang)) + (sin(w) * cos(inc) * cos(lang)) ) + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
+  const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
 
   return { x: x, y: y, z: z};
 };
@@ -69,7 +74,7 @@ const drawOrbits = (planets) => {
     let coords = 'M ';
     let points = 128;
     for (let i = 0; i < points; i++) {
-      let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * Math.PI)/points, planet.w, planet.lang, planet.inc );
+      let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * PI)/points, planet.w, planet.lang, planet.inc );
       if (i === 0) {
         divline1 = currCoord;
       } else if (Math.abs(points/2 - i) < 1) {
@@ -92,9 +97,9 @@ const drawOrbits = (planets) => {
   return retGroup;
 };
 
-// const calcDist = (planet1, planet2) => {
-//   return Math.sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
-// };
+const calcDist = (planet1, planet2) => {
+  return sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
+};
 
 exports.drawMoving = (planets, clock) => {
   const drawn = ['g', {}];
@@ -105,11 +110,25 @@ exports.drawMoving = (planets, clock) => {
     ]
   );
   for (let i = 0; i < planets.length; i++) {
-    let windowWidth = 70;
     let xWindShift = 0;
     if (planets[i].x / Math.pow(10, 9) > 250) {
       xWindShift = -windowWidth;
     }
+
+    // for (let j = 0; j < planets.length; j++) {
+    //   if (i !== j) {
+    //     let dist = calcDist(planets[i], planets[j] );
+    //     if (dist / Math.pow(10, 9) < (windowWidth * 2) && dist / Math.pow(10, 9) > 0) {
+    //       console.log('here');
+    //       xWindShift = -windowWidth;
+    //     }
+    //   }
+    // }
+    for (let j = i + 1; j < planets.length; j++) {
+      let dist = calcDist(planets[i], planets[j] );
+      // console.log(dist);
+    }
+
     drawn.push(
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['g', tt(xWindShift, 0),
@@ -145,7 +164,6 @@ const drawStatic = (planets) => {
 };
 
 exports.drawMap = (planets) => {
-
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
       drawStatic(planets),
@@ -174,6 +192,10 @@ module.exports = cfg => {
 
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
+const cos = Math.cos;
+const sin = Math.sin;
+const PI = Math.PI;
+const sqrt = Math.sqrt;
 
 const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   a = a * Math.pow(10, 9);
@@ -181,21 +203,21 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   const mass = 2 * Math.pow(10, 30); // Central object mass, approximately sol
   const u = g * mass; // Standard gravitational parameter u
 
-  const calcMinorAxis = (a, e) => {return ( a * Math.sqrt(1 - e * e) );};
+  const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
   const b = (calcMinorAxis(a, e)); // minorAxis b[m]
 
-  const calcFocalShift = (a, b) => {return ( Math.sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );};
+  const calcFocalShift = (a, b) => {return ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );};
   const focalShift = (calcFocalShift(a, b)); // distance of focus from elypse center
 
   const epoch = t0; //epoch (given) (days)
 
   const calcMat = (t, epoch) => {
     let tdiff = ( 86400 * ( t - epoch ) );
-    let mat = maz + ( tdiff * Math.sqrt( u / Math.pow(a, 3) ) );
+    let mat = maz + ( tdiff * sqrt( u / Math.pow(a, 3) ) );
     while (mat < 0) {
-      mat += Math.PI * 2;
+      mat += PI * 2;
     }
-    mat = mat % (Math.PI * 2);
+    mat = mat % (PI * 2);
     return mat;
   }; // Mean anomaly at epoch M(t)
   const mat = calcMat(t, epoch); // Mean Anomaly at Time
@@ -205,7 +227,7 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   const calcEAT = (e, mat) => {
     let eat = mat;
     for (let i = 0; i < itter; i++) {
-      eat = eat - ( (eat - ( e * Math.sin(eat) ) - mat) / ( 1 - e * Math.cos(eat) ) );
+      eat = eat - ( (eat - ( e * sin(eat) ) - mat) / ( 1 - e * cos(eat) ) );
     }
     return eat;
   }; // Eccentric anomaly at time E(t)
@@ -213,33 +235,31 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
 
   const calcTAT = (e, eat) => {
     return ( 2 * Math.atan2(
-      ( Math.sqrt(1 + e) * Math.sin(eat / 2) ),
-      ( Math.sqrt(1 - e) * Math.cos(eat / 2) )
+      ( sqrt(1 + e) * sin(eat / 2) ),
+      ( sqrt(1 - e) * cos(eat / 2) )
     ) );
   }; // True Anomaly at Time v(t)
   const tat = calcTAT(e, eat);
 
   const calcDisanceToCentral = (a, e, eat) => {
-    return ( a * ( 1 - ( e * Math.cos(eat) ) ) );
+    return ( a * ( 1 - ( e * cos(eat) ) ) );
   };
   const dist = calcDisanceToCentral(a, e, eat);
 
   // Positional vectors in orbital frame o(t)
-  const ox = dist * Math.cos(tat);
-  const oy = dist * Math.sin(tat);
+  const ox = dist * cos(tat);
+  const oy = dist * sin(tat);
   // const oz = 0;
 
-  const x = ( ox * ( (Math.cos(w) * Math.cos(lang)) - (Math.sin(w) * Math.cos(inc) * Math.sin(lang)) ) - oy * ( (Math.sin(w) * Math.cos(lang)) + (Math.cos(w) * Math.cos(inc) * Math.sin(lang)) ) );
-  const y = ( ox * ( (Math.cos(w) * Math.sin(lang)) + (Math.sin(w) * Math.cos(inc) * Math.cos(lang)) ) + oy * ( (Math.cos(w) * Math.cos(inc) * Math.cos(lang)) - (Math.sin(w) * Math.sin(lang)) ) );
-  const z = ( ox * ( Math.sin(w) * Math.sin(inc) ) + oy * ( Math.cos(w) * Math.sin(inc) ) );
+  const x = ( ox * ( (cos(w) * cos(lang)) - (sin(w) * cos(inc) * sin(lang)) ) - oy * ( (sin(w) * cos(lang)) + (cos(w) * cos(inc) * sin(lang)) ) );
+  const y = ( ox * ( (cos(w) * sin(lang)) + (sin(w) * cos(inc) * cos(lang)) ) + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
+  const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
 
   return { x: x, y: y, z: z, focalShift: focalShift };
 };
 
 const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
-
   const planDat = kepCalc(a, e, t, t0, w, lang, inc, maz);
-
   const planet = {
     name: name,
     objectRadius: 5,
@@ -253,7 +273,6 @@ const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
     lang: lang,
     inc: inc,
     maz: maz,
-    // epoch: epoch,
 
     focalShift: planDat.focalShift,
     x: planDat.x,
@@ -268,10 +287,7 @@ async function delay(ms) {
 }
 
 const main = async () => {
-
   // 1 AU = 150 million km
-  // let t = 0;
-
   const planets = [];
   // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
   planets.push(
@@ -292,7 +308,7 @@ const main = async () => {
       0.2,    // eccentricity (e)
       0,      // time (t)
       0,      // epoch (days)
-      4,      // argument of periapsis (w)
+      2,      // argument of periapsis (w)
       1.6,      // longitude of ascention node (lang)
       0.5,    // inclanation (inc)
       0       // mean anomaly at zero (maz)
@@ -323,14 +339,11 @@ const main = async () => {
       planets[i].x = newData.x;
       planets[i].y = newData.y;
       planets[i].z = newData.z;
-      // console.log(planets[i]);
     }
 
     render2(draw.drawMoving(planets, clock2));
-    // t += 0.1;
     await delay(2000);
   }
-  // return;
 };
 
 window.onload = main;

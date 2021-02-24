@@ -2,6 +2,10 @@
 
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
+const cos = Math.cos;
+const sin = Math.sin;
+const PI = Math.PI;
+const sqrt = Math.sqrt;
 
 //properties-------------
 const pageW = 700;
@@ -12,6 +16,7 @@ const centerY = pageH/2;
 
 //Artistic properties-------------
 const starRadius = 10;
+let windowWidth = 70; // width of planet data rectangles
 //--------------------------------
 
 const drawGrid = () => {
@@ -34,27 +39,27 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
   const calcEAT = (e, mat) => {
     let eat = mat;
     for (let i = 0; i < itter; i++) {
-      eat = eat - ( (eat - ( e * Math.sin(eat) ) - mat) / ( 1 - e * Math.cos(eat) ) );
+      eat = eat - ( (eat - ( e * sin(eat) ) - mat) / ( 1 - e * cos(eat) ) );
     }
     return eat;
   }; // Eccentric anomaly at time E(t)
   const eat = calcEAT(e, mat); // Eccentric anomaly at time
 
   const tat = ( 2 * Math.atan2(
-    ( Math.sqrt(1 + e) * Math.sin(eat / 2) ),
-    ( Math.sqrt(1 - e) * Math.cos(eat / 2) )
+    ( sqrt(1 + e) * sin(eat / 2) ),
+    ( sqrt(1 - e) * cos(eat / 2) )
   ) );
 
-  const dist = ( a * ( 1 - ( e * Math.cos(eat) ) ) );
+  const dist = ( a * ( 1 - ( e * cos(eat) ) ) );
 
   // Positional vectors in orbital frame o(t)
-  const ox = dist * Math.cos(tat);
-  const oy = dist * Math.sin(tat);
+  const ox = dist * cos(tat);
+  const oy = dist * sin(tat);
   // const oz = 0;
 
-  const x = ( ox * ( (Math.cos(w) * Math.cos(lang)) - (Math.sin(w) * Math.cos(inc) * Math.sin(lang)) ) - oy * ( (Math.sin(w) * Math.cos(lang)) + (Math.cos(w) * Math.cos(inc) * Math.sin(lang)) ) );
-  const y = ( ox * ( (Math.cos(w) * Math.sin(lang)) + (Math.sin(w) * Math.cos(inc) * Math.cos(lang)) ) + oy * ( (Math.cos(w) * Math.cos(inc) * Math.cos(lang)) - (Math.sin(w) * Math.sin(lang)) ) );
-  const z = ( ox * ( Math.sin(w) * Math.sin(inc) ) + oy * ( Math.cos(w) * Math.sin(inc) ) );
+  const x = ( ox * ( (cos(w) * cos(lang)) - (sin(w) * cos(inc) * sin(lang)) ) - oy * ( (sin(w) * cos(lang)) + (cos(w) * cos(inc) * sin(lang)) ) );
+  const y = ( ox * ( (cos(w) * sin(lang)) + (sin(w) * cos(inc) * cos(lang)) ) + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
+  const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
 
   return { x: x, y: y, z: z};
 };
@@ -68,7 +73,7 @@ const drawOrbits = (planets) => {
     let coords = 'M ';
     let points = 128;
     for (let i = 0; i < points; i++) {
-      let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * Math.PI)/points, planet.w, planet.lang, planet.inc );
+      let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * PI)/points, planet.w, planet.lang, planet.inc );
       if (i === 0) {
         divline1 = currCoord;
       } else if (Math.abs(points/2 - i) < 1) {
@@ -91,9 +96,9 @@ const drawOrbits = (planets) => {
   return retGroup;
 };
 
-// const calcDist = (planet1, planet2) => {
-//   return Math.sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
-// };
+const calcDist = (planet1, planet2) => {
+  return sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
+};
 
 exports.drawMoving = (planets, clock) => {
   const drawn = ['g', {}];
@@ -104,11 +109,25 @@ exports.drawMoving = (planets, clock) => {
     ]
   );
   for (let i = 0; i < planets.length; i++) {
-    let windowWidth = 70;
     let xWindShift = 0;
     if (planets[i].x / Math.pow(10, 9) > 250) {
       xWindShift = -windowWidth;
     }
+
+    // for (let j = 0; j < planets.length; j++) {
+    //   if (i !== j) {
+    //     let dist = calcDist(planets[i], planets[j] );
+    //     if (dist / Math.pow(10, 9) < (windowWidth * 2) && dist / Math.pow(10, 9) > 0) {
+    //       console.log('here');
+    //       xWindShift = -windowWidth;
+    //     }
+    //   }
+    // }
+    for (let j = i + 1; j < planets.length; j++) {
+      let dist = calcDist(planets[i], planets[j] );
+      // console.log(dist);
+    }
+
     drawn.push(
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['g', tt(xWindShift, 0),
@@ -144,7 +163,6 @@ const drawStatic = (planets) => {
 };
 
 exports.drawMap = (planets) => {
-
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
       drawStatic(planets),

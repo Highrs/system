@@ -17,7 +17,7 @@ html, body {
 }
 .majorObject {
   fill: #1a1a1a;
-  stroke-width: 3px;
+  stroke-width: 2px;
   stroke: #00ff66ff;
 }
 .majorOrbit {
