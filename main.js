@@ -1,7 +1,7 @@
 'use strict';
 
 const draw = require('./draw.js');
-const onml = require('onml');
+const renderer = require('onml/renderer.js');
 
 const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   a = a * Math.pow(10, 9);
@@ -137,9 +137,9 @@ const main = async () => {
       0       // mean anomaly at zero (maz)
     )
   );
-  onml.renderer(document.getElementById('content'))(draw.drawMap(planets));
-  const render2 = onml.renderer(document.getElementById('moving'));
-  while (true) {
+  renderer(document.getElementById('content'))(draw.drawMap(planets));
+  const render2 = renderer(document.getElementById('moving'));
+  while (Date.now()) {
     const clock = Date.now();
     const t = clock / Math.pow(10, 3);
 

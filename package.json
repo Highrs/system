@@ -12,14 +12,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "browserify": "^17.0.0",
-    "lodash": "^4.17.20",
     "onml": "^2.1.0",
-    "tspan": "^0.4.0",
-    "watchify": "^3.11.1"
+    "tspan": "^0.4.0"
   },
   "devDependencies": {
-    "eslint": "^7.20.0"
+    "eslint": "^7.20.0",
+    "browserify": "^17.0.0",
+    "watchify": "^3.11.1"
   },
   "eslintConfig": {
     "env": {

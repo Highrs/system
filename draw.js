@@ -1,7 +1,7 @@
 'use strict';
 
 const getSvg = require('./get-svg.js');
-const onml = require('onml');
+const tt = require('onml/tt.js');
 
 //properties-------------
 const pageW = 700;
@@ -91,14 +91,14 @@ const drawOrbits = (planets) => {
   return retGroup;
 };
 
-const calcDist = (planet1, planet2) => {
-  return Math.sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
-};
+// const calcDist = (planet1, planet2) => {
+//   return Math.sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
+// };
 
 exports.drawMoving = (planets, clock) => {
   const drawn = ['g', {}];
   drawn.push(
-    ['g', onml.tt( -centerX, -centerY ),
+    ['g', tt( -centerX, -centerY ),
       ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
       ['text', {x: 55, y: 15, class: 'dataText'}, clock]
     ]
@@ -110,8 +110,8 @@ exports.drawMoving = (planets, clock) => {
       xWindShift = -windowWidth;
     }
     drawn.push(
-      ['g', onml.tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
-        ['g', onml.tt(xWindShift, 0),
+      ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
+        ['g', tt(xWindShift, 0),
           ['rect', {width: windowWidth, height: 45, class: 'dataWindow'}],
           ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
           ['text', {x: 3, y: 20, class: 'dataText'},
@@ -146,7 +146,7 @@ const drawStatic = (planets) => {
 exports.drawMap = (planets) => {
 
   return getSvg({w:pageW, h:pageH}).concat([
-    ['g', onml.tt(centerX, centerY),
+    ['g', tt(centerX, centerY),
       drawStatic(planets),
       ['g', {id: 'moving'}]
       // drawMoving(planets, t)
