@@ -137,7 +137,7 @@ const main = async () => {
         t,      // time (t)
         0,      // epoch (days)
         4,      // argument of periapsis (w)
-        2,      // longitude of ascention node (lang)
+        1.6,      // longitude of ascention node (lang)
         0.5,    // inclanation (inc)
         0       // mean anomaly at zero (maz)
       ),
