@@ -8,8 +8,8 @@ const PI = Math.PI;
 const sqrt = Math.sqrt;
 
 //properties-------------
-const pageW = 700;
-const pageH = 700;
+const pageW = 800;
+const pageH = 800;
 const centerX = pageW/2;
 const centerY = pageH/2;
 //-----------------------
@@ -22,8 +22,9 @@ let windowWidth = 70; // width of planet data rectangles
 const drawGrid = () => {
   let grid = ['g', {}];
   let crossSize = 5;
-  for (let x = -pageW / 2 + 50; x < 700 / 2; x += 50) {
-    for (let y = -pageH / 2 + 50; y < 700 / 2; y += 50) {
+  
+  for (let x = -pageW / 2 + 50; x < pageW / 2; x += 50) {
+    for (let y = -pageH / 2 + 50; y < pageH / 2; y += 50) {
       grid.push(
         ['line', { x1: x - crossSize, y1: y, x2: x + crossSize, y2: y, class: 'grid'}],
         ['line', { x1: x, y1: y + crossSize, x2: x, y2: y - crossSize, class: 'grid'}]
@@ -68,10 +69,12 @@ const drawOrbits = (planets) => {
   let divline1;
   let divline2;
   let retGroup = ['g', {}];
+
   for (let i = 0; i < planets.length; i++) {
     let planet = planets[i];
     let coords = 'M ';
     let points = 128;
+
     for (let i = 0; i < points; i++) {
       let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * PI)/points, planet.w, planet.lang, planet.inc );
       if (i === 0) {
@@ -88,6 +91,7 @@ const drawOrbits = (planets) => {
         coords += 'L';
       }
     }
+
     retGroup.push(['path', { d: coords, class: 'majorOrbit' }]);
     retGroup.push(['line', {x1: divline1.x, y1: divline1.y, x2: divline2.x, y2: divline2.y, class: 'minorOrbit'}]);
     retGroup.push(['path', { d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5)  + 'L' + (divline1.x) + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5) + 'Z', class: 'symbolLine'}]);
@@ -108,21 +112,13 @@ exports.drawMoving = (planets, clock) => {
       ['text', {x: 55, y: 15, class: 'dataText'}, clock]
     ]
   );
+
   for (let i = 0; i < planets.length; i++) {
     let xWindShift = 0;
     if (planets[i].x / Math.pow(10, 9) > 250) {
       xWindShift = -windowWidth;
     }
 
-    // for (let j = 0; j < planets.length; j++) {
-    //   if (i !== j) {
-    //     let dist = calcDist(planets[i], planets[j] );
-    //     if (dist / Math.pow(10, 9) < (windowWidth * 2) && dist / Math.pow(10, 9) > 0) {
-    //       console.log('here');
-    //       xWindShift = -windowWidth;
-    //     }
-    //   }
-    // }
     for (let j = i + 1; j < planets.length; j++) {
       let dist = calcDist(planets[i], planets[j] );
       // console.log(dist);

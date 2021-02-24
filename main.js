@@ -104,7 +104,7 @@ const main = async () => {
     makePlanet(
       'Alpha', // name
       150,    // semi-major axis (a)
-      0.8,    // eccentricity (e)
+      0.6,    // eccentricity (e)
       0,      // time (days) (t)
       0,      // epoch (days) (t0)
       2,      // argument of periapsis (w)
@@ -135,8 +135,10 @@ const main = async () => {
       0       // mean anomaly at zero (maz)
     )
   );
+
   renderer(document.getElementById('content'))(draw.drawMap(planets));
   const render2 = renderer(document.getElementById('moving'));
+  
   while (Date.now()) {
     const clock = Date.now();
     const t = clock / Math.pow(10, 3);

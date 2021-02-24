@@ -70,7 +70,6 @@ html, body {
   stroke: #00ff66ff;
   stroke-dasharray: 3 3;
 }
-
 @keyframes stroke {
   to {
     stroke-dashoffset: 0;
