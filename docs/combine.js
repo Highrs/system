@@ -127,6 +127,12 @@ exports.drawMoving = (planets, clock) => {
     for (let j = i + 1; j < planets.length; j++) {
       let dist = calcDist(planets[i], planets[j] );
       // console.log(dist);
+      drawn.push(['line', { x1: planets[i].x / Math.pow(10, 9), y1: planets[i].y / Math.pow(10, 9), x2: planets[j].x / Math.pow(10, 9), y2: planets[j].y / Math.pow(10, 9), class: 'rangeLine' } ]);
+      drawn.push(['g', tt(( ( (planets[j].x / Math.pow(10, 9)) + (planets[i].x / Math.pow(10, 9) ) ) / 2), ( ( (planets[j].y / Math.pow(10, 9)) + (planets[i].y / Math.pow(10, 9) ) ) / 2)),
+        ['rect', {width: 45, height: 10, class: 'dataWindow'}],
+        ['text', {
+          x: 2, y: 9, class: 'rangeText'}, (dist / Math.pow(10, 9)).toFixed(2)]
+      ]);
     }
 
     drawn.push(
@@ -315,11 +321,11 @@ const main = async () => {
     ),
     makePlanet(
       'Gamma', // name
-      300,    // semi-major axis (a)
-      0.0,    // eccentricity (e)
+      280,    // semi-major axis (a)
+      0.1,    // eccentricity (e)
       0,      // time (t)
       0,      // epoch (days)
-      0,      // argument of periapsis (w)
+      1.5,      // argument of periapsis (w)
       0,      // longitude of ascention node (lang)
       0,      // inclanation (inc)
       0       // mean anomaly at zero (maz)
@@ -330,9 +336,7 @@ const main = async () => {
   while (Date.now()) {
     const clock = Date.now();
     const t = clock / Math.pow(10, 3);
-
     const clock2 = Date(clock);
-
 
     for (let i = 0; i < planets.length; i++) {
       let newData = kepCalc(planets[i].a, planets[i].e, t, planets[i].t0, planets[i].w, planets[i].lang, planets[i].inc, planets[i].maz);

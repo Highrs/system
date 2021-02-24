@@ -126,6 +126,12 @@ exports.drawMoving = (planets, clock) => {
     for (let j = i + 1; j < planets.length; j++) {
       let dist = calcDist(planets[i], planets[j] );
       // console.log(dist);
+      drawn.push(['line', { x1: planets[i].x / Math.pow(10, 9), y1: planets[i].y / Math.pow(10, 9), x2: planets[j].x / Math.pow(10, 9), y2: planets[j].y / Math.pow(10, 9), class: 'rangeLine' } ]);
+      drawn.push(['g', tt(( ( (planets[j].x / Math.pow(10, 9)) + (planets[i].x / Math.pow(10, 9) ) ) / 2), ( ( (planets[j].y / Math.pow(10, 9)) + (planets[i].y / Math.pow(10, 9) ) ) / 2)),
+        ['rect', {width: 45, height: 10, class: 'dataWindow'}],
+        ['text', {
+          x: 2, y: 9, class: 'rangeText'}, (dist / Math.pow(10, 9)).toFixed(2)]
+      ]);
     }
 
     drawn.push(

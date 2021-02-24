@@ -125,11 +125,11 @@ const main = async () => {
     ),
     makePlanet(
       'Gamma', // name
-      300,    // semi-major axis (a)
-      0.0,    // eccentricity (e)
+      280,    // semi-major axis (a)
+      0.1,    // eccentricity (e)
       0,      // time (t)
       0,      // epoch (days)
-      0,      // argument of periapsis (w)
+      1.5,      // argument of periapsis (w)
       0,      // longitude of ascention node (lang)
       0,      // inclanation (inc)
       0       // mean anomaly at zero (maz)
@@ -140,9 +140,7 @@ const main = async () => {
   while (Date.now()) {
     const clock = Date.now();
     const t = clock / Math.pow(10, 3);
-
     const clock2 = Date(clock);
-
 
     for (let i = 0; i < planets.length; i++) {
       let newData = kepCalc(planets[i].a, planets[i].e, t, planets[i].t0, planets[i].w, planets[i].lang, planets[i].inc, planets[i].maz);
