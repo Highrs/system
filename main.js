@@ -9,10 +9,10 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   const mass = 2 * Math.pow(10, 30); // Central object mass, approximately sol
   const u = g * mass; // Standard gravitational parameter u
 
-  const calcMinorAxis = (a, e) => {return ( a * Math.sqrt(1 - e * e) );}
+  const calcMinorAxis = (a, e) => {return ( a * Math.sqrt(1 - e * e) );};
   const b = (calcMinorAxis(a, e)); // minorAxis b[m]
 
-  const calcFocalShift = (a, b) => {return ( Math.sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );}
+  const calcFocalShift = (a, b) => {return ( Math.sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );};
   const focalShift = (calcFocalShift(a, b)); // distance of focus from elypse center
 
   const epoch = t0; //epoch (given) (days)
@@ -23,9 +23,9 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
     while (mat < 0) {
       mat += Math.PI * 2;
     }
-    mat = mat % (Math.PI * 2)
+    mat = mat % (Math.PI * 2);
     return mat;
-  } // Mean anomaly at epoch M(t)
+  }; // Mean anomaly at epoch M(t)
   const mat = calcMat(t, epoch); // Mean Anomaly at Time
 
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
@@ -36,7 +36,7 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
       eat = eat - ( (eat - ( e * Math.sin(eat) ) - mat) / ( 1 - e * Math.cos(eat) ) );
     }
     return eat;
-  } // Eccentric anomaly at time E(t)
+  }; // Eccentric anomaly at time E(t)
   const eat = calcEAT(e, mat); // Eccentric anomaly at time
 
   const calcTAT = (e, eat) => {
@@ -44,12 +44,12 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
       ( Math.sqrt(1 + e) * Math.sin(eat / 2) ),
       ( Math.sqrt(1 - e) * Math.cos(eat / 2) )
     ) );
-  } // True Anomaly at Time v(t)
+  }; // True Anomaly at Time v(t)
   const tat = calcTAT(e, eat);
 
   const calcDisanceToCentral = (a, e, eat) => {
     return ( a * ( 1 - ( e * Math.cos(eat) ) ) );
-  }
+  };
   const dist = calcDisanceToCentral(a, e, eat);
 
   // Positional vectors in orbital frame o(t)
@@ -62,7 +62,7 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   const z = ( ox * ( Math.sin(w) * Math.sin(inc) ) + oy * ( Math.cos(w) * Math.sin(inc) ) );
 
   return { x: x, y: y, z: z, focalShift: focalShift };
-}
+};
 
 const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
 
@@ -87,9 +87,9 @@ const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
     x: planDat.x,
     y: planDat.y,
     z: planDat.z,
-  }
+  };
   return planet;
-}
+};
 
 async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
@@ -159,6 +159,6 @@ const main = async () => {
     await delay(2000);
   }
   // return;
-}
+};
 
 window.onload = main;

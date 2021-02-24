@@ -37,7 +37,7 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
       eat = eat - ( (eat - ( e * Math.sin(eat) ) - mat) / ( 1 - e * Math.cos(eat) ) );
     }
     return eat;
-  } // Eccentric anomaly at time E(t)
+  }; // Eccentric anomaly at time E(t)
   const eat = calcEAT(e, mat); // Eccentric anomaly at time
 
   const tat = ( 2 * Math.atan2(
@@ -84,9 +84,9 @@ const drawOrbits = (planets) => {
       }
     }
     retGroup.push(['path', { d: coords, class: 'majorOrbit' }]);
-    retGroup.push(['line', {x1: divline1.x, y1: divline1.y, x2: divline2.x, y2: divline2.y, class: 'minorOrbit'}])
-    retGroup.push(['path', { d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5)  + 'L' + (divline1.x) + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5) + 'Z', class: 'symbolLine'}])
-    retGroup.push(['path', { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)  + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}])
+    retGroup.push(['line', {x1: divline1.x, y1: divline1.y, x2: divline2.x, y2: divline2.y, class: 'minorOrbit'}]);
+    retGroup.push(['path', { d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5)  + 'L' + (divline1.x) + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5) + 'Z', class: 'symbolLine'}]);
+    retGroup.push(['path', { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)  + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}]);
   }
   return retGroup;
 };
@@ -102,7 +102,7 @@ exports.drawMoving = (planets, clock) => {
       ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
       ['text', {x: 55, y: 15, class: 'dataText'}, clock]
     ]
-  )
+  );
   for (let i = 0; i < planets.length; i++) {
     let windowWidth = 70;
     let xWindShift = 0;
@@ -126,10 +126,10 @@ exports.drawMoving = (planets, clock) => {
         ],
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
       ]
-    )
+    );
   }
   return drawn;
-}
+};
 
 const star = ['g', {},
   ['circle', { r: starRadius, class: 'majorObject'}]
@@ -140,7 +140,7 @@ const drawStatic = (planets) => {
     drawGrid(),
     drawOrbits(planets),
     star
-  ]
+  ];
 };
 
 exports.drawMap = (planets) => {
