@@ -62,6 +62,8 @@ const orbitCoords = (a, e, mat, w, lang, inc) => {
 }
 
 const drawOrbits = (planets) => {
+  let divline1;
+  let divline2;
   let retGroup = ['g', {}];
   for (let i = 0; i < planets.length; i++) {
     let planet = planets[i];
@@ -69,6 +71,11 @@ const drawOrbits = (planets) => {
     let points = 128;
     for (let i = 0; i < points; i++) {
       let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * Math.PI)/points, planet.w, planet.lang, planet.inc );
+      if (i === 0) {
+        divline1 = currCoord;
+      } else if (Math.abs(points/2 - i) < 1) {
+        divline2 = currCoord;
+      }
       coords += currCoord.x;
       coords += ',';
       coords += currCoord.y;
@@ -79,6 +86,7 @@ const drawOrbits = (planets) => {
       }
     }
     retGroup.push(['path', { d: coords, class: 'majorOrbit' }]);
+    retGroup.push(['line', {x1: divline1.x, y1: divline1.y, x2: divline2.x, y2: divline2.y, class: 'minorOrbit'}])
   }
   return retGroup;
 }
@@ -92,14 +100,15 @@ const drawMoving = (planets, t) => {
     ]
   )
   for (let i = 0; i < planets.length; i++) {
+    let windowWidth = 70;
     let xWindShift = 0;
     if (planets[i].x / Math.pow(10, 9) > 250) {
-      xWindShift = -70;
+      xWindShift = -windowWidth;
     }
     drawn.push(
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['g', tt(xWindShift, 0),
-          ['rect', {width: 70, height: 45, class: 'dataWindow'}],
+          ['rect', {width: windowWidth, height: 45, class: 'dataWindow'}],
           ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
           ['text', {x: 3, y: 20, class: 'dataText'},
             'X:' + (planets[i].x / Math.pow(10, 9)).toFixed(2)
@@ -125,8 +134,8 @@ const star = ['g', {},
 const drawStatic = (planets) => {
   return ['g', {},
     drawGrid(),
-    star,
-    drawOrbits(planets)
+    drawOrbits(planets),
+    star
   ]
 }
 
