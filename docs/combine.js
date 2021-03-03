@@ -175,7 +175,7 @@ exports.drawMap = (planets) => {
   ]);
 };
 
-},{"./get-svg.js":2,"onml/tt.js":6}],2:[function(require,module,exports){
+},{"./get-svg.js":2,"onml/tt.js":7}],2:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -194,6 +194,7 @@ module.exports = cfg => {
 
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
+const majorObjects = require('./majorObjects.json');
 const cos = Math.cos;
 const sin = Math.sin;
 const PI = Math.PI;
@@ -289,48 +290,40 @@ async function delay(ms) {
 }
 
 const main = async () => {
+  console.log("Giant alien spiders are no joke!");
   // 1 AU = 150 million km
   const planets = [];
   // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
-  planets.push(
-    makePlanet(
-      'Alpha', // name
-      150,    // semi-major axis (a)
-      0.6,    // eccentricity (e)
-      0,      // time (days) (t)
-      0,      // epoch (days) (t0)
-      2,      // argument of periapsis (w)
-      0,      // longitude of ascention node (lang)
-      1,      // inclanation (inc)
-      0       // mean anomaly at zero (maz)
-    ),
-    makePlanet(
-      'Beta', // name
-      200,    // semi-major axis (a)
-      0.2,    // eccentricity (e)
-      0,      // time (t)
-      0,      // epoch (days)
-      2,      // argument of periapsis (w)
-      1.6,      // longitude of ascention node (lang)
-      0.5,    // inclanation (inc)
-      0       // mean anomaly at zero (maz)
-    ),
-    makePlanet(
-      'Gamma', // name
-      280,    // semi-major axis (a)
-      0.1,    // eccentricity (e)
-      0,      // time (t)
-      0,      // epoch (days)
-      1.5,      // argument of periapsis (w)
-      0,      // longitude of ascention node (lang)
-      0,      // inclanation (inc)
-      0       // mean anomaly at zero (maz)
-    )
-  );
+
+  // name
+  // semi-major axis (a)
+  // eccentricity (e)
+  // time (days) (t)
+  // epoch (days) (t0)
+  // argument of periapsis (w)
+  // longitude of ascention node (lang)
+  // inclanation (inc)
+  // mean anomaly at zero (maz)
+
+  const listOfPlanets = Object.keys(majorObjects.planets);
+  for (let i = 0; i < listOfPlanets.length; i++) {
+    // console.log(planets);
+    planets.push(makePlanet(
+      majorObjects.planets[listOfPlanets[i]].name,
+      majorObjects.planets[listOfPlanets[i]].a,
+      majorObjects.planets[listOfPlanets[i]].e,
+      majorObjects.planets[listOfPlanets[i]].t,
+      majorObjects.planets[listOfPlanets[i]].t0,
+      majorObjects.planets[listOfPlanets[i]].w,
+      majorObjects.planets[listOfPlanets[i]].lang,
+      majorObjects.planets[listOfPlanets[i]].inc,
+      majorObjects.planets[listOfPlanets[i]].maz
+    ));
+  }
 
   renderer(document.getElementById('content'))(draw.drawMap(planets));
   const render2 = renderer(document.getElementById('moving'));
-  
+
   while (Date.now()) {
     const clock = Date.now();
     const t = clock / Math.pow(10, 3);
@@ -350,7 +343,46 @@ const main = async () => {
 
 window.onload = main;
 
-},{"./draw.js":1,"onml/renderer.js":4}],4:[function(require,module,exports){
+},{"./draw.js":1,"./majorObjects.json":4,"onml/renderer.js":5}],4:[function(require,module,exports){
+module.exports={
+  "planets": {
+    "alpha": {
+      "name": "Alpha",
+      "a":    150,
+      "e":    0.6,
+      "t":    0,
+      "t0":   0,
+      "w":    2,
+      "lang": 0,
+      "inc":  1,
+      "maz":  0
+    },
+    "beta": {
+      "name": "Beta",
+      "a":    200,
+      "e":    0.2,
+      "t":    0,
+      "t0":   0,
+      "w":    2,
+      "lang": 1.6,
+      "inc":  0.5,
+      "maz":  0
+    },
+    "gamma": {
+      "name": "Gamma",
+      "a":    280,
+      "e":    0.1,
+      "t":    0,
+      "t0":   0,
+      "w":    1.5,
+      "lang": 0,
+      "inc":  0,
+      "maz":  0
+    }
+  }
+}
+
+},{}],5:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');
@@ -375,7 +407,7 @@ module.exports = renderer;
 
 /* eslint-env browser */
 
-},{"./stringify.js":5}],5:[function(require,module,exports){
+},{"./stringify.js":6}],6:[function(require,module,exports){
 'use strict';
 
 const isObject = o => o && Object.prototype.toString.call(o) === '[object Object]';
@@ -468,7 +500,7 @@ function stringify (a, indentation) {
 
 module.exports = stringify;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 module.exports = (x, y, obj) => {
