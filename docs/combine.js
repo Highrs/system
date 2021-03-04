@@ -222,7 +222,7 @@ const kepCalc = (planeto, t) => {
 
   const calcFocalShift = (a, b) => {
     return ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );};
-  const focalShift = (calcFocalShift(a, b)); // distance of focus from elypse center
+  const focalShift = (calcFocalShift(a, b)); // distance of focus from center
 
   const epoch = t0; //epoch (given) (days)
 
@@ -266,8 +266,10 @@ const kepCalc = (planeto, t) => {
   const oy = dist * sin(tat);
   // const oz = 0;
 
-  const x = ( ox * ( (cos(w) * cos(lang)) - (sin(w) * cos(inc) * sin(lang)) ) - oy * ( (sin(w) * cos(lang)) + (cos(w) * cos(inc) * sin(lang)) ) );
-  const y = ( ox * ( (cos(w) * sin(lang)) + (sin(w) * cos(inc) * cos(lang)) ) + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
+  const x = ( ox * ( (cos(w) * cos(lang)) - (sin(w) * cos(inc) * sin(lang)) )
+    - oy * ( (sin(w) * cos(lang)) + (cos(w) * cos(inc) * sin(lang)) ) );
+  const y = ( ox * ( (cos(w) * sin(lang)) + (sin(w) * cos(inc) * cos(lang)) )
+    + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
   const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
 
   return { x: x, y: y, z: z, focalShift: focalShift };
@@ -275,16 +277,7 @@ const kepCalc = (planeto, t) => {
 
 const makePlanet = (planeto) => {
 //name, a, e, t, t0, w, lang, inc, maz
-  const planDat = kepCalc(
-    planeto.a,
-    planeto.e,
-    planeto.t,
-    planeto.t0,
-    planeto.w,
-    planeto.lang,
-    planeto.inc,
-    planeto.maz
-  );
+  const planDat = kepCalc(planeto, 0);
 
   const planet = {
     name: planeto.name,
@@ -305,6 +298,7 @@ const makePlanet = (planeto) => {
     y: planDat.y,
     z: planDat.z,
   };
+
   return planet;
 };
 
