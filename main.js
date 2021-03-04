@@ -3,12 +3,21 @@
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
 const majorObjects = require('./majorObjects.json');
-const cos = Math.cos;
-const sin = Math.sin;
-const PI = Math.PI;
+const cos  = Math.cos;
+const sin  = Math.sin;
+const PI   = Math.PI;
 const sqrt = Math.sqrt;
 
-const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
+const kepCalc = (planeto, t) => {
+
+  let a    = planeto.a;
+  let e    = planeto.e;
+  let t0   = planeto.t0;
+  let w    = planeto.w;
+  let lang = planeto.lang;
+  let inc  = planeto.inc;
+  let maz  = planeto.maz;
+
   a = a * Math.pow(10, 9);
   const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
   const mass = 2 * Math.pow(10, 30); // Central object mass, approximately sol
@@ -17,7 +26,8 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
   const b = (calcMinorAxis(a, e)); // minorAxis b[m]
 
-  const calcFocalShift = (a, b) => {return ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );};
+  const calcFocalShift = (a, b) => {
+    return ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );};
   const focalShift = (calcFocalShift(a, b)); // distance of focus from elypse center
 
   const epoch = t0; //epoch (given) (days)
@@ -69,21 +79,32 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   return { x: x, y: y, z: z, focalShift: focalShift };
 };
 
-const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
-  const planDat = kepCalc(a, e, t, t0, w, lang, inc, maz);
+const makePlanet = (planeto) => {
+//name, a, e, t, t0, w, lang, inc, maz
+  const planDat = kepCalc(
+    planeto.a,
+    planeto.e,
+    planeto.t,
+    planeto.t0,
+    planeto.w,
+    planeto.lang,
+    planeto.inc,
+    planeto.maz
+  );
+
   const planet = {
-    name: name,
+    name: planeto.name,
     objectRadius: 5,
 
-    a: a, // semiMajorAxis a[m] (given)
-    e: e, // eccentricity e[1] (given)
+    a: planeto.a, // semiMajorAxis a[m] (given)
+    e: planeto.e, // eccentricity e[1] (given)
     // b: b,
-    t: t,
-    t0: t0,
-    w: w,
-    lang: lang,
-    inc: inc,
-    maz: maz,
+    t: planeto.t,
+    t0: planeto.t0,
+    w: planeto.w,
+    lang: planeto.lang,
+    inc: planeto.inc,
+    maz: planeto.maz,
 
     focalShift: planDat.focalShift,
     x: planDat.x,
@@ -101,7 +122,6 @@ const main = async () => {
   console.log("Giant alien spiders are no joke!");
   // 1 AU = 150 million km
   const planets = [];
-  // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
 
   // name
   // semi-major axis (a)
@@ -113,21 +133,9 @@ const main = async () => {
   // inclanation (inc)
   // mean anomaly at zero (maz)
 
-  const listOfPlanets = Object.keys(majorObjects.planets);
-  for (let i = 0; i < listOfPlanets.length; i++) {
-    // console.log(planets);
-    planets.push(makePlanet(
-      majorObjects.planets[listOfPlanets[i]].name,
-      majorObjects.planets[listOfPlanets[i]].a,
-      majorObjects.planets[listOfPlanets[i]].e,
-      majorObjects.planets[listOfPlanets[i]].t,
-      majorObjects.planets[listOfPlanets[i]].t0,
-      majorObjects.planets[listOfPlanets[i]].w,
-      majorObjects.planets[listOfPlanets[i]].lang,
-      majorObjects.planets[listOfPlanets[i]].inc,
-      majorObjects.planets[listOfPlanets[i]].maz
-    ));
-  }
+  Object.keys(majorObjects.planets).forEach((k) => {
+    planets.push(makePlanet(majorObjects.planets[k]));
+  });
 
   renderer(document.getElementById('content'))(draw.drawMap(planets));
   const render2 = renderer(document.getElementById('moving'));
@@ -138,7 +146,7 @@ const main = async () => {
     const clock2 = Date(clock);
 
     for (let i = 0; i < planets.length; i++) {
-      let newData = kepCalc(planets[i].a, planets[i].e, t, planets[i].t0, planets[i].w, planets[i].lang, planets[i].inc, planets[i].maz);
+      let newData = kepCalc(planets[i], t);
       planets[i].x = newData.x;
       planets[i].y = newData.y;
       planets[i].z = newData.z;

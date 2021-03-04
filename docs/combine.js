@@ -9,21 +9,24 @@ const PI = Math.PI;
 const sqrt = Math.sqrt;
 
 //properties-------------
-const pageW = 800;
-const pageH = 800;
+const sh = screen.width*(0.9);
+const sw = screen.height*(0.9);
+const pageW = (sh < 900) ? 800 : sh - (sh % 100);
+const pageH = (sw < 800) ? 700 : sw - (sw % 100);
 const centerX = pageW/2;
 const centerY = pageH/2;
 //-----------------------
 
 //Artistic properties-------------
 const starRadius = 10;
-let windowWidth = 70; // width of planet data rectangles
+let windowWidth = 110; // width of planet data rectangles
+let windowHeight = 25;
 //--------------------------------
 
 const drawGrid = () => {
   let grid = ['g', {}];
   let crossSize = 5;
-  
+
   for (let x = -pageW / 2 + 50; x < pageW / 2; x += 50) {
     for (let y = -pageH / 2 + 50; y < pageH / 2; y += 50) {
       grid.push(
@@ -116,7 +119,7 @@ exports.drawMoving = (planets, clock) => {
 
   for (let i = 0; i < planets.length; i++) {
     let xWindShift = 0;
-    if (planets[i].x / Math.pow(10, 9) > 250) {
+    if (planets[i].x / Math.pow(10, 9) > pageW - 100) {
       xWindShift = -windowWidth;
     }
 
@@ -134,16 +137,15 @@ exports.drawMoving = (planets, clock) => {
     drawn.push(
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['g', tt(xWindShift, 0),
-          ['rect', {width: windowWidth, height: 45, class: 'dataWindow'}],
+          ['rect', {width: windowWidth, height: windowHeight, class: 'dataWindow'}],
           ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
           ['text', {x: 3, y: 20, class: 'dataText'},
-            'X:' + (planets[i].x / Math.pow(10, 9)).toFixed(2)
-          ],
-          ['text', {x: 3, y: 30, class: 'dataText'},
-            'Y:' + (planets[i].y / Math.pow(10, 9)).toFixed(2)
-          ],
-          ['text', {x: 3, y: 40, class: 'dataText'},
-            'Z:' + (planets[i].z / Math.pow(10, 9)).toFixed(2)
+            'XYZ:' +
+            (planets[i].x / Math.pow(10, 9)).toFixed(0) +
+            ' ' +
+            (planets[i].y / Math.pow(10, 9)).toFixed(0) +
+            ' ' +
+            (planets[i].z / Math.pow(10, 9)).toFixed(0)
           ]
         ],
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
@@ -195,12 +197,21 @@ module.exports = cfg => {
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
 const majorObjects = require('./majorObjects.json');
-const cos = Math.cos;
-const sin = Math.sin;
-const PI = Math.PI;
+const cos  = Math.cos;
+const sin  = Math.sin;
+const PI   = Math.PI;
 const sqrt = Math.sqrt;
 
-const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
+const kepCalc = (planeto, t) => {
+
+  let a    = planeto.a;
+  let e    = planeto.e;
+  let t0   = planeto.t0;
+  let w    = planeto.w;
+  let lang = planeto.lang;
+  let inc  = planeto.inc;
+  let maz  = planeto.maz;
+
   a = a * Math.pow(10, 9);
   const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
   const mass = 2 * Math.pow(10, 30); // Central object mass, approximately sol
@@ -209,7 +220,8 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
   const b = (calcMinorAxis(a, e)); // minorAxis b[m]
 
-  const calcFocalShift = (a, b) => {return ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );};
+  const calcFocalShift = (a, b) => {
+    return ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );};
   const focalShift = (calcFocalShift(a, b)); // distance of focus from elypse center
 
   const epoch = t0; //epoch (given) (days)
@@ -261,21 +273,32 @@ const kepCalc = (a, e, t, t0, w, lang, inc, maz) => {
   return { x: x, y: y, z: z, focalShift: focalShift };
 };
 
-const makePlanet = (name, a, e, t, t0, w, lang, inc, maz) => {
-  const planDat = kepCalc(a, e, t, t0, w, lang, inc, maz);
+const makePlanet = (planeto) => {
+//name, a, e, t, t0, w, lang, inc, maz
+  const planDat = kepCalc(
+    planeto.a,
+    planeto.e,
+    planeto.t,
+    planeto.t0,
+    planeto.w,
+    planeto.lang,
+    planeto.inc,
+    planeto.maz
+  );
+
   const planet = {
-    name: name,
+    name: planeto.name,
     objectRadius: 5,
 
-    a: a, // semiMajorAxis a[m] (given)
-    e: e, // eccentricity e[1] (given)
+    a: planeto.a, // semiMajorAxis a[m] (given)
+    e: planeto.e, // eccentricity e[1] (given)
     // b: b,
-    t: t,
-    t0: t0,
-    w: w,
-    lang: lang,
-    inc: inc,
-    maz: maz,
+    t: planeto.t,
+    t0: planeto.t0,
+    w: planeto.w,
+    lang: planeto.lang,
+    inc: planeto.inc,
+    maz: planeto.maz,
 
     focalShift: planDat.focalShift,
     x: planDat.x,
@@ -293,7 +316,6 @@ const main = async () => {
   console.log("Giant alien spiders are no joke!");
   // 1 AU = 150 million km
   const planets = [];
-  // makePlanet takes: (name, a, e, t, w, lang, inc, maz)
 
   // name
   // semi-major axis (a)
@@ -305,21 +327,9 @@ const main = async () => {
   // inclanation (inc)
   // mean anomaly at zero (maz)
 
-  const listOfPlanets = Object.keys(majorObjects.planets);
-  for (let i = 0; i < listOfPlanets.length; i++) {
-    // console.log(planets);
-    planets.push(makePlanet(
-      majorObjects.planets[listOfPlanets[i]].name,
-      majorObjects.planets[listOfPlanets[i]].a,
-      majorObjects.planets[listOfPlanets[i]].e,
-      majorObjects.planets[listOfPlanets[i]].t,
-      majorObjects.planets[listOfPlanets[i]].t0,
-      majorObjects.planets[listOfPlanets[i]].w,
-      majorObjects.planets[listOfPlanets[i]].lang,
-      majorObjects.planets[listOfPlanets[i]].inc,
-      majorObjects.planets[listOfPlanets[i]].maz
-    ));
-  }
+  Object.keys(majorObjects.planets).forEach((k) => {
+    planets.push(makePlanet(majorObjects.planets[k]));
+  });
 
   renderer(document.getElementById('content'))(draw.drawMap(planets));
   const render2 = renderer(document.getElementById('moving'));
@@ -330,7 +340,7 @@ const main = async () => {
     const clock2 = Date(clock);
 
     for (let i = 0; i < planets.length; i++) {
-      let newData = kepCalc(planets[i].a, planets[i].e, t, planets[i].t0, planets[i].w, planets[i].lang, planets[i].inc, planets[i].maz);
+      let newData = kepCalc(planets[i], t);
       planets[i].x = newData.x;
       planets[i].y = newData.y;
       planets[i].z = newData.z;
@@ -348,36 +358,46 @@ module.exports={
   "planets": {
     "alpha": {
       "name": "Alpha",
-      "a":    150,
-      "e":    0.6,
+      "a":    100,
+      "e":    0.3,
       "t":    0,
       "t0":   0,
       "w":    2,
       "lang": 0,
       "inc":  1,
-      "maz":  0
+      "maz":  0,
+      "industry": ["mining"],
+      "storage": {
+        "ore": 0
+      }
     },
     "beta": {
       "name": "Beta",
-      "a":    200,
-      "e":    0.2,
+      "a":    250,
+      "e":    0.1,
       "t":    0,
       "t0":   0,
       "w":    2,
       "lang": 1.6,
-      "inc":  0.5,
-      "maz":  0
+      "inc":  0.2,
+      "maz":  0,
+      "industry": ["refining"],
+      "storage": {
+        "metal": 0
+      }
     },
     "gamma": {
       "name": "Gamma",
-      "a":    280,
-      "e":    0.1,
+      "a":    350,
+      "e":    0.5,
       "t":    0,
       "t0":   0,
-      "w":    1.5,
+      "w":    0.1,
       "lang": 0,
-      "inc":  0,
-      "maz":  0
+      "inc":  0.1,
+      "maz":  0,
+      "industry": [],
+      "storage": {}
     }
   }
 }

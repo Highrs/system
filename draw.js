@@ -8,21 +8,24 @@ const PI = Math.PI;
 const sqrt = Math.sqrt;
 
 //properties-------------
-const pageW = 800;
-const pageH = 800;
+const sh = screen.width*(0.9);
+const sw = screen.height*(0.9);
+const pageW = (sh < 900) ? 800 : sh - (sh % 100);
+const pageH = (sw < 800) ? 700 : sw - (sw % 100);
 const centerX = pageW/2;
 const centerY = pageH/2;
 //-----------------------
 
 //Artistic properties-------------
 const starRadius = 10;
-let windowWidth = 70; // width of planet data rectangles
+let windowWidth = 110; // width of planet data rectangles
+let windowHeight = 25;
 //--------------------------------
 
 const drawGrid = () => {
   let grid = ['g', {}];
   let crossSize = 5;
-  
+
   for (let x = -pageW / 2 + 50; x < pageW / 2; x += 50) {
     for (let y = -pageH / 2 + 50; y < pageH / 2; y += 50) {
       grid.push(
@@ -115,7 +118,7 @@ exports.drawMoving = (planets, clock) => {
 
   for (let i = 0; i < planets.length; i++) {
     let xWindShift = 0;
-    if (planets[i].x / Math.pow(10, 9) > 250) {
+    if (planets[i].x / Math.pow(10, 9) > pageW - 100) {
       xWindShift = -windowWidth;
     }
 
@@ -133,16 +136,15 @@ exports.drawMoving = (planets, clock) => {
     drawn.push(
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['g', tt(xWindShift, 0),
-          ['rect', {width: windowWidth, height: 45, class: 'dataWindow'}],
+          ['rect', {width: windowWidth, height: windowHeight, class: 'dataWindow'}],
           ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
           ['text', {x: 3, y: 20, class: 'dataText'},
-            'X:' + (planets[i].x / Math.pow(10, 9)).toFixed(2)
-          ],
-          ['text', {x: 3, y: 30, class: 'dataText'},
-            'Y:' + (planets[i].y / Math.pow(10, 9)).toFixed(2)
-          ],
-          ['text', {x: 3, y: 40, class: 'dataText'},
-            'Z:' + (planets[i].z / Math.pow(10, 9)).toFixed(2)
+            'XYZ:' +
+            (planets[i].x / Math.pow(10, 9)).toFixed(0) +
+            ' ' +
+            (planets[i].y / Math.pow(10, 9)).toFixed(0) +
+            ' ' +
+            (planets[i].z / Math.pow(10, 9)).toFixed(0)
           ]
         ],
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
