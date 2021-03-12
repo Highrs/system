@@ -1,13 +1,12 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 'use strict';
-
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
-const cos = Math.cos;
-const sin = Math.sin;
+const mech = require('./mechanics.js');
+// const cos = Math.cos;
+// const sin = Math.sin;
 const PI = Math.PI;
 const sqrt = Math.sqrt;
-
 //properties-------------
 const sh = screen.width*(0.9);
 const sw = screen.height*(0.9);
@@ -15,12 +14,11 @@ const pageW = (sh < 900) ? 800 : sh - (sh % 100);
 const pageH = (sw < 800) ? 700 : sw - (sw % 100);
 const centerX = pageW/2;
 const centerY = pageH/2;
-//-----------------------
-
 //Artistic properties-------------
 const starRadius = 10;
-let windowWidth = 110; // width of planet data rectangles
+let windowWidth = 130; // width of planet data rectangles
 let windowHeight = 25;
+let distanceWindowLength = 44;
 //--------------------------------
 
 const drawGrid = () => {
@@ -38,37 +36,6 @@ const drawGrid = () => {
   return grid;
 };
 
-const orbitCoords = (a, e, mat, w, lang, inc) => {
-  // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
-  const itter = 3;
-  const calcEAT = (e, mat) => {
-    let eat = mat;
-    for (let i = 0; i < itter; i++) {
-      eat = eat - ( (eat - ( e * sin(eat) ) - mat) / ( 1 - e * cos(eat) ) );
-    }
-    return eat;
-  }; // Eccentric anomaly at time E(t)
-  const eat = calcEAT(e, mat); // Eccentric anomaly at time
-
-  const tat = ( 2 * Math.atan2(
-    ( sqrt(1 + e) * sin(eat / 2) ),
-    ( sqrt(1 - e) * cos(eat / 2) )
-  ) );
-
-  const dist = ( a * ( 1 - ( e * cos(eat) ) ) );
-
-  // Positional vectors in orbital frame o(t)
-  const ox = dist * cos(tat);
-  const oy = dist * sin(tat);
-  // const oz = 0;
-
-  const x = ( ox * ( (cos(w) * cos(lang)) - (sin(w) * cos(inc) * sin(lang)) ) - oy * ( (sin(w) * cos(lang)) + (cos(w) * cos(inc) * sin(lang)) ) );
-  const y = ( ox * ( (cos(w) * sin(lang)) + (sin(w) * cos(inc) * cos(lang)) ) + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
-  const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
-
-  return { x: x, y: y, z: z};
-};
-
 const drawOrbits = (planets) => {
   let divline1;
   let divline2;
@@ -80,7 +47,7 @@ const drawOrbits = (planets) => {
     let points = 128;
 
     for (let i = 0; i < points; i++) {
-      let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * PI)/points, planet.w, planet.lang, planet.inc );
+      let currCoord = mech.orbitCoords( planet.a, planet.e, (i * 2 * PI)/points, planet.w, planet.lang, planet.inc );
       if (i === 0) {
         divline1 = currCoord;
       } else if (Math.abs(points/2 - i) < 1) {
@@ -89,17 +56,17 @@ const drawOrbits = (planets) => {
       coords += currCoord.x;
       coords += ',';
       coords += currCoord.y;
-      if (i === points - 1) {
-        coords += 'Z';
-      } else {
-        coords += 'L';
-      }
+      (i === points - 1)?(coords += 'Z'):(coords += 'L');
     }
 
-    retGroup.push(['path', { d: coords, class: 'majorOrbit' }]);
-    retGroup.push(['line', {x1: divline1.x, y1: divline1.y, x2: divline2.x, y2: divline2.y, class: 'minorOrbit'}]);
-    retGroup.push(['path', { d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5)  + 'L' + (divline1.x) + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5) + 'Z', class: 'symbolLine'}]);
-    retGroup.push(['path', { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)  + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}]);
+    retGroup.push(['path',
+      { d: coords, class: 'majorOrbit' }]);
+    retGroup.push(['line',
+      {x1: divline1.x, y1: divline1.y, x2: divline2.x, y2: divline2.y, class: 'minorOrbit'}]);
+    retGroup.push(['path',
+      { d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5)  + 'L' + (divline1.x) + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5) + 'Z', class: 'symbolLine'}]);
+    retGroup.push(['path',
+      { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)  + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}]);
   }
   return retGroup;
 };
@@ -112,7 +79,7 @@ exports.drawMoving = (planets, clock) => {
   const drawn = ['g', {}];
   drawn.push(
     ['g', tt( -centerX, -centerY ),
-      ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
+      // ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
       ['text', {x: 55, y: 15, class: 'dataText'}, clock]
     ]
   );
@@ -128,7 +95,7 @@ exports.drawMoving = (planets, clock) => {
       // console.log(dist);
       drawn.push(['line', { x1: planets[i].x / Math.pow(10, 9), y1: planets[i].y / Math.pow(10, 9), x2: planets[j].x / Math.pow(10, 9), y2: planets[j].y / Math.pow(10, 9), class: 'rangeLine' } ]);
       drawn.push(['g', tt(( ( (planets[j].x / Math.pow(10, 9)) + (planets[i].x / Math.pow(10, 9) ) ) / 2 - 22), ( ( (planets[j].y / Math.pow(10, 9)) + (planets[i].y / Math.pow(10, 9) ) ) / 2 - 4.5)),
-        ['rect', {width: 44, height: 10, class: 'dataWindow'}],
+        ['rect', {width: distanceWindowLength, height: 10, class: 'dataWindow'}],
         ['text', {
           x: 2, y: 9, class: 'rangeText'}, (dist / Math.pow(10, 9)).toFixed(2)]
       ]);
@@ -172,12 +139,11 @@ exports.drawMap = (planets) => {
     ['g', tt(centerX, centerY),
       drawStatic(planets),
       ['g', {id: 'moving'}]
-      // drawMoving(planets, t)
     ]
   ]);
 };
 
-},{"./get-svg.js":2,"onml/tt.js":7}],2:[function(require,module,exports){
+},{"./get-svg.js":2,"./mechanics.js":6,"onml/tt.js":9}],2:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -193,24 +159,149 @@ module.exports = cfg => {
 
 },{}],3:[function(require,module,exports){
 'use strict';
+// industry manager
+
+const industryStoreCheck = (planet) => {
+  return {};
+};
+
+
+exports.initInd = (planet) => {
+  planet.storage = industryStoreCheck(planet);
+};
+
+},{}],4:[function(require,module,exports){
+'use strict';
 
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
 const majorObjects = require('./majorObjects.json');
-const cos  = Math.cos;
-const sin  = Math.sin;
-const PI   = Math.PI;
+const mech = require('./mechanics.js');
+const ind = require('./industry.js');
+// const cos  = Math.cos;
+// const sin  = Math.sin;
+// const PI   = Math.PI;
+// const sqrt = Math.sqrt;
+
+const makePlanet = (planeto) => {
+//name, a, e, t, t0, w, lang, inc, maz
+  const planDat = mech.kepCalc(planeto, 0);
+  ind.initInd(planeto);
+
+  const planet = Object.assign(
+    planeto,
+    {
+      focalShift:    planDat.focalShift,
+      x:             planDat.x,
+      y:             planDat.y,
+      z:             planDat.z,
+    }
+  );
+
+  return planet;
+};
+
+async function delay(ms) {
+  return await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const main = async () => {
+  console.log("Giant alien spiders are no joke!");
+  // 1 AU = 150 million km
+  const planets = [];
+
+  Object.keys(majorObjects.planets).forEach((k) => {
+    planets.push(makePlanet(majorObjects.planets[k]));
+  });
+
+  renderer(document.getElementById('content'))(draw.drawMap(planets));
+  const render2 = renderer(document.getElementById('moving'));
+
+  while (Date.now()) {
+    const clock = Date.now();
+    const t = clock / Math.pow(10, 3);
+    const clock2 = Date(clock);
+
+    for (let i = 0; i < planets.length; i++) {
+      let newData = mech.kepCalc(planets[i], t);
+      planets[i].x = newData.x;
+      planets[i].y = newData.y;
+      planets[i].z = newData.z;
+    }
+
+    render2(draw.drawMoving(planets, clock2));
+    await delay(100);
+  }
+};
+
+window.onload = main;
+
+},{"./draw.js":1,"./industry.js":3,"./majorObjects.json":5,"./mechanics.js":6,"onml/renderer.js":7}],5:[function(require,module,exports){
+module.exports={
+  "planets": {
+    "alpha": {
+      "name": "Alpha",
+      "a":    100,
+      "e":    0.3,
+      "t":    0,
+      "t0":   0,
+      "w":    2,
+      "lang": 0,
+      "inc":  1,
+      "maz":  0,
+      "objectRadius": 5,
+      "industry": ["mining"],
+      "storage": {}
+    },
+    "beta": {
+      "name": "Beta",
+      "a":    250,
+      "e":    0.1,
+      "t":    0,
+      "t0":   0,
+      "w":    2,
+      "lang": 1.6,
+      "inc":  0.2,
+      "maz":  0,
+      "objectRadius": 5,
+      "industry": ["refining"],
+      "storage": {}
+    },
+    "gamma": {
+      "name": "Gamma",
+      "a":    350,
+      "e":    0.5,
+      "t":    0,
+      "t0":   0,
+      "w":    0.1,
+      "lang": 0,
+      "inc":  0.1,
+      "maz":  0,
+      "objectRadius": 5,
+      "industry": [],
+      "storage": {}
+    }
+  }
+}
+
+},{}],6:[function(require,module,exports){
+'use strict';
+
+const cos = Math.cos;
+const sin = Math.sin;
+const PI = Math.PI;
 const sqrt = Math.sqrt;
 
-const kepCalc = (planeto, t) => {
+exports.kepCalc = (planeto, t) => {
 
-  let a    = planeto.a;
-  let e    = planeto.e;
-  let t0   = planeto.t0;
-  let w    = planeto.w;
-  let lang = planeto.lang;
-  let inc  = planeto.inc;
-  let maz  = planeto.maz;
+  let a    = planeto.a;    // semi-major axis (a)
+  let e    = planeto.e;    // eccentricity (e)
+  let t0   = planeto.t0;   // epoch (days) (t0)
+  let w    = planeto.w;    // argument of periapsis (w)
+  let lang = planeto.lang; // longitude of ascention node (lang)
+  let inc  = planeto.inc;  // inclanation (inc)
+  let maz  = planeto.maz;  // mean anomaly at zero (maz)
+  // time (days) (t)
 
   a = a * Math.pow(10, 9);
   const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
@@ -275,128 +366,41 @@ const kepCalc = (planeto, t) => {
   return { x: x, y: y, z: z, focalShift: focalShift };
 };
 
-const makePlanet = (planeto) => {
-//name, a, e, t, t0, w, lang, inc, maz
-  const planDat = kepCalc(planeto, 0);
 
-  const planet = {
-    name: planeto.name,
-    objectRadius: 5,
+exports.orbitCoords = (a, e, mat, w, lang, inc) => {
+  // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
+  const itter = 3;
+  const calcEAT = (e, mat) => {
+    let eat = mat;
+    for (let i = 0; i < itter; i++) {
+      eat = eat - ( (eat - ( e * sin(eat) ) - mat) / ( 1 - e * cos(eat) ) );
+    }
+    return eat;
+  }; // Eccentric anomaly at time E(t)
+  const eat = calcEAT(e, mat); // Eccentric anomaly at time
 
-    a: planeto.a, // semiMajorAxis a[m] (given)
-    e: planeto.e, // eccentricity e[1] (given)
-    // b: b,
-    t: planeto.t,
-    t0: planeto.t0,
-    w: planeto.w,
-    lang: planeto.lang,
-    inc: planeto.inc,
-    maz: planeto.maz,
+  const tat = ( 2 * Math.atan2(
+    ( sqrt(1 + e) * sin(eat / 2) ),
+    ( sqrt(1 - e) * cos(eat / 2) )
+  ) );
 
-    focalShift: planDat.focalShift,
-    x: planDat.x,
-    y: planDat.y,
-    z: planDat.z,
-  };
+  const dist = ( a * ( 1 - ( e * cos(eat) ) ) );
 
-  return planet;
+  // Positional vectors in orbital frame o(t)
+  const ox = dist * cos(tat);
+  const oy = dist * sin(tat);
+  // const oz = 0;
+
+  const x = ( ox * ( (cos(w) * cos(lang)) - (sin(w) * cos(inc) * sin(lang)) )
+    - oy * ( (sin(w) * cos(lang)) + (cos(w) * cos(inc) * sin(lang)) ) );
+  const y = ( ox * ( (cos(w) * sin(lang)) + (sin(w) * cos(inc) * cos(lang)) )
+    + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
+  const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
+
+  return { x: x, y: y, z: z};
 };
 
-async function delay(ms) {
-  return await new Promise(resolve => setTimeout(resolve, ms));
-}
-
-const main = async () => {
-  console.log("Giant alien spiders are no joke!");
-  // 1 AU = 150 million km
-  const planets = [];
-
-  // name
-  // semi-major axis (a)
-  // eccentricity (e)
-  // time (days) (t)
-  // epoch (days) (t0)
-  // argument of periapsis (w)
-  // longitude of ascention node (lang)
-  // inclanation (inc)
-  // mean anomaly at zero (maz)
-
-  Object.keys(majorObjects.planets).forEach((k) => {
-    planets.push(makePlanet(majorObjects.planets[k]));
-  });
-
-  renderer(document.getElementById('content'))(draw.drawMap(planets));
-  const render2 = renderer(document.getElementById('moving'));
-
-  while (Date.now()) {
-    const clock = Date.now();
-    const t = clock / Math.pow(10, 3);
-    const clock2 = Date(clock);
-
-    for (let i = 0; i < planets.length; i++) {
-      let newData = kepCalc(planets[i], t);
-      planets[i].x = newData.x;
-      planets[i].y = newData.y;
-      planets[i].z = newData.z;
-    }
-
-    render2(draw.drawMoving(planets, clock2));
-    await delay(2000);
-  }
-};
-
-window.onload = main;
-
-},{"./draw.js":1,"./majorObjects.json":4,"onml/renderer.js":5}],4:[function(require,module,exports){
-module.exports={
-  "planets": {
-    "alpha": {
-      "name": "Alpha",
-      "a":    100,
-      "e":    0.3,
-      "t":    0,
-      "t0":   0,
-      "w":    2,
-      "lang": 0,
-      "inc":  1,
-      "maz":  0,
-      "industry": ["mining"],
-      "storage": {
-        "ore": 0
-      }
-    },
-    "beta": {
-      "name": "Beta",
-      "a":    250,
-      "e":    0.1,
-      "t":    0,
-      "t0":   0,
-      "w":    2,
-      "lang": 1.6,
-      "inc":  0.2,
-      "maz":  0,
-      "industry": ["refining"],
-      "storage": {
-        "metal": 0
-      }
-    },
-    "gamma": {
-      "name": "Gamma",
-      "a":    350,
-      "e":    0.5,
-      "t":    0,
-      "t0":   0,
-      "w":    0.1,
-      "lang": 0,
-      "inc":  0.1,
-      "maz":  0,
-      "industry": [],
-      "storage": {}
-    }
-  }
-}
-
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');
@@ -421,7 +425,7 @@ module.exports = renderer;
 
 /* eslint-env browser */
 
-},{"./stringify.js":6}],6:[function(require,module,exports){
+},{"./stringify.js":8}],8:[function(require,module,exports){
 'use strict';
 
 const isObject = o => o && Object.prototype.toString.call(o) === '[object Object]';
@@ -514,7 +518,7 @@ function stringify (a, indentation) {
 
 module.exports = stringify;
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 module.exports = (x, y, obj) => {
@@ -527,4 +531,4 @@ module.exports = (x, y, obj) => {
   return Object.assign(objt, obj);
 };
 
-},{}]},{},[3]);
+},{}]},{},[4]);

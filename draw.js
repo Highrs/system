@@ -1,12 +1,11 @@
 'use strict';
-
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
-const cos = Math.cos;
-const sin = Math.sin;
+const mech = require('./mechanics.js');
+// const cos = Math.cos;
+// const sin = Math.sin;
 const PI = Math.PI;
 const sqrt = Math.sqrt;
-
 //properties-------------
 const sh = screen.width*(0.9);
 const sw = screen.height*(0.9);
@@ -14,12 +13,11 @@ const pageW = (sh < 900) ? 800 : sh - (sh % 100);
 const pageH = (sw < 800) ? 700 : sw - (sw % 100);
 const centerX = pageW/2;
 const centerY = pageH/2;
-//-----------------------
-
 //Artistic properties-------------
 const starRadius = 10;
-let windowWidth = 110; // width of planet data rectangles
+let windowWidth = 130; // width of planet data rectangles
 let windowHeight = 25;
+let distanceWindowLength = 44;
 //--------------------------------
 
 const drawGrid = () => {
@@ -37,37 +35,6 @@ const drawGrid = () => {
   return grid;
 };
 
-const orbitCoords = (a, e, mat, w, lang, inc) => {
-  // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
-  const itter = 3;
-  const calcEAT = (e, mat) => {
-    let eat = mat;
-    for (let i = 0; i < itter; i++) {
-      eat = eat - ( (eat - ( e * sin(eat) ) - mat) / ( 1 - e * cos(eat) ) );
-    }
-    return eat;
-  }; // Eccentric anomaly at time E(t)
-  const eat = calcEAT(e, mat); // Eccentric anomaly at time
-
-  const tat = ( 2 * Math.atan2(
-    ( sqrt(1 + e) * sin(eat / 2) ),
-    ( sqrt(1 - e) * cos(eat / 2) )
-  ) );
-
-  const dist = ( a * ( 1 - ( e * cos(eat) ) ) );
-
-  // Positional vectors in orbital frame o(t)
-  const ox = dist * cos(tat);
-  const oy = dist * sin(tat);
-  // const oz = 0;
-
-  const x = ( ox * ( (cos(w) * cos(lang)) - (sin(w) * cos(inc) * sin(lang)) ) - oy * ( (sin(w) * cos(lang)) + (cos(w) * cos(inc) * sin(lang)) ) );
-  const y = ( ox * ( (cos(w) * sin(lang)) + (sin(w) * cos(inc) * cos(lang)) ) + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
-  const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
-
-  return { x: x, y: y, z: z};
-};
-
 const drawOrbits = (planets) => {
   let divline1;
   let divline2;
@@ -79,7 +46,7 @@ const drawOrbits = (planets) => {
     let points = 128;
 
     for (let i = 0; i < points; i++) {
-      let currCoord = orbitCoords( planet.a, planet.e, (i * 2 * PI)/points, planet.w, planet.lang, planet.inc );
+      let currCoord = mech.orbitCoords( planet.a, planet.e, (i * 2 * PI)/points, planet.w, planet.lang, planet.inc );
       if (i === 0) {
         divline1 = currCoord;
       } else if (Math.abs(points/2 - i) < 1) {
@@ -88,17 +55,17 @@ const drawOrbits = (planets) => {
       coords += currCoord.x;
       coords += ',';
       coords += currCoord.y;
-      if (i === points - 1) {
-        coords += 'Z';
-      } else {
-        coords += 'L';
-      }
+      (i === points - 1)?(coords += 'Z'):(coords += 'L');
     }
 
-    retGroup.push(['path', { d: coords, class: 'majorOrbit' }]);
-    retGroup.push(['line', {x1: divline1.x, y1: divline1.y, x2: divline2.x, y2: divline2.y, class: 'minorOrbit'}]);
-    retGroup.push(['path', { d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5)  + 'L' + (divline1.x) + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5) + 'Z', class: 'symbolLine'}]);
-    retGroup.push(['path', { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)  + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}]);
+    retGroup.push(['path',
+      { d: coords, class: 'majorOrbit' }]);
+    retGroup.push(['line',
+      {x1: divline1.x, y1: divline1.y, x2: divline2.x, y2: divline2.y, class: 'minorOrbit'}]);
+    retGroup.push(['path',
+      { d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5)  + 'L' + (divline1.x) + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5) + 'Z', class: 'symbolLine'}]);
+    retGroup.push(['path',
+      { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)  + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}]);
   }
   return retGroup;
 };
@@ -111,7 +78,7 @@ exports.drawMoving = (planets, clock) => {
   const drawn = ['g', {}];
   drawn.push(
     ['g', tt( -centerX, -centerY ),
-      ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
+      // ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
       ['text', {x: 55, y: 15, class: 'dataText'}, clock]
     ]
   );
@@ -127,7 +94,7 @@ exports.drawMoving = (planets, clock) => {
       // console.log(dist);
       drawn.push(['line', { x1: planets[i].x / Math.pow(10, 9), y1: planets[i].y / Math.pow(10, 9), x2: planets[j].x / Math.pow(10, 9), y2: planets[j].y / Math.pow(10, 9), class: 'rangeLine' } ]);
       drawn.push(['g', tt(( ( (planets[j].x / Math.pow(10, 9)) + (planets[i].x / Math.pow(10, 9) ) ) / 2 - 22), ( ( (planets[j].y / Math.pow(10, 9)) + (planets[i].y / Math.pow(10, 9) ) ) / 2 - 4.5)),
-        ['rect', {width: 44, height: 10, class: 'dataWindow'}],
+        ['rect', {width: distanceWindowLength, height: 10, class: 'dataWindow'}],
         ['text', {
           x: 2, y: 9, class: 'rangeText'}, (dist / Math.pow(10, 9)).toFixed(2)]
       ]);
@@ -171,7 +138,6 @@ exports.drawMap = (planets) => {
     ['g', tt(centerX, centerY),
       drawStatic(planets),
       ['g', {id: 'moving'}]
-      // drawMoving(planets, t)
     ]
   ]);
 };
