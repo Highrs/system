@@ -2,6 +2,8 @@
 // industry manager
 
 const industryStoreCheck = (planet) => {
+  let listOfIndustries = planet.industry;
+  console.log(listOfIndustries);
   return {};
 };
 

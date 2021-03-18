@@ -162,6 +162,8 @@ module.exports = cfg => {
 // industry manager
 
 const industryStoreCheck = (planet) => {
+  let listOfIndustries = planet.industry;
+  console.log(listOfIndustries);
   return {};
 };
 
@@ -178,10 +180,6 @@ const renderer = require('onml/renderer.js');
 const majorObjects = require('./majorObjects.json');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
-// const cos  = Math.cos;
-// const sin  = Math.sin;
-// const PI   = Math.PI;
-// const sqrt = Math.sqrt;
 
 const makePlanet = (planeto) => {
 //name, a, e, t, t0, w, lang, inc, maz
@@ -191,10 +189,10 @@ const makePlanet = (planeto) => {
   const planet = Object.assign(
     planeto,
     {
-      focalShift:    planDat.focalShift,
-      x:             planDat.x,
-      y:             planDat.y,
-      z:             planDat.z,
+      focalShift: planDat.focalShift,
+      x:          planDat.x,
+      y:          planDat.y,
+      z:          planDat.z,
     }
   );
 
