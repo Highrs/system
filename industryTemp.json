@@ -1,0 +1,24 @@
+{
+  "mining": {
+    "input": {},
+    "output": {
+      "ore": 1
+    },
+    "storage": {
+      "ore": 0
+    }
+  },
+
+  "refining": {
+    "input": {
+      "ore": 2
+    },
+    "output": {
+      "metal": 1
+    },
+    "storage": {
+      "ore": 0,
+      "metal": 0
+    }
+  }
+}

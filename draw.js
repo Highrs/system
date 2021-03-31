@@ -16,7 +16,7 @@ const centerY = pageH/2;
 //Artistic properties-------------
 const starRadius = 10;
 let windowWidth = 130; // width of planet data rectangles
-let windowHeight = 25;
+let windowHeight = 35;
 let distanceWindowLength = 44;
 //--------------------------------
 
@@ -112,7 +112,9 @@ exports.drawMoving = (planets, clock) => {
             (planets[i].y / Math.pow(10, 9)).toFixed(0) +
             ' ' +
             (planets[i].z / Math.pow(10, 9)).toFixed(0)
-          ]
+          ],
+          ['text', {x: 3, y: 30, class: 'dataText'},
+            (planets[i].industry.length > 0 ? planets[i].industry[0] : "No Industry")]
         ],
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
       ]

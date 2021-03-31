@@ -17,7 +17,7 @@ const centerY = pageH/2;
 //Artistic properties-------------
 const starRadius = 10;
 let windowWidth = 130; // width of planet data rectangles
-let windowHeight = 25;
+let windowHeight = 35;
 let distanceWindowLength = 44;
 //--------------------------------
 
@@ -113,7 +113,9 @@ exports.drawMoving = (planets, clock) => {
             (planets[i].y / Math.pow(10, 9)).toFixed(0) +
             ' ' +
             (planets[i].z / Math.pow(10, 9)).toFixed(0)
-          ]
+          ],
+          ['text', {x: 3, y: 30, class: 'dataText'},
+            (planets[i].industry.length > 0 ? planets[i].industry[0] : "No Industry")]
         ],
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
       ]
@@ -143,7 +145,7 @@ exports.drawMap = (planets) => {
   ]);
 };
 
-},{"./get-svg.js":2,"./mechanics.js":6,"onml/tt.js":9}],2:[function(require,module,exports){
+},{"./get-svg.js":2,"./mechanics.js":7,"onml/tt.js":10}],2:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -159,22 +161,53 @@ module.exports = cfg => {
 
 },{}],3:[function(require,module,exports){
 'use strict';
-// industry manager
+// Industry manager
+const indTemp = require('./industryTemp.json');
 
 const industryStoreCheck = (planet) => {
-  let listOfIndustries = planet.industry;
-  console.log(listOfIndustries);
-  return {};
+  if (planet.industry) {
+    planet.industry.forEach((planetIndName) => {
+      if (!planet.storage[indTemp[planetIndName].storage]) {
+        Object.assign(planet.storage, indTemp[planetIndName].storage);
+      }
+    });
+  }
 };
 
 
 exports.initInd = (planet) => {
-  planet.storage = industryStoreCheck(planet);
+  industryStoreCheck(planet);
 };
 
-},{}],4:[function(require,module,exports){
-'use strict';
+},{"./industryTemp.json":4}],4:[function(require,module,exports){
+module.exports={
+  "mining": {
+    "input": {},
+    "output": {
+      "ore": 1
+    },
+    "storage": {
+      "ore": 0
+    }
+  },
 
+  "refining": {
+    "input": {
+      "ore": 2
+    },
+    "output": {
+      "metal": 1
+    },
+    "storage": {
+      "ore": 0,
+      "metal": 0
+    }
+  }
+}
+
+},{}],5:[function(require,module,exports){
+'use strict';
+// Initialization and run
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
 const majorObjects = require('./majorObjects.json');
@@ -215,9 +248,10 @@ const main = async () => {
   renderer(document.getElementById('content'))(draw.drawMap(planets));
   const render2 = renderer(document.getElementById('moving'));
 
+  console.log(planets);
   while (Date.now()) {
     const clock = Date.now();
-    const t = clock / Math.pow(10, 3);
+    const t = clock / Math.pow(10, 4);
     const clock2 = Date(clock);
 
     for (let i = 0; i < planets.length; i++) {
@@ -228,13 +262,14 @@ const main = async () => {
     }
 
     render2(draw.drawMoving(planets, clock2));
+    // setTimeout(function(){}, 1000);
     await delay(100);
   }
 };
 
 window.onload = main;
 
-},{"./draw.js":1,"./industry.js":3,"./majorObjects.json":5,"./mechanics.js":6,"onml/renderer.js":7}],5:[function(require,module,exports){
+},{"./draw.js":1,"./industry.js":3,"./majorObjects.json":6,"./mechanics.js":7,"onml/renderer.js":8}],6:[function(require,module,exports){
 module.exports={
   "planets": {
     "alpha": {
@@ -248,7 +283,7 @@ module.exports={
       "inc":  1,
       "maz":  0,
       "objectRadius": 5,
-      "industry": ["mining"],
+      "industry": ["mining", "mining"],
       "storage": {}
     },
     "beta": {
@@ -278,11 +313,25 @@ module.exports={
       "objectRadius": 5,
       "industry": [],
       "storage": {}
+    },
+    "delta": {
+      "name": "Delta",
+      "a":    600,
+      "e":    0.5,
+      "t":    0,
+      "t0":   0,
+      "w":    0.1,
+      "lang": 6.1,
+      "inc":  0.02,
+      "maz":  0,
+      "objectRadius": 5,
+      "industry": [],
+      "storage": {}
     }
   }
 }
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 const cos = Math.cos;
@@ -398,7 +447,7 @@ exports.orbitCoords = (a, e, mat, w, lang, inc) => {
   return { x: x, y: y, z: z};
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');
@@ -423,7 +472,7 @@ module.exports = renderer;
 
 /* eslint-env browser */
 
-},{"./stringify.js":8}],8:[function(require,module,exports){
+},{"./stringify.js":9}],9:[function(require,module,exports){
 'use strict';
 
 const isObject = o => o && Object.prototype.toString.call(o) === '[object Object]';
@@ -516,7 +565,7 @@ function stringify (a, indentation) {
 
 module.exports = stringify;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 module.exports = (x, y, obj) => {
@@ -529,4 +578,4 @@ module.exports = (x, y, obj) => {
   return Object.assign(objt, obj);
 };
 
-},{}]},{},[4]);
+},{}]},{},[5]);
