@@ -1,5 +1,6 @@
 {
   "mining": {
+    "cycle": 10,
     "input": {},
     "output": {
       "ore": 1
@@ -10,6 +11,7 @@
   },
 
   "refining": {
+    "cycle": 20,
     "input": {
       "ore": 2
     },
