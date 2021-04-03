@@ -108,28 +108,24 @@ exports.drawMoving = (planets, clock) => {
     }
 
     let indDisplay = (planet, line) => {
+
       let display = ['g', {}];
       // let numOfStorage = 0;
-      let counter = 0;
       display.push(
         ['text', {x: 3, y: (line)*10, class: 'dataText'}, "Industry:"],
         ['text', {x: 3, y: (line + planet.industry.length + 1)*10,
           class: 'dataText'},
           "Storage:"]
       );
-      planet.industry.forEach((e) => {
-        counter ++;
-        display.push(['text', {x: 9, y: (line + counter) * 10,
+      planet.industry.forEach((e, idx) => {
+        display.push(['text', {x: 9, y: (line + idx + 1) * 10,
           class: 'dataText'}, e]);
       });
-      counter = 0;
-      Object.keys(planet.storage).forEach((e) => {
-        counter ++;
+      Object.keys(planet.storage).forEach((e, idx) => {
         display.push(['text', {x: 9,
-          y: (line + planet.industry.length + counter + 1) * 10,
+          y: (line + planet.industry.length + idx + 2) * 10,
           class: 'dataText'}, e + " - " + planet.storage[e]]);
       });
-
 
       return display;
     };
