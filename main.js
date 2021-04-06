@@ -54,7 +54,6 @@ const main = async () => {
     }
 
     render2(draw.drawMoving(planets, clock2));
-    // setTimeout(function(){}, 1000);
     await delay(100);
   }
 };

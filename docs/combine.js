@@ -198,6 +198,7 @@ const indTemp = require('./industryTemp.json');
 const industryStoreCheck = (planet) => {
   if (planet.industry) {
     planet.industry.forEach((planetIndName) => {
+      indWork(planet, planetIndName);
       if (!planet.storage[indTemp[planetIndName].storage]) {
         Object.assign(planet.storage, indTemp[planetIndName].storage);
       }
@@ -205,26 +206,49 @@ const industryStoreCheck = (planet) => {
   }
 };
 
-
 exports.initInd = (planet) => {
   industryStoreCheck(planet);
+};
+
+const indWork = (planet, industry) => {
+  let workGo = true;
+
+  Object.keys(indTemp[industry].input).forEach((inputResource) => {
+    if (indTemp[industry].input[inputResource] > planet.storage[inputResource]) {
+      workGo = false;
+    }
+  });
+
+  if (workGo === true) {
+    Object.keys(indTemp[industry].input).forEach((inputResource) => {
+      planet.storage[inputResource] -= indTemp[industry].input[inputResource];
+    });
+    setTimeout(
+      function(){
+        Object.keys(indTemp[industry].output).forEach((outputResource) => {
+          planet.storage[outputResource] += indTemp[industry].output[outputResource];
+        });
+        indWork(planet, industry);
+      },
+      indTemp[industry].cycle);
+  }
 };
 
 },{"./industryTemp.json":4}],4:[function(require,module,exports){
 module.exports={
   "mining": {
-    "cycle": 10,
+    "cycle": 1000,
     "input": {},
     "output": {
       "ore": 1
     },
     "storage": {
-      "ore": 0
+      "ore": 10
     }
   },
 
   "refining": {
-    "cycle": 20,
+    "cycle": 2000,
     "input": {
       "ore": 2
     },
@@ -232,7 +256,7 @@ module.exports={
       "metal": 1
     },
     "storage": {
-      "ore": 0,
+      "ore": 10,
       "metal": 0
     }
   }
@@ -295,7 +319,6 @@ const main = async () => {
     }
 
     render2(draw.drawMoving(planets, clock2));
-    // setTimeout(function(){}, 1000);
     await delay(100);
   }
 };

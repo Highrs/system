@@ -1,17 +1,17 @@
 {
   "mining": {
-    "cycle": 10,
+    "cycle": 1000,
     "input": {},
     "output": {
       "ore": 1
     },
     "storage": {
-      "ore": 0
+      "ore": 10
     }
   },
 
   "refining": {
-    "cycle": 20,
+    "cycle": 2000,
     "input": {
       "ore": 2
     },
@@ -19,7 +19,7 @@
       "metal": 1
     },
     "storage": {
-      "ore": 0,
+      "ore": 10,
       "metal": 0
     }
   }
