@@ -18,7 +18,7 @@ const centerX = pageW/2;
 const centerY = pageH/2;
 //Artistic properties-------------
 const starRadius = 10;
-let windowWidth = 160; // width of planet data rectangles
+let windowWidth = 120; // width of planet data rectangles
 let windowHeight = 25;
 let distanceWindowLength = 44;
 //--------------------------------
@@ -198,10 +198,10 @@ const indTemp = require('./industryTemp.json');
 const industryStoreCheck = (planet) => {
   if (planet.industry) {
     planet.industry.forEach((planetIndName) => {
-      indWork(planet, planetIndName);
       if (!planet.storage[indTemp[planetIndName].storage]) {
         Object.assign(planet.storage, indTemp[planetIndName].storage);
       }
+      indWork(planet, planetIndName);
     });
   }
 };
@@ -214,7 +214,10 @@ const indWork = (planet, industry) => {
   let workGo = true;
 
   Object.keys(indTemp[industry].input).forEach((inputResource) => {
-    if (indTemp[industry].input[inputResource] > planet.storage[inputResource]) {
+    if (
+      (!planet.storage[inputResource]) ||
+      (indTemp[industry].input[inputResource] > planet.storage[inputResource])
+    ) {
       workGo = false;
     }
   });
@@ -223,6 +226,7 @@ const indWork = (planet, industry) => {
     Object.keys(indTemp[industry].input).forEach((inputResource) => {
       planet.storage[inputResource] -= indTemp[industry].input[inputResource];
     });
+
     setTimeout(
       function(){
         Object.keys(indTemp[industry].output).forEach((outputResource) => {
@@ -256,7 +260,7 @@ module.exports={
       "metal": 1
     },
     "storage": {
-      "ore": 10,
+      "ore": 100,
       "metal": 0
     }
   }
@@ -295,7 +299,6 @@ async function delay(ms) {
 
 const main = async () => {
   console.log("Giant alien spiders are no joke!");
-  // 1 AU = 150 million km
   const planets = [];
 
   Object.keys(majorObjects.planets).forEach((k) => {

@@ -5,10 +5,10 @@ const indTemp = require('./industryTemp.json');
 const industryStoreCheck = (planet) => {
   if (planet.industry) {
     planet.industry.forEach((planetIndName) => {
-      indWork(planet, planetIndName);
       if (!planet.storage[indTemp[planetIndName].storage]) {
         Object.assign(planet.storage, indTemp[planetIndName].storage);
       }
+      indWork(planet, planetIndName);
     });
   }
 };
@@ -21,7 +21,10 @@ const indWork = (planet, industry) => {
   let workGo = true;
 
   Object.keys(indTemp[industry].input).forEach((inputResource) => {
-    if (indTemp[industry].input[inputResource] > planet.storage[inputResource]) {
+    if (
+      (!planet.storage[inputResource]) ||
+      (indTemp[industry].input[inputResource] > planet.storage[inputResource])
+    ) {
       workGo = false;
     }
   });
@@ -30,6 +33,7 @@ const indWork = (planet, industry) => {
     Object.keys(indTemp[industry].input).forEach((inputResource) => {
       planet.storage[inputResource] -= indTemp[industry].input[inputResource];
     });
+
     setTimeout(
       function(){
         Object.keys(indTemp[industry].output).forEach((outputResource) => {

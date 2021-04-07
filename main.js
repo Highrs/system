@@ -30,7 +30,6 @@ async function delay(ms) {
 
 const main = async () => {
   console.log("Giant alien spiders are no joke!");
-  // 1 AU = 150 million km
   const planets = [];
 
   Object.keys(majorObjects.planets).forEach((k) => {

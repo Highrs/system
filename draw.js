@@ -17,7 +17,7 @@ const centerX = pageW/2;
 const centerY = pageH/2;
 //Artistic properties-------------
 const starRadius = 10;
-let windowWidth = 160; // width of planet data rectangles
+let windowWidth = 120; // width of planet data rectangles
 let windowHeight = 25;
 let distanceWindowLength = 44;
 //--------------------------------
