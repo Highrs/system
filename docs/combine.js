@@ -78,9 +78,7 @@ const calcDist = (planet1, planet2) => {
 };
 
 const indDisplay = (planet, line) => {
-
   let display = ['g', {}];
-  // let numOfStorage = 0;
   display.push(
     ['text', {x: 3, y: (line)*10, class: 'dataText'}, "Industry:"],
     ['text', {x: 3, y: (line + planet.industry.length + 1)*10,
@@ -167,13 +165,11 @@ const drawStatic = (planets) => {
 };
 
 exports.drawMoving = (planets, clock, craft) => {
-  const drawn = ['g', {}];
-
-  drawn.push(drawTime(clock));
-  drawn.push(drawPlanets(planets));
-  // drawn.push(drawCraft(craft));
-
-  return drawn;
+  return ['g', {},
+    drawTime(clock),
+    drawPlanets(planets)
+    // drawn.push(drawCraft(craft));
+  ];
 };
 
 exports.drawMap = (planets) => {
