@@ -13,7 +13,7 @@ const industryStoreCheck = (planet) => {
   }
 };
 
-exports.initInd = (planet) => {
+const initInd = (planet) => {
   industryStoreCheck(planet);
 };
 
@@ -44,3 +44,6 @@ const indWork = (planet, industry) => {
       indTemp[industry].cycle);
   }
 };
+
+exports.initInd = initInd;
+exports.indWork = indWork;

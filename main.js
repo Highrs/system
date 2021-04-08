@@ -2,9 +2,10 @@
 // Initialization and run
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
-const majorObjects = require('./majorObjects.json');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
+const majorObjects = require('./majorObjects.json');
+const hulls = require('./hulls.json');
 
 const makePlanet = (planeto) => {
 //name, a, e, t, t0, w, lang, inc, maz
@@ -17,11 +18,24 @@ const makePlanet = (planeto) => {
       focalShift: planDat.focalShift,
       x:          planDat.x,
       y:          planDat.y,
-      z:          planDat.z,
+      z:          planDat.z
     }
   );
 
   return planet;
+};
+
+const makeCraft = (crafto) => {
+  const craft = Object.assign(
+    crafto,
+    {
+      x: 150000000,
+      y: 0,
+      z: 0
+    }
+  );
+
+  return craft;
 };
 
 async function delay(ms) {
@@ -31,10 +45,15 @@ async function delay(ms) {
 const main = async () => {
   console.log("Giant alien spiders are no joke!");
   const planets = [];
+  const craft = [];
 
-  Object.keys(majorObjects.planets).forEach((k) => {
-    planets.push(makePlanet(majorObjects.planets[k]));
+  Object.keys(majorObjects.planets).forEach((planetName) => {
+    planets.push(makePlanet(majorObjects.planets[planetName]));
   });
+
+  for (let i = 0; i < 1; i++) {
+    craft.push(makeCraft(hulls.brick));
+  }
 
   renderer(document.getElementById('content'))(draw.drawMap(planets));
   const render2 = renderer(document.getElementById('moving'));
@@ -52,7 +71,7 @@ const main = async () => {
       planets[i].z = newData.z;
     }
 
-    render2(draw.drawMoving(planets, clock2));
+    render2(draw.drawMoving(planets, clock2, craft));
     await delay(100);
   }
 };

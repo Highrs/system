@@ -76,15 +76,31 @@ const calcDist = (planet1, planet2) => {
   return sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
 };
 
-exports.drawMoving = (planets, clock) => {
-  const drawn = ['g', {}];
-  drawn.push(
-    ['g', tt( -centerX, -centerY ),
-      // ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
-      ['text', {x: 55, y: 15, class: 'dataText'}, clock]
-    ]
-  );
+const indDisplay = (planet, line) => {
 
+  let display = ['g', {}];
+  // let numOfStorage = 0;
+  display.push(
+    ['text', {x: 3, y: (line)*10, class: 'dataText'}, "Industry:"],
+    ['text', {x: 3, y: (line + planet.industry.length + 1)*10,
+      class: 'dataText'},
+      "Storage:"]
+  );
+  planet.industry.forEach((e, idx) => {
+    display.push(['text', {x: 9, y: (line + idx + 1) * 10,
+      class: 'dataText'}, e]);
+  });
+  Object.keys(planet.storage).forEach((e, idx) => {
+    display.push(['text', {x: 9,
+      y: (line + planet.industry.length + idx + 2) * 10,
+      class: 'dataText'}, e + " - " + planet.storage[e]]);
+  });
+
+  return display;
+};
+
+const drawPlanets = (planets) => {
+  const planetsDrawn = ['g', {}];
   for (let i = 0; i < planets.length; i++) {
     let xWindShift = 0;
     if (planets[i].x / Math.pow(10, 9) > pageW - 100) {
@@ -93,12 +109,12 @@ exports.drawMoving = (planets, clock) => {
 
     for (let j = i + 1; j < planets.length; j++) {
       let dist = calcDist(planets[i], planets[j] );
-      drawn.push(['line',{
+      planetsDrawn.push(['line',{
         x1: planets[i].x / Math.pow(10, 9),
         y1: planets[i].y / Math.pow(10, 9),
         x2: planets[j].x / Math.pow(10, 9),
         y2: planets[j].y / Math.pow(10, 9), class: 'rangeLine' } ]);
-      drawn.push(['g',
+      planetsDrawn.push(['g',
       tt((((planets[j].x / Math.pow(10, 9)) + (planets[i].x / Math.pow(10, 9))) / 2 - 22),
          (((planets[j].y / Math.pow(10, 9)) + (planets[i].y / Math.pow(10, 9))) / 2 - 4.5)),
         ['rect', {width: distanceWindowLength, height: 10, class: 'dataWindow'}],
@@ -107,29 +123,7 @@ exports.drawMoving = (planets, clock) => {
       ]);
     }
 
-    let indDisplay = (planet, line) => {
-
-      let display = ['g', {}];
-      // let numOfStorage = 0;
-      display.push(
-        ['text', {x: 3, y: (line)*10, class: 'dataText'}, "Industry:"],
-        ['text', {x: 3, y: (line + planet.industry.length + 1)*10,
-          class: 'dataText'},
-          "Storage:"]
-      );
-      planet.industry.forEach((e, idx) => {
-        display.push(['text', {x: 9, y: (line + idx + 1) * 10,
-          class: 'dataText'}, e]);
-      });
-      Object.keys(planet.storage).forEach((e, idx) => {
-        display.push(['text', {x: 9,
-          y: (line + planet.industry.length + idx + 2) * 10,
-          class: 'dataText'}, e + " - " + planet.storage[e]]);
-      });
-
-      return display;
-    };
-    drawn.push(
+    planetsDrawn.push(
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['g', tt(xWindShift, 0),
           ['rect', {width: windowWidth,
@@ -151,7 +145,12 @@ exports.drawMoving = (planets, clock) => {
     );
 
   }
-  return drawn;
+  return planetsDrawn;
+};
+
+const drawTime = (clock) => {
+  return ['g', tt( -centerX, -centerY ),
+        ['text', {x: 55, y: 15, class: 'dataText'}, clock]];
 };
 
 const star = ['g', {},
@@ -164,6 +163,16 @@ const drawStatic = (planets) => {
     drawOrbits(planets),
     star
   ];
+};
+
+exports.drawMoving = (planets, clock, craft) => {
+  const drawn = ['g', {}];
+
+  drawn.push(drawTime(clock));
+  drawn.push(drawPlanets(planets));
+  // drawn.push(drawCraft(craft));
+
+  return drawn;
 };
 
 exports.drawMap = (planets) => {

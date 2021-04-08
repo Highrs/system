@@ -77,15 +77,31 @@ const calcDist = (planet1, planet2) => {
   return sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
 };
 
-exports.drawMoving = (planets, clock) => {
-  const drawn = ['g', {}];
-  drawn.push(
-    ['g', tt( -centerX, -centerY ),
-      // ['circle', {cx: 25, cy: 25, r: 20, class: 'updateIcon'}],
-      ['text', {x: 55, y: 15, class: 'dataText'}, clock]
-    ]
-  );
+const indDisplay = (planet, line) => {
 
+  let display = ['g', {}];
+  // let numOfStorage = 0;
+  display.push(
+    ['text', {x: 3, y: (line)*10, class: 'dataText'}, "Industry:"],
+    ['text', {x: 3, y: (line + planet.industry.length + 1)*10,
+      class: 'dataText'},
+      "Storage:"]
+  );
+  planet.industry.forEach((e, idx) => {
+    display.push(['text', {x: 9, y: (line + idx + 1) * 10,
+      class: 'dataText'}, e]);
+  });
+  Object.keys(planet.storage).forEach((e, idx) => {
+    display.push(['text', {x: 9,
+      y: (line + planet.industry.length + idx + 2) * 10,
+      class: 'dataText'}, e + " - " + planet.storage[e]]);
+  });
+
+  return display;
+};
+
+const drawPlanets = (planets) => {
+  const planetsDrawn = ['g', {}];
   for (let i = 0; i < planets.length; i++) {
     let xWindShift = 0;
     if (planets[i].x / Math.pow(10, 9) > pageW - 100) {
@@ -94,12 +110,12 @@ exports.drawMoving = (planets, clock) => {
 
     for (let j = i + 1; j < planets.length; j++) {
       let dist = calcDist(planets[i], planets[j] );
-      drawn.push(['line',{
+      planetsDrawn.push(['line',{
         x1: planets[i].x / Math.pow(10, 9),
         y1: planets[i].y / Math.pow(10, 9),
         x2: planets[j].x / Math.pow(10, 9),
         y2: planets[j].y / Math.pow(10, 9), class: 'rangeLine' } ]);
-      drawn.push(['g',
+      planetsDrawn.push(['g',
       tt((((planets[j].x / Math.pow(10, 9)) + (planets[i].x / Math.pow(10, 9))) / 2 - 22),
          (((planets[j].y / Math.pow(10, 9)) + (planets[i].y / Math.pow(10, 9))) / 2 - 4.5)),
         ['rect', {width: distanceWindowLength, height: 10, class: 'dataWindow'}],
@@ -108,29 +124,7 @@ exports.drawMoving = (planets, clock) => {
       ]);
     }
 
-    let indDisplay = (planet, line) => {
-
-      let display = ['g', {}];
-      // let numOfStorage = 0;
-      display.push(
-        ['text', {x: 3, y: (line)*10, class: 'dataText'}, "Industry:"],
-        ['text', {x: 3, y: (line + planet.industry.length + 1)*10,
-          class: 'dataText'},
-          "Storage:"]
-      );
-      planet.industry.forEach((e, idx) => {
-        display.push(['text', {x: 9, y: (line + idx + 1) * 10,
-          class: 'dataText'}, e]);
-      });
-      Object.keys(planet.storage).forEach((e, idx) => {
-        display.push(['text', {x: 9,
-          y: (line + planet.industry.length + idx + 2) * 10,
-          class: 'dataText'}, e + " - " + planet.storage[e]]);
-      });
-
-      return display;
-    };
-    drawn.push(
+    planetsDrawn.push(
       ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
         ['g', tt(xWindShift, 0),
           ['rect', {width: windowWidth,
@@ -152,7 +146,12 @@ exports.drawMoving = (planets, clock) => {
     );
 
   }
-  return drawn;
+  return planetsDrawn;
+};
+
+const drawTime = (clock) => {
+  return ['g', tt( -centerX, -centerY ),
+        ['text', {x: 55, y: 15, class: 'dataText'}, clock]];
 };
 
 const star = ['g', {},
@@ -167,6 +166,16 @@ const drawStatic = (planets) => {
   ];
 };
 
+exports.drawMoving = (planets, clock, craft) => {
+  const drawn = ['g', {}];
+
+  drawn.push(drawTime(clock));
+  drawn.push(drawPlanets(planets));
+  // drawn.push(drawCraft(craft));
+
+  return drawn;
+};
+
 exports.drawMap = (planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', tt(centerX, centerY),
@@ -176,7 +185,7 @@ exports.drawMap = (planets) => {
   ]);
 };
 
-},{"./get-svg.js":2,"./mechanics.js":7,"onml/tt.js":10}],2:[function(require,module,exports){
+},{"./get-svg.js":2,"./mechanics.js":8,"onml/tt.js":11}],2:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -191,6 +200,14 @@ module.exports = cfg => {
 }
 
 },{}],3:[function(require,module,exports){
+module.exports={
+  "brick": {
+    "class": "Brick",
+    "cargo": {}
+  }
+}
+
+},{}],4:[function(require,module,exports){
 'use strict';
 // Industry manager
 const indTemp = require('./industryTemp.json');
@@ -206,7 +223,7 @@ const industryStoreCheck = (planet) => {
   }
 };
 
-exports.initInd = (planet) => {
+const initInd = (planet) => {
   industryStoreCheck(planet);
 };
 
@@ -238,7 +255,10 @@ const indWork = (planet, industry) => {
   }
 };
 
-},{"./industryTemp.json":4}],4:[function(require,module,exports){
+exports.initInd = initInd;
+exports.indWork = indWork;
+
+},{"./industryTemp.json":5}],5:[function(require,module,exports){
 module.exports={
   "mining": {
     "cycle": 1000,
@@ -266,14 +286,15 @@ module.exports={
   }
 }
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 // Initialization and run
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
-const majorObjects = require('./majorObjects.json');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
+const majorObjects = require('./majorObjects.json');
+const hulls = require('./hulls.json');
 
 const makePlanet = (planeto) => {
 //name, a, e, t, t0, w, lang, inc, maz
@@ -286,11 +307,24 @@ const makePlanet = (planeto) => {
       focalShift: planDat.focalShift,
       x:          planDat.x,
       y:          planDat.y,
-      z:          planDat.z,
+      z:          planDat.z
     }
   );
 
   return planet;
+};
+
+const makeCraft = (crafto) => {
+  const craft = Object.assign(
+    crafto,
+    {
+      x: 150000000,
+      y: 0,
+      z: 0
+    }
+  );
+
+  return craft;
 };
 
 async function delay(ms) {
@@ -300,10 +334,15 @@ async function delay(ms) {
 const main = async () => {
   console.log("Giant alien spiders are no joke!");
   const planets = [];
+  const craft = [];
 
-  Object.keys(majorObjects.planets).forEach((k) => {
-    planets.push(makePlanet(majorObjects.planets[k]));
+  Object.keys(majorObjects.planets).forEach((planetName) => {
+    planets.push(makePlanet(majorObjects.planets[planetName]));
   });
+
+  for (let i = 0; i < 1; i++) {
+    craft.push(makeCraft(hulls.brick));
+  }
 
   renderer(document.getElementById('content'))(draw.drawMap(planets));
   const render2 = renderer(document.getElementById('moving'));
@@ -321,14 +360,14 @@ const main = async () => {
       planets[i].z = newData.z;
     }
 
-    render2(draw.drawMoving(planets, clock2));
+    render2(draw.drawMoving(planets, clock2, craft));
     await delay(100);
   }
 };
 
 window.onload = main;
 
-},{"./draw.js":1,"./industry.js":3,"./majorObjects.json":6,"./mechanics.js":7,"onml/renderer.js":8}],6:[function(require,module,exports){
+},{"./draw.js":1,"./hulls.json":3,"./industry.js":4,"./majorObjects.json":7,"./mechanics.js":8,"onml/renderer.js":9}],7:[function(require,module,exports){
 module.exports={
   "planets": {
     "alpha": {
@@ -362,7 +401,7 @@ module.exports={
   }
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 const cos = Math.cos;
@@ -478,7 +517,7 @@ exports.orbitCoords = (a, e, mat, w, lang, inc) => {
   return { x: x, y: y, z: z};
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');
@@ -503,7 +542,7 @@ module.exports = renderer;
 
 /* eslint-env browser */
 
-},{"./stringify.js":9}],9:[function(require,module,exports){
+},{"./stringify.js":10}],10:[function(require,module,exports){
 'use strict';
 
 const isObject = o => o && Object.prototype.toString.call(o) === '[object Object]';
@@ -596,7 +635,7 @@ function stringify (a, indentation) {
 
 module.exports = stringify;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 module.exports = (x, y, obj) => {
@@ -609,4 +648,4 @@ module.exports = (x, y, obj) => {
   return Object.assign(objt, obj);
 };
 
-},{}]},{},[5]);
+},{}]},{},[6]);
