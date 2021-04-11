@@ -73,20 +73,22 @@ const drawOrbit = (planets) => {
         y2: divline2.y,
         class: 'minorOrbit'}]);
     retGroup.push(['path', {
-      d: 'M '
-      + (divline1.x - 2) + ',' + (divline1.y - 5) + 'L' + (divline1.x)
+      d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5) + 'L' + (divline1.x)
       + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5)
-      + 'Z', class: 'symbolLine'}]);
-    retGroup.push(['path',
-      { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)
-      + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2)
-      + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}]);
+      + 'Z', class: 'symbolLine'
+    }]);
+    retGroup.push(['path', {
+      d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5) + 'L' + (divline2.x)
+      + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5)
+      + 'Z', class: 'symbolLine'
+    }]);
   }
+
   return retGroup;
 };
 
 const calcDist = (planet1, planet2) => {
-  return sqrt(Math.pow( (planet1.x - planet2.x), 2 )
+  return sqrt( Math.pow( (planet1.x - planet2.x), 2 )
   + Math.pow( (planet1.y - planet2.y), 2 )
   + Math.pow( (planet1.z - planet2.z), 2 ) );
 };
@@ -94,10 +96,10 @@ const calcDist = (planet1, planet2) => {
 const indDisplay = (planet, line) => {
   let display = ['g', {}];
   display.push(
-    ['text', {x: 3, y: (line)*10, class: 'dataText'}, "Industry:"],
+    ['text', {x: 3, y: line * 10,
+      class: 'dataText'}, "Industry:"],
     ['text', {x: 3, y: (line + planet.industry.length + 1)*10,
-      class: 'dataText'},
-      "Storage:"]
+      class: 'dataText'}, "Storage:"]
   );
   planet.industry.forEach((e, idx) => {
     display.push(['text', {x: 9, y: (line + idx + 1) * 10,
@@ -120,41 +122,43 @@ const drawPlanets = (planets) => {
       xWindShift = -windowWidth;
     }
 
-    for (let j = i + 1; j < planets.length; j++) {
-      let dist = calcDist(planets[i], planets[j]);
-      planetsDrawn.push(['line',{
-        x1: planets[i].x,
-        y1: planets[i].y,
-        x2: planets[j].x,
-        y2: planets[j].y, class: 'rangeLine' } ]);
-      planetsDrawn.push(['g',
-      tt((((planets[j].x) + (planets[i].x)) / 2 - 22),
-        (((planets[j].y) + (planets[i].y)) / 2 - 4.5)),
-        ['rect', {width: distanceWindowLength, height: 10, class: 'dataWindow'}],
-        ['text', {
-          x: 2, y: 9, class: 'rangeText'}, (dist).toFixed(2)]
-      ]);
-    }
+    // for (let j = i + 1; j < planets.length; j++) {
+    //   let dist = calcDist(planets[i], planets[j]);
+    //   planetsDrawn.push(['line', {
+    //     x1: planets[i].x,
+    //     y1: planets[i].y,
+    //     x2: planets[j].x,
+    //     y2: planets[j].y,
+    //     class: 'rangeLine'
+    //   }]);
+    //   planetsDrawn.push(['g',
+    //   tt((((planets[j].x) + (planets[i].x)) / 2 - 22),
+    //     (((planets[j].y) + (planets[i].y)) / 2 - 4.5)),
+    //     ['rect', {width: distanceWindowLength, height: 10, class: 'dataWindow'}],
+    //     ['text', {
+    //       x: 2, y: 9, class: 'rangeText'}, (dist).toFixed(2)]
+    //   ]);
+    // }
 
     planetsDrawn.push(
       ['g', tt( (planets[i].x), (planets[i].y)),
-        ['g', tt(xWindShift, 0),
-          ['rect', {width: windowWidth,
-            height: windowHeight + 20
-            + (planets[i].industry.length * 10)
-            + (Object.keys(planets[i].storage).length * 10),
-            class: 'dataWindow'}],
-          ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
-          ['text', {x: 3, y: 20, class: 'dataText'},
-            'XYZ:' +
-            (planets[i].x).toFixed(0) +
-            ' ' +
-            (planets[i].y).toFixed(0) +
-            ' ' +
-            (planets[i].z).toFixed(0)
-          ],
-          indDisplay(planets[i], 3)
-        ],
+        // ['g', tt(xWindShift, 0),
+        //   ['rect', {width: windowWidth,
+        //     height: windowHeight + 20
+        //     + (planets[i].industry.length * 10)
+        //     + (Object.keys(planets[i].storage).length * 10),
+        //     class: 'dataWindow'}],
+        //   ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
+        //   ['text', {x: 3, y: 20, class: 'dataText'},
+        //     'XYZ:' +
+        //     (planets[i].x).toFixed(0) +
+        //     ' ' +
+        //     (planets[i].y).toFixed(0) +
+        //     ' ' +
+        //     (planets[i].z).toFixed(0)
+        //   ],
+        //   indDisplay(planets[i], 3)
+        // ],
         ['circle', { r: planets[i].objectRadius, class: 'majorObject'}]
       ]
     );
@@ -184,7 +188,9 @@ const drawStar = (staro) =>{
 exports.drawMoving = (clock, planets, moons, ast) => {
   return ['g', {},
     drawTime(clock),
-    drawPlanets(planets)
+    drawOrbit(moons),
+    drawPlanets(planets),
+    drawPlanets(moons)
   ];
 };
 
@@ -227,7 +233,7 @@ const makeStar = (staro) => {
   return staro;
 };
 
-const makePlanet = (planeto) => {
+const makeBody = (planeto) => {
   // ind.initInd(planeto);
   const planDat = mech.kepCalc(0, planeto);
   const planet = Object.assign(
@@ -278,11 +284,11 @@ const main = async () => {
       stars.push(makeStar(majObj[objName]));
     }
     if (majObj[objName].type === "planet") {
-      planets.push(makePlanet(majObj[objName]));
+      planets.push(makeBody(majObj[objName]));
     }
-    // if (majObj[objName].type === "moon") {
-    //   moons.   push(makeMoon(majObj[objName]));
-    // }
+    if (majObj[objName].type === "moon") {
+      moons.push(makeBody(majObj[objName]));
+    }
     // if (majObj[objName].type === "asteroid") {
     //   ast.     push(makeAst(majObj[objName]));
     // }
@@ -299,7 +305,7 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, ast);
   while (Date.now()) {
     const clock = Date.now();
-    const t = clock / Math.pow(10, 4);
+    const t = clock / Math.pow(10, 2);
     const clock2 = Date(clock);
 
     for (let i = 0; i < movBod.length; i++) {
@@ -310,7 +316,7 @@ const main = async () => {
     }
 
     render2(draw.drawMoving(clock2, planets, moons, ast));
-    await delay(1000);
+    await delay(50);
   }
 };
 
@@ -331,7 +337,7 @@ module.exports={
     "name": "Alpha",
     "type": "planet",
     "primary": "prime",
-    "mass": 60000,
+    "mass": 60000000,
     "a":    250,
     "e":    0.05,
     "t":    0,
@@ -348,7 +354,7 @@ module.exports={
     "name": "Beta",
     "type": "planet",
     "primary": "prime",
-    "mass": 60000,
+    "mass": 60000000,
     "a":    400,
     "e":    0.01,
     "t":    0,
@@ -361,12 +367,46 @@ module.exports={
     "industry": ["refining"],
     "storage": {}
   },
-  "alphaMinor": {
-    "name": "Alpha Minor",
+  "aMinA": {
+    "name": "Alpha Minor A",
     "type": "moon",
     "primary": "alpha",
     "mass": 10000,
     "a":    20,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0,
+    "objectRadius": 2,
+    "industry": [],
+    "storage": {}
+  },
+  "bMinA": {
+    "name": "Beta Minor A",
+    "type": "moon",
+    "primary": "beta",
+    "mass": 10000,
+    "a":    20,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0,
+    "objectRadius": 2,
+    "industry": [],
+    "storage": {}
+  },
+  "bMinb": {
+    "name": "Beta Minor B",
+    "type": "moon",
+    "primary": "beta",
+    "mass": 10000,
+    "a":    40,
     "e":    0,
     "t":    0,
     "t0":   0,

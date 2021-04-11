@@ -11,7 +11,7 @@ const makeStar = (staro) => {
   return staro;
 };
 
-const makePlanet = (planeto) => {
+const makeBody = (planeto) => {
   // ind.initInd(planeto);
   const planDat = mech.kepCalc(0, planeto);
   const planet = Object.assign(
@@ -62,11 +62,11 @@ const main = async () => {
       stars.push(makeStar(majObj[objName]));
     }
     if (majObj[objName].type === "planet") {
-      planets.push(makePlanet(majObj[objName]));
+      planets.push(makeBody(majObj[objName]));
     }
-    // if (majObj[objName].type === "moon") {
-    //   moons.   push(makeMoon(majObj[objName]));
-    // }
+    if (majObj[objName].type === "moon") {
+      moons.push(makeBody(majObj[objName]));
+    }
     // if (majObj[objName].type === "asteroid") {
     //   ast.     push(makeAst(majObj[objName]));
     // }
@@ -83,7 +83,7 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, ast);
   while (Date.now()) {
     const clock = Date.now();
-    const t = clock / Math.pow(10, 4);
+    const t = clock / Math.pow(10, 2);
     const clock2 = Date(clock);
 
     for (let i = 0; i < movBod.length; i++) {
@@ -94,7 +94,7 @@ const main = async () => {
     }
 
     render2(draw.drawMoving(clock2, planets, moons, ast));
-    await delay(1000);
+    await delay(50);
   }
 };
 
