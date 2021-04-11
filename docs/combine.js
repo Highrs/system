@@ -3,6 +3,7 @@
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
 const mech = require('./mechanics.js');
+const majObj = require('./majorObjects.json');
 // const cos = Math.cos;
 // const sin = Math.sin;
 const PI = Math.PI;
@@ -14,10 +15,10 @@ const pageW = 1000;
 const pageH = 1000;
 // const pageW = (sh < 900) ? 800 : sh - (sh % 100);
 // const pageH = (sw < 800) ? 700 : sw - (sw % 100);
-const centerX = pageW/2;
-const centerY = pageH/2;
+// const centerX = pageW/2;
+// const centerY = pageH/2;
 //Artistic properties-------------
-const starRadius = 10;
+// const starRadius = 10;
 let windowWidth = 120; // width of planet data rectangles
 let windowHeight = 25;
 let distanceWindowLength = 44;
@@ -27,18 +28,19 @@ const drawGrid = () => {
   let grid = ['g', {}];
   let crossSize = 5;
 
-  for (let x = -pageW / 2 + 50; x < pageW / 2; x += 50) {
-    for (let y = -pageH / 2 + 50; y < pageH / 2; y += 50) {
+  for (let x = 50; x < pageW; x += 50) {
+    for (let y = 50; y < pageH; y += 50) {
       grid.push(
         ['line', { x1: x - crossSize, y1: y, x2: x + crossSize, y2: y, class: 'grid'}],
         ['line', { x1: x, y1: y + crossSize, x2: x, y2: y - crossSize, class: 'grid'}]
       );
     }
   }
+
   return grid;
 };
 
-const drawOrbits = (planets) => {
+const drawOrbit = (planets) => {
   let divline1;
   let divline2;
   let retGroup = ['g', {}];
@@ -49,7 +51,8 @@ const drawOrbits = (planets) => {
     let points = 128;
 
     for (let i = 0; i < points; i++) {
-      let currCoord = mech.orbitCoords( planet.a, planet.e, (i * 2 * PI)/points, planet.w, planet.lang, planet.inc );
+      let currCoord = mech.orbitCoords((i * 2 * PI) / points,
+        planet, majObj[planet.primary]);
       if (i === 0) {
         divline1 = currCoord;
       } else if (Math.abs(points/2 - i) < 1) {
@@ -64,17 +67,28 @@ const drawOrbits = (planets) => {
     retGroup.push(['path',
       { d: coords, class: 'majorOrbit' }]);
     retGroup.push(['line',
-      {x1: divline1.x, y1: divline1.y, x2: divline2.x, y2: divline2.y, class: 'minorOrbit'}]);
+      {x1: divline1.x,
+        y1: divline1.y,
+        x2: divline2.x,
+        y2: divline2.y,
+        class: 'minorOrbit'}]);
+    retGroup.push(['path', {
+      d: 'M '
+      + (divline1.x - 2) + ',' + (divline1.y - 5) + 'L' + (divline1.x)
+      + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5)
+      + 'Z', class: 'symbolLine'}]);
     retGroup.push(['path',
-      { d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5)  + 'L' + (divline1.x) + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5) + 'Z', class: 'symbolLine'}]);
-    retGroup.push(['path',
-      { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)  + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}]);
+      { d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5)
+      + 'L' + (divline2.x) + ',' + (divline2.y) + 'L' + (divline2.x + 2)
+      + ',' + (divline2.y + 5) + 'Z', class: 'symbolLine'}]);
   }
   return retGroup;
 };
 
 const calcDist = (planet1, planet2) => {
-  return sqrt(Math.pow( (planet1.x - planet2.x), 2 ) + Math.pow( (planet1.y - planet2.y), 2 ) + Math.pow( (planet1.z - planet2.z), 2 ) );
+  return sqrt(Math.pow( (planet1.x - planet2.x), 2 )
+  + Math.pow( (planet1.y - planet2.y), 2 )
+  + Math.pow( (planet1.z - planet2.z), 2 ) );
 };
 
 const indDisplay = (planet, line) => {
@@ -107,35 +121,37 @@ const drawPlanets = (planets) => {
     }
 
     for (let j = i + 1; j < planets.length; j++) {
-      let dist = calcDist(planets[i], planets[j] );
+      let dist = calcDist(planets[i], planets[j]);
       planetsDrawn.push(['line',{
-        x1: planets[i].x / Math.pow(10, 9),
-        y1: planets[i].y / Math.pow(10, 9),
-        x2: planets[j].x / Math.pow(10, 9),
-        y2: planets[j].y / Math.pow(10, 9), class: 'rangeLine' } ]);
+        x1: planets[i].x,
+        y1: planets[i].y,
+        x2: planets[j].x,
+        y2: planets[j].y, class: 'rangeLine' } ]);
       planetsDrawn.push(['g',
-      tt((((planets[j].x / Math.pow(10, 9)) + (planets[i].x / Math.pow(10, 9))) / 2 - 22),
-         (((planets[j].y / Math.pow(10, 9)) + (planets[i].y / Math.pow(10, 9))) / 2 - 4.5)),
+      tt((((planets[j].x) + (planets[i].x)) / 2 - 22),
+        (((planets[j].y) + (planets[i].y)) / 2 - 4.5)),
         ['rect', {width: distanceWindowLength, height: 10, class: 'dataWindow'}],
         ['text', {
-          x: 2, y: 9, class: 'rangeText'}, (dist / Math.pow(10, 9)).toFixed(2)]
+          x: 2, y: 9, class: 'rangeText'}, (dist).toFixed(2)]
       ]);
     }
 
     planetsDrawn.push(
-      ['g', tt( (planets[i].x / Math.pow(10, 9)), (planets[i].y / Math.pow(10, 9))),
+      ['g', tt( (planets[i].x), (planets[i].y)),
         ['g', tt(xWindShift, 0),
           ['rect', {width: windowWidth,
-            height: windowHeight + 20 + (planets[i].industry.length * 10) + (Object.keys(planets[i].storage).length * 10),
+            height: windowHeight + 20
+            + (planets[i].industry.length * 10)
+            + (Object.keys(planets[i].storage).length * 10),
             class: 'dataWindow'}],
           ['text', {x: 8, y: 10, class: 'dataText'}, planets[i].name],
           ['text', {x: 3, y: 20, class: 'dataText'},
             'XYZ:' +
-            (planets[i].x / Math.pow(10, 9)).toFixed(0) +
+            (planets[i].x).toFixed(0) +
             ' ' +
-            (planets[i].y / Math.pow(10, 9)).toFixed(0) +
+            (planets[i].y).toFixed(0) +
             ' ' +
-            (planets[i].z / Math.pow(10, 9)).toFixed(0)
+            (planets[i].z).toFixed(0)
           ],
           indDisplay(planets[i], 3)
         ],
@@ -148,40 +164,42 @@ const drawPlanets = (planets) => {
 };
 
 const drawTime = (clock) => {
-  return ['g', tt( -centerX, -centerY ),
-        ['text', {x: 55, y: 15, class: 'dataText'}, clock]];
+  return ['g', tt(10, 20),
+        ['text', {class: 'dataText'}, clock]];
 };
 
-const star = ['g', {},
-  ['circle', { r: starRadius, class: 'majorObject'}]
-];
+const drawStar = (staro) =>{
+  let star = ['g', {}, ];
 
-const drawStatic = (planets) => {
-  return ['g', {},
-    drawGrid(),
-    drawOrbits(planets),
-    star
-  ];
+  Object.keys(staro).forEach((starName) => {
+    star.push(['g', tt(staro[starName].x, staro[starName].y), ['circle', {
+      r: staro[starName].objectRadius,
+      class: 'majorObject'
+    }]]);
+  });
+
+  return star;
 };
 
-exports.drawMoving = (planets, clock, craft) => {
+exports.drawMoving = (clock, planets, moons, ast) => {
   return ['g', {},
     drawTime(clock),
     drawPlanets(planets)
-    // drawn.push(drawCraft(craft));
   ];
 };
 
-exports.drawMap = (planets) => {
+exports.drawStatic = (stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
-    ['g', tt(centerX, centerY),
-      drawStatic(planets),
+    ['g', {},
+      drawGrid(),
+      drawStar(stars),
+      drawOrbit(planets),
       ['g', {id: 'moving'}]
     ]
   ]);
 };
 
-},{"./get-svg.js":2,"./mechanics.js":8,"onml/tt.js":11}],2:[function(require,module,exports){
+},{"./get-svg.js":2,"./majorObjects.json":4,"./mechanics.js":5,"onml/tt.js":8}],2:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -196,132 +214,50 @@ module.exports = cfg => {
 }
 
 },{}],3:[function(require,module,exports){
-module.exports={
-  "brick": {
-    "class": "Brick",
-    "cargo": {}
-  }
-}
-
-},{}],4:[function(require,module,exports){
-'use strict';
-// Industry manager
-const indTemp = require('./industryTemp.json');
-
-const industryStoreCheck = (planet) => {
-  if (planet.industry) {
-    planet.industry.forEach((planetIndName) => {
-      if (!planet.storage[indTemp[planetIndName].storage]) {
-        Object.assign(planet.storage, indTemp[planetIndName].storage);
-      }
-      indWork(planet, planetIndName);
-    });
-  }
-};
-
-const initInd = (planet) => {
-  industryStoreCheck(planet);
-};
-
-const indWork = (planet, industry) => {
-  let workGo = true;
-
-  Object.keys(indTemp[industry].input).forEach((inputResource) => {
-    if (
-      (!planet.storage[inputResource]) ||
-      (indTemp[industry].input[inputResource] > planet.storage[inputResource])
-    ) {
-      workGo = false;
-    }
-  });
-
-  if (workGo === true) {
-    Object.keys(indTemp[industry].input).forEach((inputResource) => {
-      planet.storage[inputResource] -= indTemp[industry].input[inputResource];
-    });
-
-    setTimeout(
-      function(){
-        Object.keys(indTemp[industry].output).forEach((outputResource) => {
-          planet.storage[outputResource] += indTemp[industry].output[outputResource];
-        });
-        indWork(planet, industry);
-      },
-      indTemp[industry].cycle);
-  }
-};
-
-exports.initInd = initInd;
-exports.indWork = indWork;
-
-},{"./industryTemp.json":5}],5:[function(require,module,exports){
-module.exports={
-  "mining": {
-    "cycle": 1000,
-    "input": {},
-    "output": {
-      "ore": 1
-    },
-    "storage": {
-      "ore": 10
-    }
-  },
-
-  "refining": {
-    "cycle": 2000,
-    "input": {
-      "ore": 2
-    },
-    "output": {
-      "metal": 1
-    },
-    "storage": {
-      "ore": 100,
-      "metal": 0
-    }
-  }
-}
-
-},{}],6:[function(require,module,exports){
 'use strict';
 // Initialization and run
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
 const mech = require('./mechanics.js');
-const ind = require('./industry.js');
-const majorObjects = require('./majorObjects.json');
-const hulls = require('./hulls.json');
+// const ind = require('./industry.js');
+const majObj = require('./majorObjects.json');
+// const hulls = require('./hulls.json');
+
+const makeStar = (staro) => {
+  return staro;
+};
 
 const makePlanet = (planeto) => {
-//name, a, e, t, t0, w, lang, inc, maz
-  const planDat = mech.kepCalc(planeto, 0);
-  ind.initInd(planeto);
-
+  // ind.initInd(planeto);
+  const planDat = mech.kepCalc(0, planeto);
   const planet = Object.assign(
     planeto,
     {
       focalShift: planDat.focalShift,
-      x:          planDat.x,
-      y:          planDat.y,
-      z:          planDat.z
+      x: planDat.x,
+      y: planDat.y,
+      z: planDat.z
     }
   );
-
   return planet;
 };
 
-const makeCraft = (crafto) => {
-  const craft = Object.assign(
-    crafto,
-    {
-      x: 150000000,
-      y: 0,
-      z: 0
-    }
-  );
-
-  return craft;
-};
+// const makeMoon = (moono) => {
+//   const planDat = mech.kepCalc(moono, 0, majObj[moono.primary]);
+//   const moon = Object.assign(
+//     moono,
+//     {focalShift: planDat.focalShift, x: planDat.x, y: planDat.y, z: planDat.z}
+//   );
+//   return moon;
+// };
+//
+// const makeCraft = (crafto) => {
+//   const craft = Object.assign(
+//     crafto,
+//     {x: 150000000, y: 0, z: 0}
+//   );
+//   return craft;
+// };
 
 async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
@@ -329,83 +265,149 @@ async function delay(ms) {
 
 const main = async () => {
   console.log("Giant alien spiders are no joke!");
-  const planets = [];
-  const craft = [];
+  let stars = [];
+  let planets = [];
+  let moons = [];
+  let ast = [];
 
-  Object.keys(majorObjects.planets).forEach((planetName) => {
-    planets.push(makePlanet(majorObjects.planets[planetName]));
+  // const craft = [];
+
+  Object.keys(majObj).forEach((objName) => {
+    // console.log(el);
+    if (majObj[objName].type === "star") {
+      stars.push(makeStar(majObj[objName]));
+    }
+    if (majObj[objName].type === "planet") {
+      planets.push(makePlanet(majObj[objName]));
+    }
+    // if (majObj[objName].type === "moon") {
+    //   moons.   push(makeMoon(majObj[objName]));
+    // }
+    // if (majObj[objName].type === "asteroid") {
+    //   ast.     push(makeAst(majObj[objName]));
+    // }
+    else {console.log("ERROR at make. Skipping.");}
   });
+  // for (let i = 0; i < 1; i++) {
+  //   craft.push(makeCraft(hulls.brick));
+  // }
 
-  for (let i = 0; i < 1; i++) {
-    craft.push(makeCraft(hulls.brick));
-  }
-
-  renderer(document.getElementById('content'))(draw.drawMap(planets));
+  renderer(document.getElementById('content'))(draw.drawStatic(stars, planets));
   const render2 = renderer(document.getElementById('moving'));
 
-  console.log(planets);
+  let movBod = [];
+  movBod = movBod.concat(planets, moons, ast);
   while (Date.now()) {
     const clock = Date.now();
     const t = clock / Math.pow(10, 4);
     const clock2 = Date(clock);
 
-    for (let i = 0; i < planets.length; i++) {
-      let newData = mech.kepCalc(planets[i], t);
-      planets[i].x = newData.x;
-      planets[i].y = newData.y;
-      planets[i].z = newData.z;
+    for (let i = 0; i < movBod.length; i++) {
+      let newData = mech.kepCalc(t, movBod[i]);
+      movBod[i].x = newData.x;
+      movBod[i].y = newData.y;
+      movBod[i].z = newData.z;
     }
 
-    render2(draw.drawMoving(planets, clock2, craft));
-    await delay(100);
+    render2(draw.drawMoving(clock2, planets, moons, ast));
+    await delay(1000);
   }
 };
 
 window.onload = main;
 
-},{"./draw.js":1,"./hulls.json":3,"./industry.js":4,"./majorObjects.json":7,"./mechanics.js":8,"onml/renderer.js":9}],7:[function(require,module,exports){
+},{"./draw.js":1,"./majorObjects.json":4,"./mechanics.js":5,"onml/renderer.js":6}],4:[function(require,module,exports){
 module.exports={
-  "planets": {
-    "alpha": {
-      "name": "Alpha",
-      "a":    250,
-      "e":    0.05,
-      "t":    0,
-      "t0":   0,
-      "w":    2,
-      "lang": 0,
-      "inc":  0.1,
-      "maz":  0,
-      "objectRadius": 5,
-      "industry": ["mining", "mining"],
-      "storage": {}
-    },
-    "beta": {
-      "name": "Beta",
-      "a":    400,
-      "e":    0.01,
-      "t":    0,
-      "t0":   0,
-      "w":    2,
-      "lang": 1.6,
-      "inc":  0.2,
-      "maz":  0,
-      "objectRadius": 5,
-      "industry": ["refining"],
-      "storage": {}
-    }
+  "prime": {
+    "name": "Prime",
+    "type": "star",
+    "mass": 20000000000,
+    "x": 500,
+    "y": 500,
+    "z": 0,
+    "objectRadius": 5
+  },
+  "alpha": {
+    "name": "Alpha",
+    "type": "planet",
+    "primary": "prime",
+    "mass": 60000,
+    "a":    250,
+    "e":    0.05,
+    "t":    0,
+    "t0":   0,
+    "w":    2,
+    "lang": 0,
+    "inc":  0.1,
+    "maz":  0,
+    "objectRadius": 5,
+    "industry": ["mining", "mining"],
+    "storage": {}
+  },
+  "beta": {
+    "name": "Beta",
+    "type": "planet",
+    "primary": "prime",
+    "mass": 60000,
+    "a":    400,
+    "e":    0.01,
+    "t":    0,
+    "t0":   0,
+    "w":    2,
+    "lang": 1.6,
+    "inc":  0.2,
+    "maz":  0,
+    "objectRadius": 5,
+    "industry": ["refining"],
+    "storage": {}
+  },
+  "alphaMinor": {
+    "name": "Alpha Minor",
+    "type": "moon",
+    "primary": "alpha",
+    "mass": 10000,
+    "a":    20,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0,
+    "objectRadius": 2,
+    "industry": [],
+    "storage": {}
+  },
+  "astroDelta": {
+    "name": "Asteroid Delta",
+    "type": "asteroid",
+    "primary": "alpha",
+    "mass": 1,
+    "a":    100,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0,
+    "objectRadius": 1,
+    "industry": [],
+    "storage": {}
   }
 }
 
-},{}],8:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
+const majObj = require('./majorObjects.json');
 
 const cos = Math.cos;
 const sin = Math.sin;
 const PI = Math.PI;
 const sqrt = Math.sqrt;
 
-exports.kepCalc = (planeto, t) => {
+exports.kepCalc = (t, planeto) => {
+  let primaryo = majObj[planeto.primary];
 
   let a    = planeto.a;    // semi-major axis (a)
   let e    = planeto.e;    // eccentricity (e)
@@ -418,7 +420,7 @@ exports.kepCalc = (planeto, t) => {
 
   a = a * Math.pow(10, 9);
   const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
-  const mass = 2 * Math.pow(10, 30); // Central object mass, approximately sol
+  const mass = primaryo.mass * Math.pow(10, 20); // Central object mass, approximately sol
   const u = g * mass; // Standard gravitational parameter u
 
   const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
@@ -476,11 +478,23 @@ exports.kepCalc = (planeto, t) => {
     + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
   const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
 
-  return { x: x, y: y, z: z, focalShift: focalShift };
+  return {
+    x: (x / Math.pow(10, 9)) + primaryo.x,
+    y: (y / Math.pow(10, 9)) + primaryo.y,
+    z: (z / Math.pow(10, 9)) + primaryo.z,
+    focalShift: focalShift };
 };
 
 
-exports.orbitCoords = (a, e, mat, w, lang, inc) => {
+exports.orbitCoords = (mat, planeto) => {
+  let primaryo = majObj[planeto.primary];
+
+  let a    = planeto.a;    // semi-major axis (a)
+  let e    = planeto.e;    // eccentricity (e)
+  let w    = planeto.w;    // argument of periapsis (w)
+  let lang = planeto.lang; // longitude of ascention node (lang)
+  let inc  = planeto.inc;  // inclanation (inc)
+
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
   const itter = 3;
   const calcEAT = (e, mat) => {
@@ -510,10 +524,14 @@ exports.orbitCoords = (a, e, mat, w, lang, inc) => {
     + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
   const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
 
-  return { x: x, y: y, z: z};
+  return {
+    x: x + primaryo.x,
+    y: y + primaryo.y,
+    z: z + primaryo.z
+  };
 };
 
-},{}],9:[function(require,module,exports){
+},{"./majorObjects.json":4}],6:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');
@@ -538,7 +556,7 @@ module.exports = renderer;
 
 /* eslint-env browser */
 
-},{"./stringify.js":10}],10:[function(require,module,exports){
+},{"./stringify.js":7}],7:[function(require,module,exports){
 'use strict';
 
 const isObject = o => o && Object.prototype.toString.call(o) === '[object Object]';
@@ -631,7 +649,7 @@ function stringify (a, indentation) {
 
 module.exports = stringify;
 
-},{}],11:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 module.exports = (x, y, obj) => {
@@ -644,4 +662,4 @@ module.exports = (x, y, obj) => {
   return Object.assign(objt, obj);
 };
 
-},{}]},{},[6]);
+},{}]},{},[3]);

@@ -1,11 +1,13 @@
 'use strict';
+const majObj = require('./majorObjects.json');
 
 const cos = Math.cos;
 const sin = Math.sin;
 const PI = Math.PI;
 const sqrt = Math.sqrt;
 
-exports.kepCalc = (planeto, t) => {
+exports.kepCalc = (t, planeto) => {
+  let primaryo = majObj[planeto.primary];
 
   let a    = planeto.a;    // semi-major axis (a)
   let e    = planeto.e;    // eccentricity (e)
@@ -18,7 +20,7 @@ exports.kepCalc = (planeto, t) => {
 
   a = a * Math.pow(10, 9);
   const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
-  const mass = 2 * Math.pow(10, 30); // Central object mass, approximately sol
+  const mass = primaryo.mass * Math.pow(10, 20); // Central object mass, approximately sol
   const u = g * mass; // Standard gravitational parameter u
 
   const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
@@ -76,11 +78,23 @@ exports.kepCalc = (planeto, t) => {
     + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
   const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
 
-  return { x: x, y: y, z: z, focalShift: focalShift };
+  return {
+    x: (x / Math.pow(10, 9)) + primaryo.x,
+    y: (y / Math.pow(10, 9)) + primaryo.y,
+    z: (z / Math.pow(10, 9)) + primaryo.z,
+    focalShift: focalShift };
 };
 
 
-exports.orbitCoords = (a, e, mat, w, lang, inc) => {
+exports.orbitCoords = (mat, planeto) => {
+  let primaryo = majObj[planeto.primary];
+
+  let a    = planeto.a;    // semi-major axis (a)
+  let e    = planeto.e;    // eccentricity (e)
+  let w    = planeto.w;    // argument of periapsis (w)
+  let lang = planeto.lang; // longitude of ascention node (lang)
+  let inc  = planeto.inc;  // inclanation (inc)
+
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
   const itter = 3;
   const calcEAT = (e, mat) => {
@@ -110,5 +124,9 @@ exports.orbitCoords = (a, e, mat, w, lang, inc) => {
     + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
   const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
 
-  return { x: x, y: y, z: z};
+  return {
+    x: x + primaryo.x,
+    y: y + primaryo.y,
+    z: z + primaryo.z
+  };
 };
