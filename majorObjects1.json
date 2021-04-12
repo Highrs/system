@@ -1,0 +1,28 @@
+{
+  "prime": {
+    "name": "Prime",
+    "type": "star",
+    "mass": 20000000000,
+    "x": 600,
+    "y": 600,
+    "z": 0,
+    "objectRadius": 10
+  },
+  "alpha": {
+    "name": "Alpha",
+    "type": "planet",
+    "primary": "prime",
+    "mass": 60000000,
+    "a":    250,
+    "e":    0.05,
+    "t":    0,
+    "t0":   0,
+    "w":    2,
+    "lang": 0,
+    "inc":  0.1,
+    "maz":  0,
+    "objectRadius": 5,
+    "industry": [],
+    "storage": {}
+  }
+}

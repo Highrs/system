@@ -1,5 +1,5 @@
 'use strict';
-const majObj = require('./majorObjects.json');
+const majObj = require('./majorObjects2.json');
 
 const cos = Math.cos;
 const sin = Math.sin;

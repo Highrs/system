@@ -1,10 +1,10 @@
 'use strict';
+const majObj = require('./majorObjects2.json');
 // Initialization and run
 const draw = require('./draw.js');
 const renderer = require('onml/renderer.js');
 const mech = require('./mechanics.js');
-// const ind = require('./industry.js');
-const majObj = require('./majorObjects.json');
+const ind = require('./industry.js');
 // const hulls = require('./hulls.json');
 
 const makeStar = (staro) => {
@@ -12,7 +12,7 @@ const makeStar = (staro) => {
 };
 
 const makeBody = (planeto) => {
-  // ind.initInd(planeto);
+  ind.initInd(planeto);
   const planDat = mech.kepCalc(0, planeto);
   const planet = Object.assign(
     planeto,
@@ -26,15 +26,6 @@ const makeBody = (planeto) => {
   return planet;
 };
 
-// const makeMoon = (moono) => {
-//   const planDat = mech.kepCalc(moono, 0, majObj[moono.primary]);
-//   const moon = Object.assign(
-//     moono,
-//     {focalShift: planDat.focalShift, x: planDat.x, y: planDat.y, z: planDat.z}
-//   );
-//   return moon;
-// };
-//
 // const makeCraft = (crafto) => {
 //   const craft = Object.assign(
 //     crafto,
@@ -67,9 +58,9 @@ const main = async () => {
     if (majObj[objName].type === "moon") {
       moons.push(makeBody(majObj[objName]));
     }
-    // if (majObj[objName].type === "asteroid") {
-    //   ast.     push(makeAst(majObj[objName]));
-    // }
+    if (majObj[objName].type === "asteroid") {
+      ast.push(makeBody(majObj[objName]));
+    }
     else {console.log("ERROR at make. Skipping.");}
   });
   // for (let i = 0; i < 1; i++) {
