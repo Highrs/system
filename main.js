@@ -51,17 +51,18 @@ const main = async () => {
     // console.log(el);
     if (majObj[objName].type === "star") {
       stars.push(makeStar(majObj[objName]));
-    }
+    } else
     if (majObj[objName].type === "planet") {
       planets.push(makeBody(majObj[objName]));
-    }
+    } else
     if (majObj[objName].type === "moon") {
       moons.push(makeBody(majObj[objName]));
-    }
+    } else
     if (majObj[objName].type === "asteroid") {
       ast.push(makeBody(majObj[objName]));
+    } else {
+      console.log("ERROR at make. Skipping.");
     }
-    else {console.log("ERROR at make. Skipping.");}
   });
   // for (let i = 0; i < 1; i++) {
   //   craft.push(makeCraft(hulls.brick));

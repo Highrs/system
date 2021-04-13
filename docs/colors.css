@@ -25,6 +25,7 @@ html, body {
   stroke-width: 0.8px;
   stroke: #00ff66ff;
   stroke-dasharray: 20 5;
+  fill: #363636;
 }
 .minorOrbit {
   fill: none;

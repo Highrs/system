@@ -227,10 +227,10 @@ exports.drawMoving = (clock, planets, moons, ast) => {
 exports.drawStatic = (stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', {},
-      drawGrid(),
       drawOrbit(planets),
-      drawStar(stars),
-      ['g', {id: 'moving'}]
+      ['g', {id: 'moving'}],
+      drawGrid(),
+      drawStar(stars)
     ]
   ]);
 };
@@ -382,17 +382,18 @@ const main = async () => {
     // console.log(el);
     if (majObj[objName].type === "star") {
       stars.push(makeStar(majObj[objName]));
-    }
+    } else
     if (majObj[objName].type === "planet") {
       planets.push(makeBody(majObj[objName]));
-    }
+    } else
     if (majObj[objName].type === "moon") {
       moons.push(makeBody(majObj[objName]));
-    }
+    } else
     if (majObj[objName].type === "asteroid") {
       ast.push(makeBody(majObj[objName]));
+    } else {
+      console.log("ERROR at make. Skipping.");
     }
-    else {console.log("ERROR at make. Skipping.");}
   });
   // for (let i = 0; i < 1; i++) {
   //   craft.push(makeCraft(hulls.brick));
@@ -433,23 +434,6 @@ module.exports={
     "z": 0,
     "objectRadius": 5
   },
-  "alpha": {
-    "name": "Alpha",
-    "type": "planet",
-    "primary": "prime",
-    "mass": 60000000,
-    "a":    250,
-    "e":    0.05,
-    "t":    0,
-    "t0":   0,
-    "w":    2,
-    "lang": 0,
-    "inc":  0.1,
-    "maz":  0,
-    "objectRadius": 5,
-    "industry": ["mining", "mining"],
-    "storage": {}
-  },
   "beta": {
     "name": "Beta",
     "type": "planet",
@@ -465,6 +449,23 @@ module.exports={
     "maz":  0,
     "objectRadius": 5,
     "industry": ["refining"],
+    "storage": {}
+  },
+  "alpha": {
+    "name": "Alpha",
+    "type": "planet",
+    "primary": "prime",
+    "mass": 60000000,
+    "a":    250,
+    "e":    0.05,
+    "t":    0,
+    "t0":   0,
+    "w":    2,
+    "lang": 0,
+    "inc":  0.1,
+    "maz":  0,
+    "objectRadius": 5,
+    "industry": ["mining", "mining"],
     "storage": {}
   },
   "delta": {
@@ -484,12 +485,12 @@ module.exports={
     "industry": [],
     "storage": {}
   },
-  "aMinA": {
-    "name": "Alpha Minor A",
+  "bMinB": {
+    "name": "Beta Minor B",
     "type": "moon",
-    "primary": "alpha",
+    "primary": "beta",
     "mass": 10000,
-    "a":    20,
+    "a":    40,
     "e":    0,
     "t":    0,
     "t0":   0,
@@ -518,12 +519,12 @@ module.exports={
     "industry": [],
     "storage": {}
   },
-  "bMinb": {
-    "name": "Beta Minor B",
+  "aMinA": {
+    "name": "Alpha Minor A",
     "type": "moon",
-    "primary": "beta",
+    "primary": "alpha",
     "mass": 10000,
-    "a":    40,
+    "a":    20,
     "e":    0,
     "t":    0,
     "t0":   0,

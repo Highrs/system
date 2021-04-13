@@ -226,10 +226,10 @@ exports.drawMoving = (clock, planets, moons, ast) => {
 exports.drawStatic = (stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', {},
-      drawGrid(),
       drawOrbit(planets),
-      drawStar(stars),
-      ['g', {id: 'moving'}]
+      ['g', {id: 'moving'}],
+      drawGrid(),
+      drawStar(stars)
     ]
   ]);
 };
