@@ -6,16 +6,16 @@ const sin = Math.sin;
 const PI = Math.PI;
 const sqrt = Math.sqrt;
 
-exports.kepCalc = (t, planeto) => {
-  let primaryo = majObj[planeto.primary];
+exports.kepCalc = (t, bodyo) => {
+  let primaryo = majObj[bodyo.primary];
 
-  let a    = planeto.a;    // semi-major axis (a)
-  let e    = planeto.e;    // eccentricity (e)
-  let t0   = planeto.t0;   // epoch (days) (t0)
-  let w    = planeto.w;    // argument of periapsis (w)
-  let lang = planeto.lang; // longitude of ascention node (lang)
-  let inc  = planeto.inc;  // inclanation (inc)
-  let maz  = planeto.maz;  // mean anomaly at zero (maz)
+  let a    = bodyo.a;    // semi-major axis (a)
+  let e    = bodyo.e;    // eccentricity (e)
+  let t0   = bodyo.t0;   // epoch (days) (t0)
+  let w    = bodyo.w;    // argument of periapsis (w)
+  let lang = bodyo.lang; // longitude of ascention node (lang)
+  let inc  = bodyo.inc;  // inclanation (inc)
+  let maz  = bodyo.maz;  // mean anomaly at zero (maz)
   // time (days) (t)
 
   a = a * Math.pow(10, 9);
@@ -86,14 +86,14 @@ exports.kepCalc = (t, planeto) => {
 };
 
 
-exports.orbitCoords = (mat, planeto) => {
-  let primaryo = majObj[planeto.primary];
+exports.orbitCoords = (mat, bodyo) => {
+  let primaryo = majObj[bodyo.primary];
 
-  let a    = planeto.a;    // semi-major axis (a)
-  let e    = planeto.e;    // eccentricity (e)
-  let w    = planeto.w;    // argument of periapsis (w)
-  let lang = planeto.lang; // longitude of ascention node (lang)
-  let inc  = planeto.inc;  // inclanation (inc)
+  let a    = bodyo.a;    // semi-major axis (a)
+  let e    = bodyo.e;    // eccentricity (e)
+  let w    = bodyo.w;    // argument of periapsis (w)
+  let lang = bodyo.lang; // longitude of ascention node (lang)
+  let inc  = bodyo.inc;  // inclanation (inc)
 
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
   const itter = 3;

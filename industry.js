@@ -2,44 +2,43 @@
 // Industry manager
 const indTemp = require('./industryTemp.json');
 
-const industryStoreCheck = (planet) => {
-  if (planet.industry) {
-    planet.industry.forEach((planetIndName) => {
-      if (!planet.storage[indTemp[planetIndName].storage]) {
-        Object.assign(planet.storage, indTemp[planetIndName].storage);
-      }
-      indWork(planet, planetIndName);
-    });
-  }
+const industryStoreCheck = (body) => {
+  body.industry && body.industry.forEach((bodyIndName) => {
+    if (!body.storage[indTemp[bodyIndName].storage]) {
+      Object.assign(body.storage, indTemp[bodyIndName].storage);
+    }
+    indWork(body, bodyIndName);
+  });
+
 };
 
-const initInd = (planet) => {
-  industryStoreCheck(planet);
+const initInd = (body) => {
+  industryStoreCheck(body);
 };
 
-const indWork = (planet, industry) => {
+const indWork = (body, industry) => {
   let workGo = true;
 
-  Object.keys(indTemp[industry].input).forEach((inputResource) => {
+  Object.keys(indTemp[industry].input).forEach((inRes) => {
     if (
-      (!planet.storage[inputResource]) ||
-      (indTemp[industry].input[inputResource] > planet.storage[inputResource])
+      (!body.storage[inRes]) ||
+      (indTemp[industry].input[inRes] > body.storage[inRes])
     ) {
       workGo = false;
     }
   });
 
   if (workGo === true) {
-    Object.keys(indTemp[industry].input).forEach((inputResource) => {
-      planet.storage[inputResource] -= indTemp[industry].input[inputResource];
+    Object.keys(indTemp[industry].input).forEach((inRes) => {
+      body.storage[inRes] -= indTemp[industry].input[inRes];
     });
 
     setTimeout(
       function(){
-        Object.keys(indTemp[industry].output).forEach((outputResource) => {
-          planet.storage[outputResource] += indTemp[industry].output[outputResource];
+        Object.keys(indTemp[industry].output).forEach((outRes) => {
+          body.storage[outRes] += indTemp[industry].output[outRes];
         });
-        indWork(planet, industry);
+        indWork(body, industry);
       },
       indTemp[industry].cycle);
   }

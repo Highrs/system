@@ -6,14 +6,14 @@
     "x": 600,
     "y": 600,
     "z": 0,
-    "objectRadius": 5
+    "objectRadius": 20
   },
   "beta": {
     "name": "Beta",
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
-    "a":    400,
+    "a":    450,
     "e":    0.01,
     "t":    0,
     "t0":   0,
@@ -22,7 +22,7 @@
     "inc":  0.2,
     "maz":  0,
     "objectRadius": 5,
-    "industry": ["refining"],
+    "industry": [],
     "storage": {}
   },
   "alpha": {
@@ -47,13 +47,13 @@
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
-    "a":    100,
-    "e":    0.01,
+    "a":    70,
+    "e":    0.4,
     "t":    0,
     "t0":   0,
     "w":    4,
     "lang": 1.6,
-    "inc":  0.2,
+    "inc":  0.9,
     "maz":  0,
     "objectRadius": 5,
     "industry": [],
@@ -73,7 +73,7 @@
     "inc":  0,
     "maz":  0,
     "objectRadius": 2,
-    "industry": [],
+    "industry": ["refining"],
     "storage": {}
   },
   "bMinA": {
@@ -102,7 +102,7 @@
     "e":    0,
     "t":    0,
     "t0":   0,
-    "w":    0,
+    "w":    2,
     "lang": 0,
     "inc":  0,
     "maz":  0,

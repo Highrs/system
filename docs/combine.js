@@ -31,8 +31,10 @@ const drawGrid = () => {
   for (let x = 100; x < pageW; x += 100) {
     for (let y = 100; y < pageH; y += 100) {
       grid.push(
-        ['line', { x1: x - crossSize, y1: y, x2: x + crossSize, y2: y, class: 'grid'}],
-        ['line', { x1: x, y1: y + crossSize, x2: x, y2: y - crossSize, class: 'grid'}]
+        ['line', { x1: x - crossSize, y1: y,
+          x2: x + crossSize, y2: y, class: 'grid'}],
+        ['line', { x1: x, y1: y + crossSize,
+          x2: x, y2: y - crossSize, class: 'grid'}]
       );
     }
   }
@@ -40,21 +42,24 @@ const drawGrid = () => {
   return grid;
 };
 
-const drawOrbit = (planets) => {
-  if (planets.length < 1) {return ['g', {}];}
+const drawOrbit = (bodies) => {
+  if (bodies.length < 1) {return ['g', {}];}
 
   let divline1;
   let divline2;
   let retGroup = ['g', {}];
 
-  for (let i = 0; i < planets.length; i++) {
-    let planet = planets[i];
+  for (let i = 0; i < bodies.length; i++) {
+    let body = bodies[i];
     let coords = 'M ';
     let points = 128;
+    if (body.type === "moon") {
+      points = 32;
+    }
 
     for (let i = 0; i < points; i++) {
       let currCoord = mech.orbitCoords((i * 2 * PI) / points,
-        planet, majObj[planet.primary]);
+        body, majObj[body.primary]);
       if (i === 0) {
         divline1 = currCoord;
       } else if (Math.abs(points/2 - i) < 1) {
@@ -89,18 +94,19 @@ const drawOrbit = (planets) => {
   return retGroup;
 };
 
-const calcDist = (planet1, planet2) => {
-  return sqrt( Math.pow( (planet1.x - planet2.x), 2 )
-  + Math.pow( (planet1.y - planet2.y), 2 )
-  + Math.pow( (planet1.z - planet2.z), 2 ) );
+const calcDist = (body1, body2) => {
+  return sqrt( Math.pow( (body1.x - body2.x), 2 )
+  + Math.pow( (body1.y - body2.y), 2 )
+  + Math.pow( (body1.z - body2.z), 2 ) );
 };
 
-const indDisplay = (planet) => {
+const indDisplay = (body) => {
   let display = ['g', tt(0, 30),
     ['rect', {
       width: 100,
       height:
-        planet.industry.length * 10 + Object.keys(planet.storage).length * 10 + 25,
+        body.industry.length * 10
+          + Object.keys(body.storage).length * 10 + 25,
       class: 'dataWindow'
     }]
   ];
@@ -108,23 +114,23 @@ const indDisplay = (planet) => {
     ['g', tt(0, 10),
     ['text', {x: 3, y: 0,
       class: 'dataText'}, "Industry:"],
-      ['text', {x: 3, y: (planet.industry.length + 1)*10,
+      ['text', {x: 3, y: (body.industry.length + 1)*10,
         class: 'dataText'}, "Storage:"]
     ]
   );
-  planet.industry.forEach((e, idx) => {
+  body.industry.forEach((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'}, e]
       ]
     );
   });
-  Object.keys(planet.storage).forEach((e, idx) => {
+  Object.keys(body.storage).forEach((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9,
-          y: (planet.industry.length + idx + 2) * 10,
-          class: 'dataText'}, e + " - " + planet.storage[e]
+          y: (body.industry.length + idx + 2) * 10,
+          class: 'dataText'}, e + " - " + body.storage[e]
         ]
       ]
     );
@@ -135,7 +141,7 @@ const indDisplay = (planet) => {
 
 const drawData = (body) => {
   let dataDisp = ['g', {}];
-  if (body.type === 'planet') {
+  if (body.type === "planet" || body.industry.length > 0) {
     dataDisp.push(
       ['rect', {
         width: windowWidth,
@@ -177,9 +183,14 @@ const drawBodies = (bodies) => {
           bodiesDrawn.push(['g',
           tt((((bodies[j].x) + (bodies[i].x)) / 2 - 22),
             (((bodies[j].y) + (bodies[i].y)) / 2 - 4.5)),
-            ['rect', {width: distanceWindowLength, height: 10, class: 'dataWindow'}],
+            ['rect', {
+              width: distanceWindowLength,
+              height: 10,
+              class: 'dataWindow'
+            }],
             ['text', {
-              x: 2, y: 9, class: 'rangeText'}, (dist).toFixed(2)]
+              x: 2, y: 9, class: 'rangeText'
+            }, (dist).toFixed(2)]
           ]);
         }
       }
@@ -205,10 +216,12 @@ const drawStar = (staro) =>{
   let star = ['g', {}, ];
 
   Object.keys(staro).forEach((starName) => {
-    star.push(['g', tt(staro[starName].x, staro[starName].y), ['circle', {
-      r: staro[starName].objectRadius,
-      class: 'majorObject'
-    }]]);
+    star.push(['g', tt(staro[starName].x, staro[starName].y),
+      ['circle', {
+        r: staro[starName].objectRadius,
+        class: 'majorObject'
+      }]
+    ]);
   });
 
   return star;
@@ -228,9 +241,9 @@ exports.drawStatic = (stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', {},
       drawOrbit(planets),
-      ['g', {id: 'moving'}],
       drawGrid(),
-      drawStar(stars)
+      drawStar(stars),
+      ['g', {id: 'moving'}],
     ]
   ]);
 };
@@ -254,44 +267,43 @@ module.exports = cfg => {
 // Industry manager
 const indTemp = require('./industryTemp.json');
 
-const industryStoreCheck = (planet) => {
-  if (planet.industry) {
-    planet.industry.forEach((planetIndName) => {
-      if (!planet.storage[indTemp[planetIndName].storage]) {
-        Object.assign(planet.storage, indTemp[planetIndName].storage);
-      }
-      indWork(planet, planetIndName);
-    });
-  }
+const industryStoreCheck = (body) => {
+  body.industry && body.industry.forEach((bodyIndName) => {
+    if (!body.storage[indTemp[bodyIndName].storage]) {
+      Object.assign(body.storage, indTemp[bodyIndName].storage);
+    }
+    indWork(body, bodyIndName);
+  });
+
 };
 
-const initInd = (planet) => {
-  industryStoreCheck(planet);
+const initInd = (body) => {
+  industryStoreCheck(body);
 };
 
-const indWork = (planet, industry) => {
+const indWork = (body, industry) => {
   let workGo = true;
 
-  Object.keys(indTemp[industry].input).forEach((inputResource) => {
+  Object.keys(indTemp[industry].input).forEach((inRes) => {
     if (
-      (!planet.storage[inputResource]) ||
-      (indTemp[industry].input[inputResource] > planet.storage[inputResource])
+      (!body.storage[inRes]) ||
+      (indTemp[industry].input[inRes] > body.storage[inRes])
     ) {
       workGo = false;
     }
   });
 
   if (workGo === true) {
-    Object.keys(indTemp[industry].input).forEach((inputResource) => {
-      planet.storage[inputResource] -= indTemp[industry].input[inputResource];
+    Object.keys(indTemp[industry].input).forEach((inRes) => {
+      body.storage[inRes] -= indTemp[industry].input[inRes];
     });
 
     setTimeout(
       function(){
-        Object.keys(indTemp[industry].output).forEach((outputResource) => {
-          planet.storage[outputResource] += indTemp[industry].output[outputResource];
+        Object.keys(indTemp[industry].output).forEach((outRes) => {
+          body.storage[outRes] += indTemp[industry].output[outRes];
         });
-        indWork(planet, industry);
+        indWork(body, industry);
       },
       indTemp[industry].cycle);
   }
@@ -375,11 +387,15 @@ const main = async () => {
   let planets = [];
   let moons = [];
   let ast = [];
+  let indSites = [];
 
   // const craft = [];
 
   Object.keys(majObj).forEach((objName) => {
-    // console.log(el);
+    if (majObj[objName].industry && majObj[objName].industry.length > 0) {
+      indSites.push(majObj[objName]);
+    }
+
     if (majObj[objName].type === "star") {
       stars.push(makeStar(majObj[objName]));
     } else
@@ -395,6 +411,7 @@ const main = async () => {
       console.log("ERROR at make. Skipping.");
     }
   });
+
   // for (let i = 0; i < 1; i++) {
   //   craft.push(makeCraft(hulls.brick));
   // }
@@ -432,14 +449,14 @@ module.exports={
     "x": 600,
     "y": 600,
     "z": 0,
-    "objectRadius": 5
+    "objectRadius": 20
   },
   "beta": {
     "name": "Beta",
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
-    "a":    400,
+    "a":    450,
     "e":    0.01,
     "t":    0,
     "t0":   0,
@@ -448,7 +465,7 @@ module.exports={
     "inc":  0.2,
     "maz":  0,
     "objectRadius": 5,
-    "industry": ["refining"],
+    "industry": [],
     "storage": {}
   },
   "alpha": {
@@ -473,13 +490,13 @@ module.exports={
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
-    "a":    100,
-    "e":    0.01,
+    "a":    70,
+    "e":    0.4,
     "t":    0,
     "t0":   0,
     "w":    4,
     "lang": 1.6,
-    "inc":  0.2,
+    "inc":  0.9,
     "maz":  0,
     "objectRadius": 5,
     "industry": [],
@@ -499,7 +516,7 @@ module.exports={
     "inc":  0,
     "maz":  0,
     "objectRadius": 2,
-    "industry": [],
+    "industry": ["refining"],
     "storage": {}
   },
   "bMinA": {
@@ -528,7 +545,7 @@ module.exports={
     "e":    0,
     "t":    0,
     "t0":   0,
-    "w":    0,
+    "w":    2,
     "lang": 0,
     "inc":  0,
     "maz":  0,
@@ -564,16 +581,16 @@ const sin = Math.sin;
 const PI = Math.PI;
 const sqrt = Math.sqrt;
 
-exports.kepCalc = (t, planeto) => {
-  let primaryo = majObj[planeto.primary];
+exports.kepCalc = (t, bodyo) => {
+  let primaryo = majObj[bodyo.primary];
 
-  let a    = planeto.a;    // semi-major axis (a)
-  let e    = planeto.e;    // eccentricity (e)
-  let t0   = planeto.t0;   // epoch (days) (t0)
-  let w    = planeto.w;    // argument of periapsis (w)
-  let lang = planeto.lang; // longitude of ascention node (lang)
-  let inc  = planeto.inc;  // inclanation (inc)
-  let maz  = planeto.maz;  // mean anomaly at zero (maz)
+  let a    = bodyo.a;    // semi-major axis (a)
+  let e    = bodyo.e;    // eccentricity (e)
+  let t0   = bodyo.t0;   // epoch (days) (t0)
+  let w    = bodyo.w;    // argument of periapsis (w)
+  let lang = bodyo.lang; // longitude of ascention node (lang)
+  let inc  = bodyo.inc;  // inclanation (inc)
+  let maz  = bodyo.maz;  // mean anomaly at zero (maz)
   // time (days) (t)
 
   a = a * Math.pow(10, 9);
@@ -644,14 +661,14 @@ exports.kepCalc = (t, planeto) => {
 };
 
 
-exports.orbitCoords = (mat, planeto) => {
-  let primaryo = majObj[planeto.primary];
+exports.orbitCoords = (mat, bodyo) => {
+  let primaryo = majObj[bodyo.primary];
 
-  let a    = planeto.a;    // semi-major axis (a)
-  let e    = planeto.e;    // eccentricity (e)
-  let w    = planeto.w;    // argument of periapsis (w)
-  let lang = planeto.lang; // longitude of ascention node (lang)
-  let inc  = planeto.inc;  // inclanation (inc)
+  let a    = bodyo.a;    // semi-major axis (a)
+  let e    = bodyo.e;    // eccentricity (e)
+  let w    = bodyo.w;    // argument of periapsis (w)
+  let lang = bodyo.lang; // longitude of ascention node (lang)
+  let inc  = bodyo.inc;  // inclanation (inc)
 
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
   const itter = 3;

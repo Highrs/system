@@ -30,8 +30,10 @@ const drawGrid = () => {
   for (let x = 100; x < pageW; x += 100) {
     for (let y = 100; y < pageH; y += 100) {
       grid.push(
-        ['line', { x1: x - crossSize, y1: y, x2: x + crossSize, y2: y, class: 'grid'}],
-        ['line', { x1: x, y1: y + crossSize, x2: x, y2: y - crossSize, class: 'grid'}]
+        ['line', { x1: x - crossSize, y1: y,
+          x2: x + crossSize, y2: y, class: 'grid'}],
+        ['line', { x1: x, y1: y + crossSize,
+          x2: x, y2: y - crossSize, class: 'grid'}]
       );
     }
   }
@@ -39,21 +41,24 @@ const drawGrid = () => {
   return grid;
 };
 
-const drawOrbit = (planets) => {
-  if (planets.length < 1) {return ['g', {}];}
+const drawOrbit = (bodies) => {
+  if (bodies.length < 1) {return ['g', {}];}
 
   let divline1;
   let divline2;
   let retGroup = ['g', {}];
 
-  for (let i = 0; i < planets.length; i++) {
-    let planet = planets[i];
+  for (let i = 0; i < bodies.length; i++) {
+    let body = bodies[i];
     let coords = 'M ';
     let points = 128;
+    if (body.type === "moon") {
+      points = 32;
+    }
 
     for (let i = 0; i < points; i++) {
       let currCoord = mech.orbitCoords((i * 2 * PI) / points,
-        planet, majObj[planet.primary]);
+        body, majObj[body.primary]);
       if (i === 0) {
         divline1 = currCoord;
       } else if (Math.abs(points/2 - i) < 1) {
@@ -88,18 +93,19 @@ const drawOrbit = (planets) => {
   return retGroup;
 };
 
-const calcDist = (planet1, planet2) => {
-  return sqrt( Math.pow( (planet1.x - planet2.x), 2 )
-  + Math.pow( (planet1.y - planet2.y), 2 )
-  + Math.pow( (planet1.z - planet2.z), 2 ) );
+const calcDist = (body1, body2) => {
+  return sqrt( Math.pow( (body1.x - body2.x), 2 )
+  + Math.pow( (body1.y - body2.y), 2 )
+  + Math.pow( (body1.z - body2.z), 2 ) );
 };
 
-const indDisplay = (planet) => {
+const indDisplay = (body) => {
   let display = ['g', tt(0, 30),
     ['rect', {
       width: 100,
       height:
-        planet.industry.length * 10 + Object.keys(planet.storage).length * 10 + 25,
+        body.industry.length * 10
+          + Object.keys(body.storage).length * 10 + 25,
       class: 'dataWindow'
     }]
   ];
@@ -107,23 +113,23 @@ const indDisplay = (planet) => {
     ['g', tt(0, 10),
     ['text', {x: 3, y: 0,
       class: 'dataText'}, "Industry:"],
-      ['text', {x: 3, y: (planet.industry.length + 1)*10,
+      ['text', {x: 3, y: (body.industry.length + 1)*10,
         class: 'dataText'}, "Storage:"]
     ]
   );
-  planet.industry.forEach((e, idx) => {
+  body.industry.forEach((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'}, e]
       ]
     );
   });
-  Object.keys(planet.storage).forEach((e, idx) => {
+  Object.keys(body.storage).forEach((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9,
-          y: (planet.industry.length + idx + 2) * 10,
-          class: 'dataText'}, e + " - " + planet.storage[e]
+          y: (body.industry.length + idx + 2) * 10,
+          class: 'dataText'}, e + " - " + body.storage[e]
         ]
       ]
     );
@@ -134,7 +140,7 @@ const indDisplay = (planet) => {
 
 const drawData = (body) => {
   let dataDisp = ['g', {}];
-  if (body.type === 'planet') {
+  if (body.type === "planet" || body.industry.length > 0) {
     dataDisp.push(
       ['rect', {
         width: windowWidth,
@@ -176,9 +182,14 @@ const drawBodies = (bodies) => {
           bodiesDrawn.push(['g',
           tt((((bodies[j].x) + (bodies[i].x)) / 2 - 22),
             (((bodies[j].y) + (bodies[i].y)) / 2 - 4.5)),
-            ['rect', {width: distanceWindowLength, height: 10, class: 'dataWindow'}],
+            ['rect', {
+              width: distanceWindowLength,
+              height: 10,
+              class: 'dataWindow'
+            }],
             ['text', {
-              x: 2, y: 9, class: 'rangeText'}, (dist).toFixed(2)]
+              x: 2, y: 9, class: 'rangeText'
+            }, (dist).toFixed(2)]
           ]);
         }
       }
@@ -204,10 +215,12 @@ const drawStar = (staro) =>{
   let star = ['g', {}, ];
 
   Object.keys(staro).forEach((starName) => {
-    star.push(['g', tt(staro[starName].x, staro[starName].y), ['circle', {
-      r: staro[starName].objectRadius,
-      class: 'majorObject'
-    }]]);
+    star.push(['g', tt(staro[starName].x, staro[starName].y),
+      ['circle', {
+        r: staro[starName].objectRadius,
+        class: 'majorObject'
+      }]
+    ]);
   });
 
   return star;
@@ -227,9 +240,9 @@ exports.drawStatic = (stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', {},
       drawOrbit(planets),
-      ['g', {id: 'moving'}],
       drawGrid(),
-      drawStar(stars)
+      drawStar(stars),
+      ['g', {id: 'moving'}],
     ]
   ]);
 };

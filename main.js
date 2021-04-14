@@ -44,11 +44,15 @@ const main = async () => {
   let planets = [];
   let moons = [];
   let ast = [];
+  let indSites = [];
 
   // const craft = [];
 
   Object.keys(majObj).forEach((objName) => {
-    // console.log(el);
+    if (majObj[objName].industry && majObj[objName].industry.length > 0) {
+      indSites.push(majObj[objName]);
+    }
+
     if (majObj[objName].type === "star") {
       stars.push(makeStar(majObj[objName]));
     } else
@@ -64,6 +68,7 @@ const main = async () => {
       console.log("ERROR at make. Skipping.");
     }
   });
+
   // for (let i = 0; i < 1; i++) {
   //   craft.push(makeCraft(hulls.brick));
   // }
