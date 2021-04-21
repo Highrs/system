@@ -71,6 +71,11 @@ html, body {
   stroke: #00ff66ff;
   stroke-dasharray: 3 3;
 }
+.craft {
+  fill: #363636;
+  stroke-width: 1px;
+  stroke: #00ff66ff;
+}
 @keyframes stroke {
   to {
     stroke-dashoffset: 0;

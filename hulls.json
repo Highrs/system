@@ -1,6 +1,8 @@
 {
   "brick": {
     "class": "Brick",
-    "cargo": {}
+    "cargoCao": 10,
+    "cargo": {},
+    "speed": 5
   }
 }

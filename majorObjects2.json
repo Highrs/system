@@ -8,8 +8,8 @@
     "z": 0,
     "objectRadius": 20
   },
-  "beta": {
-    "name": "Beta",
+  "gamma": {
+    "name": "Gamma",
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
@@ -21,12 +21,10 @@
     "lang": 1.6,
     "inc":  0.2,
     "maz":  0,
-    "objectRadius": 5,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 5
   },
-  "alpha": {
-    "name": "Alpha",
+  "beta": {
+    "name": "Beta",
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
@@ -39,11 +37,10 @@
     "inc":  0.1,
     "maz":  0,
     "objectRadius": 5,
-    "industry": ["mining", "mining"],
-    "storage": {}
+    "industry": ["mining", "mining"]
   },
-  "delta": {
-    "name": "Delta",
+  "alpha": {
+    "name": "Alpha",
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
@@ -55,14 +52,12 @@
     "lang": 1.6,
     "inc":  0.9,
     "maz":  0,
-    "objectRadius": 5,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 5
   },
-  "bMinB": {
-    "name": "Beta Minor B",
+  "gMinB": {
+    "name": "Gamma Minor B",
     "type": "moon",
-    "primary": "beta",
+    "primary": "gamma",
     "mass": 10000,
     "a":    40,
     "e":    0,
@@ -73,13 +68,12 @@
     "inc":  0,
     "maz":  0,
     "objectRadius": 2,
-    "industry": ["refining"],
-    "storage": {}
+    "industry": ["refining"]
   },
-  "bMinA": {
-    "name": "Beta Minor A",
+  "gMinA": {
+    "name": "Gamma Minor A",
     "type": "moon",
-    "primary": "beta",
+    "primary": "gamma",
     "mass": 10000,
     "a":    20,
     "e":    .5,
@@ -89,14 +83,12 @@
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "objectRadius": 2,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 2
   },
-  "aMinA": {
-    "name": "Alpha Minor A",
+  "bMinA": {
+    "name": "Beta Minor A",
     "type": "moon",
-    "primary": "alpha",
+    "primary": "beta",
     "mass": 10000,
     "a":    20,
     "e":    0,
@@ -106,9 +98,7 @@
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "objectRadius": 2,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 2
   },
   "astroDelta": {
     "name": "Asteroid Delta",
@@ -123,8 +113,6 @@
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "objectRadius": 1,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 1
   }
 }

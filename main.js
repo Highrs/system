@@ -1,11 +1,12 @@
 'use strict';
 const majObj = require('./majorObjects2.json');
 // Initialization and run
-const draw = require('./draw.js');
+const drawMap = require('./drawMap.js');
 const renderer = require('onml/renderer.js');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
-// const hulls = require('./hulls.json');
+const hulls = require('./hulls.json');
+const craft = require('./craft.js');
 
 const makeStar = (staro) => {
   return staro;
@@ -26,27 +27,20 @@ const makeBody = (planeto) => {
   return planet;
 };
 
-// const makeCraft = (crafto) => {
-//   const craft = Object.assign(
-//     crafto,
-//     {x: 150000000, y: 0, z: 0}
-//   );
-//   return craft;
-// };
-
 async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const main = async () => {
   console.log("Giant alien spiders are no joke!");
+
   let stars = [];
   let planets = [];
   let moons = [];
   let ast = [];
   let indSites = [];
 
-  // const craft = [];
+  const listOfcraft = [];
 
   Object.keys(majObj).forEach((objName) => {
     if (majObj[objName].industry && majObj[objName].industry.length > 0) {
@@ -69,15 +63,20 @@ const main = async () => {
     }
   });
 
-  // for (let i = 0; i < 1; i++) {
-  //   craft.push(makeCraft(hulls.brick));
-  // }
+  for (let i = 0; i < 1; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.brick));
+  }
 
-  renderer(document.getElementById('content'))(draw.drawStatic(stars, planets));
+  // console.log(listOfcraft);
+
+  renderer(document.getElementById('content'))(drawMap.drawStatic(stars, planets));
   const render2 = renderer(document.getElementById('moving'));
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
+
+  craft.startCraftLife(listOfcraft, indSites);
+
   while (Date.now()) {
     const clock = Date.now();
     const t = clock / Math.pow(10, 2);
@@ -90,7 +89,7 @@ const main = async () => {
       movBod[i].z = newData.z;
     }
 
-    render2(draw.drawMoving(clock2, planets, moons, ast));
+    render2(drawMap.drawMoving(clock2, planets, moons, ast, listOfcraft));
     await delay(50);
   }
 };

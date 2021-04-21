@@ -85,7 +85,6 @@ exports.kepCalc = (t, bodyo) => {
     focalShift: focalShift };
 };
 
-
 exports.orbitCoords = (mat, bodyo) => {
   let primaryo = majObj[bodyo.primary];
 
@@ -130,3 +129,11 @@ exports.orbitCoords = (mat, bodyo) => {
     z: z + primaryo.z
   };
 };
+
+const calcDist = (body1, body2) => {
+  return sqrt(
+    Math.pow( (body1.x - body2.x), 2 )
+  + Math.pow( (body1.y - body2.y), 2 )
+  + Math.pow( (body1.z - body2.z), 2 ) );
+};
+exports.calcDist = calcDist;

@@ -6,7 +6,7 @@ const mech = require('./mechanics.js');
 // const cos = Math.cos;
 // const sin = Math.sin;
 const PI = Math.PI;
-const sqrt = Math.sqrt;
+// const sqrt = Math.sqrt;
 //properties-------------
 // const sh = screen.width*(0.9);
 // const sw = screen.height*(0.9);
@@ -93,12 +93,6 @@ const drawOrbit = (bodies) => {
   return retGroup;
 };
 
-const calcDist = (body1, body2) => {
-  return sqrt( Math.pow( (body1.x - body2.x), 2 )
-  + Math.pow( (body1.y - body2.y), 2 )
-  + Math.pow( (body1.z - body2.z), 2 ) );
-};
-
 const indDisplay = (body) => {
   let display = ['g', tt(0, 30),
     ['rect', {
@@ -140,7 +134,7 @@ const indDisplay = (body) => {
 
 const drawData = (body) => {
   let dataDisp = ['g', {}];
-  if (body.type === "planet" || body.industry.length > 0) {
+  if (body.type === "planet" || body.industry) {
     dataDisp.push(
       ['rect', {
         width: windowWidth,
@@ -158,7 +152,7 @@ const drawData = (body) => {
       ]
     );
   }
-  if (body.industry.length > 0) {
+  if (body.industry) {
     dataDisp.push(indDisplay(body, 4));
   }
   return dataDisp;
@@ -171,7 +165,7 @@ const drawBodies = (bodies) => {
     if (bodies[i].type === "planet") {
       for (let j = i + 1; j < bodies.length; j++) {
         if (bodies[j].type === "planet") {
-          let dist = calcDist(bodies[i], bodies[j]);
+          let dist = mech.calcDist(bodies[i], bodies[j]);
           bodiesDrawn.push(['line', {
             x1: bodies[i].x,
             y1: bodies[i].y,
@@ -207,8 +201,7 @@ const drawBodies = (bodies) => {
 };
 
 const drawTime = (clock) => {
-  return ['g', tt(10, 20),
-        ['text', {class: 'dataText'}, clock]];
+  return ['g', tt(10, 20), ['text', {class: 'dataText'}, clock]];
 };
 
 const drawStar = (staro) =>{
@@ -226,13 +219,27 @@ const drawStar = (staro) =>{
   return star;
 };
 
-exports.drawMoving = (clock, planets, moons, ast) => {
+const drawCraft = (craft) => {
+  let drawnCraft = ['g', {}];
+
+  Object.keys(craft).forEach((craftID) => {
+    drawnCraft.push(['g', tt(craft[craftID].x, craft[craftID].y),
+      ['path', {d: 'M 0,3 L 3,0 L 0,-3 L -3,0 Z', class: 'craft'}]
+    ]);
+  });
+
+  return drawnCraft;
+
+};
+
+exports.drawMoving = (clock, planets, moons, ast, craft) => {
   return ['g', {},
     drawTime(clock),
     drawOrbit(moons),
     drawBodies(moons),
     drawBodies(planets),
-    drawBodies(ast)
+    drawBodies(ast),
+    drawCraft(craft)
   ];
 };
 

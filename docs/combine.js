@@ -1,5 +1,83 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 'use strict';
+const mech = require('./mechanics.js');
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min) + min);
+  //The maximum is exclusive and the minimum is inclusive
+} //Thanks stock
+
+async function delay(ms) {
+  return await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const makeCraft = (crafto) => {
+  let newCrafto = {};
+  Object.assign(
+    newCrafto,
+    crafto,
+    {
+      name: getRandomInt(1000, 9999),
+      x: 150,
+      y: 150,
+      z: 0,
+      route: []
+    }
+  );
+  // console.log(crafto);
+  return newCrafto;
+}; exports.makeCraft = makeCraft;
+
+const startCraftLife = (listOfcraft, indSites) => {
+  Object.keys(listOfcraft).forEach((craftID) => {
+    // console.log(craftID);
+    craftAI(listOfcraft[craftID], indSites);
+  });
+};
+exports.startCraftLife = startCraftLife;
+
+const craftAI = async (crafto, indSites) => {
+  await delay(50);
+  if (crafto.route.length === 0) {
+    if (deviseRoute(crafto, indSites)) {
+      craftAI(crafto, indSites);
+    } else {
+      await delay(1000);
+      craftAI(crafto, indSites);
+    }
+  } else {
+    if (mech.calcDist(crafto, crafto.route[0]) < crafto.speed) {
+      crafto.route.shift();
+      craftAI(crafto, indSites);
+    } else {
+      calcVector(crafto, crafto.route[0]);
+      craftAI(crafto, indSites);
+    }
+  }
+};
+
+const deviseRoute = (crafto, indSites) => {
+  if (indSites.length < 2) {
+    console.log("ERROR at craft.deviseRoute: Too few industry sites.");
+    return false;
+  }
+
+  // console.log("Generating route (deviseRoute)");
+  crafto.route = [indSites[0], indSites[1]];
+  return true;
+};
+
+const calcVector =  (crafto, targeto) => {
+  const dist = mech.calcDist(crafto, targeto);
+  crafto.x += crafto.speed * ((targeto.x - crafto.x) / dist );
+  crafto.y += crafto.speed * ((targeto.y - crafto.y) / dist );
+  crafto.z += crafto.speed * ((targeto.z - crafto.z) / dist );
+};
+
+},{"./mechanics.js":9}],2:[function(require,module,exports){
+'use strict';
 const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
@@ -7,7 +85,7 @@ const mech = require('./mechanics.js');
 // const cos = Math.cos;
 // const sin = Math.sin;
 const PI = Math.PI;
-const sqrt = Math.sqrt;
+// const sqrt = Math.sqrt;
 //properties-------------
 // const sh = screen.width*(0.9);
 // const sw = screen.height*(0.9);
@@ -94,12 +172,6 @@ const drawOrbit = (bodies) => {
   return retGroup;
 };
 
-const calcDist = (body1, body2) => {
-  return sqrt( Math.pow( (body1.x - body2.x), 2 )
-  + Math.pow( (body1.y - body2.y), 2 )
-  + Math.pow( (body1.z - body2.z), 2 ) );
-};
-
 const indDisplay = (body) => {
   let display = ['g', tt(0, 30),
     ['rect', {
@@ -141,7 +213,7 @@ const indDisplay = (body) => {
 
 const drawData = (body) => {
   let dataDisp = ['g', {}];
-  if (body.type === "planet" || body.industry.length > 0) {
+  if (body.type === "planet" || body.industry) {
     dataDisp.push(
       ['rect', {
         width: windowWidth,
@@ -159,7 +231,7 @@ const drawData = (body) => {
       ]
     );
   }
-  if (body.industry.length > 0) {
+  if (body.industry) {
     dataDisp.push(indDisplay(body, 4));
   }
   return dataDisp;
@@ -172,7 +244,7 @@ const drawBodies = (bodies) => {
     if (bodies[i].type === "planet") {
       for (let j = i + 1; j < bodies.length; j++) {
         if (bodies[j].type === "planet") {
-          let dist = calcDist(bodies[i], bodies[j]);
+          let dist = mech.calcDist(bodies[i], bodies[j]);
           bodiesDrawn.push(['line', {
             x1: bodies[i].x,
             y1: bodies[i].y,
@@ -208,8 +280,7 @@ const drawBodies = (bodies) => {
 };
 
 const drawTime = (clock) => {
-  return ['g', tt(10, 20),
-        ['text', {class: 'dataText'}, clock]];
+  return ['g', tt(10, 20), ['text', {class: 'dataText'}, clock]];
 };
 
 const drawStar = (staro) =>{
@@ -227,13 +298,27 @@ const drawStar = (staro) =>{
   return star;
 };
 
-exports.drawMoving = (clock, planets, moons, ast) => {
+const drawCraft = (craft) => {
+  let drawnCraft = ['g', {}];
+
+  Object.keys(craft).forEach((craftID) => {
+    drawnCraft.push(['g', tt(craft[craftID].x, craft[craftID].y),
+      ['path', {d: 'M 0,3 L 3,0 L 0,-3 L -3,0 Z', class: 'craft'}]
+    ]);
+  });
+
+  return drawnCraft;
+
+};
+
+exports.drawMoving = (clock, planets, moons, ast, craft) => {
   return ['g', {},
     drawTime(clock),
     drawOrbit(moons),
     drawBodies(moons),
     drawBodies(planets),
-    drawBodies(ast)
+    drawBodies(ast),
+    drawCraft(craft)
   ];
 };
 
@@ -248,7 +333,7 @@ exports.drawStatic = (stars, planets) => {
   ]);
 };
 
-},{"./get-svg.js":2,"./majorObjects2.json":6,"./mechanics.js":7,"onml/tt.js":10}],2:[function(require,module,exports){
+},{"./get-svg.js":3,"./majorObjects2.json":8,"./mechanics.js":9,"onml/tt.js":12}],3:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -262,15 +347,30 @@ module.exports = cfg => {
   }];
 }
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
+module.exports={
+  "brick": {
+    "class": "Brick",
+    "cargoCao": 10,
+    "cargo": {},
+    "speed": 5
+  }
+}
+
+},{}],5:[function(require,module,exports){
 'use strict';
 // Industry manager
 const indTemp = require('./industryTemp.json');
 
 const industryStoreCheck = (body) => {
   body.industry && body.industry.forEach((bodyIndName) => {
+    if (!body.storage) {Object.assign(body, {storage: {}});}
     if (!body.storage[indTemp[bodyIndName].storage]) {
       Object.assign(body.storage, indTemp[bodyIndName].storage);
+    }
+    if (!body.holding) {Object.assign(body, {holding: {}});}
+    if (!body.holding[indTemp[bodyIndName].storage]) {
+      Object.assign(body.holding, indTemp[bodyIndName].storage);
     }
     indWork(body, bodyIndName);
   });
@@ -309,10 +409,16 @@ const indWork = (body, industry) => {
   }
 };
 
+const moveToHolding = (body, resource, quant) => {
+  body.storage[resource] -= quant;
+  body.holding[resource] += quant;
+};
+
 exports.initInd = initInd;
 exports.indWork = indWork;
+exports.moveToHolding = moveToHolding;
 
-},{"./industryTemp.json":4}],4:[function(require,module,exports){
+},{"./industryTemp.json":6}],6:[function(require,module,exports){
 module.exports={
   "mining": {
     "cycle": 1000,
@@ -340,15 +446,16 @@ module.exports={
   }
 }
 
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
 // Initialization and run
-const draw = require('./draw.js');
+const drawMap = require('./drawMap.js');
 const renderer = require('onml/renderer.js');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
-// const hulls = require('./hulls.json');
+const hulls = require('./hulls.json');
+const craft = require('./craft.js');
 
 const makeStar = (staro) => {
   return staro;
@@ -369,27 +476,20 @@ const makeBody = (planeto) => {
   return planet;
 };
 
-// const makeCraft = (crafto) => {
-//   const craft = Object.assign(
-//     crafto,
-//     {x: 150000000, y: 0, z: 0}
-//   );
-//   return craft;
-// };
-
 async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const main = async () => {
   console.log("Giant alien spiders are no joke!");
+
   let stars = [];
   let planets = [];
   let moons = [];
   let ast = [];
   let indSites = [];
 
-  // const craft = [];
+  const listOfcraft = [];
 
   Object.keys(majObj).forEach((objName) => {
     if (majObj[objName].industry && majObj[objName].industry.length > 0) {
@@ -412,15 +512,20 @@ const main = async () => {
     }
   });
 
-  // for (let i = 0; i < 1; i++) {
-  //   craft.push(makeCraft(hulls.brick));
-  // }
+  for (let i = 0; i < 1; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.brick));
+  }
 
-  renderer(document.getElementById('content'))(draw.drawStatic(stars, planets));
+  // console.log(listOfcraft);
+
+  renderer(document.getElementById('content'))(drawMap.drawStatic(stars, planets));
   const render2 = renderer(document.getElementById('moving'));
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
+
+  craft.startCraftLife(listOfcraft, indSites);
+
   while (Date.now()) {
     const clock = Date.now();
     const t = clock / Math.pow(10, 2);
@@ -433,14 +538,14 @@ const main = async () => {
       movBod[i].z = newData.z;
     }
 
-    render2(draw.drawMoving(clock2, planets, moons, ast));
+    render2(drawMap.drawMoving(clock2, planets, moons, ast, listOfcraft));
     await delay(50);
   }
 };
 
 window.onload = main;
 
-},{"./draw.js":1,"./industry.js":3,"./majorObjects2.json":6,"./mechanics.js":7,"onml/renderer.js":8}],6:[function(require,module,exports){
+},{"./craft.js":1,"./drawMap.js":2,"./hulls.json":4,"./industry.js":5,"./majorObjects2.json":8,"./mechanics.js":9,"onml/renderer.js":10}],8:[function(require,module,exports){
 module.exports={
   "prime": {
     "name": "Prime",
@@ -451,8 +556,8 @@ module.exports={
     "z": 0,
     "objectRadius": 20
   },
-  "beta": {
-    "name": "Beta",
+  "gamma": {
+    "name": "Gamma",
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
@@ -464,12 +569,10 @@ module.exports={
     "lang": 1.6,
     "inc":  0.2,
     "maz":  0,
-    "objectRadius": 5,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 5
   },
-  "alpha": {
-    "name": "Alpha",
+  "beta": {
+    "name": "Beta",
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
@@ -482,11 +585,10 @@ module.exports={
     "inc":  0.1,
     "maz":  0,
     "objectRadius": 5,
-    "industry": ["mining", "mining"],
-    "storage": {}
+    "industry": ["mining", "mining"]
   },
-  "delta": {
-    "name": "Delta",
+  "alpha": {
+    "name": "Alpha",
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
@@ -498,14 +600,12 @@ module.exports={
     "lang": 1.6,
     "inc":  0.9,
     "maz":  0,
-    "objectRadius": 5,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 5
   },
-  "bMinB": {
-    "name": "Beta Minor B",
+  "gMinB": {
+    "name": "Gamma Minor B",
     "type": "moon",
-    "primary": "beta",
+    "primary": "gamma",
     "mass": 10000,
     "a":    40,
     "e":    0,
@@ -516,13 +616,12 @@ module.exports={
     "inc":  0,
     "maz":  0,
     "objectRadius": 2,
-    "industry": ["refining"],
-    "storage": {}
+    "industry": ["refining"]
   },
-  "bMinA": {
-    "name": "Beta Minor A",
+  "gMinA": {
+    "name": "Gamma Minor A",
     "type": "moon",
-    "primary": "beta",
+    "primary": "gamma",
     "mass": 10000,
     "a":    20,
     "e":    .5,
@@ -532,14 +631,12 @@ module.exports={
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "objectRadius": 2,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 2
   },
-  "aMinA": {
-    "name": "Alpha Minor A",
+  "bMinA": {
+    "name": "Beta Minor A",
     "type": "moon",
-    "primary": "alpha",
+    "primary": "beta",
     "mass": 10000,
     "a":    20,
     "e":    0,
@@ -549,9 +646,7 @@ module.exports={
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "objectRadius": 2,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 2
   },
   "astroDelta": {
     "name": "Asteroid Delta",
@@ -566,13 +661,11 @@ module.exports={
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "objectRadius": 1,
-    "industry": [],
-    "storage": {}
+    "objectRadius": 1
   }
 }
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
 
@@ -660,7 +753,6 @@ exports.kepCalc = (t, bodyo) => {
     focalShift: focalShift };
 };
 
-
 exports.orbitCoords = (mat, bodyo) => {
   let primaryo = majObj[bodyo.primary];
 
@@ -706,7 +798,15 @@ exports.orbitCoords = (mat, bodyo) => {
   };
 };
 
-},{"./majorObjects2.json":6}],8:[function(require,module,exports){
+const calcDist = (body1, body2) => {
+  return sqrt(
+    Math.pow( (body1.x - body2.x), 2 )
+  + Math.pow( (body1.y - body2.y), 2 )
+  + Math.pow( (body1.z - body2.z), 2 ) );
+};
+exports.calcDist = calcDist;
+
+},{"./majorObjects2.json":8}],10:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');
@@ -731,7 +831,7 @@ module.exports = renderer;
 
 /* eslint-env browser */
 
-},{"./stringify.js":9}],9:[function(require,module,exports){
+},{"./stringify.js":11}],11:[function(require,module,exports){
 'use strict';
 
 const isObject = o => o && Object.prototype.toString.call(o) === '[object Object]';
@@ -824,7 +924,7 @@ function stringify (a, indentation) {
 
 module.exports = stringify;
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 module.exports = (x, y, obj) => {
@@ -837,4 +937,4 @@ module.exports = (x, y, obj) => {
   return Object.assign(objt, obj);
 };
 
-},{}]},{},[5]);
+},{}]},{},[7]);
