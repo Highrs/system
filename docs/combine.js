@@ -380,19 +380,23 @@ const initInd = (body) => {
 exports.initInd = initInd;
 
 const industryStoreCheck = (body) => {
-  // console.log(body.name);
+  // console.log(body);
   body.industry && body.industry.forEach((bodyIndName) => {
     // console.log(bodyIndName);
     if (!body.storage) {
-      body.storage = indTemp[bodyIndName].storage;
+      body.storage = {};
+      Object.keys(indTemp[bodyIndName].input).forEach((resourceName) => {
+        // console.log(resourceName);
+        if (!body.storage[resourceName]) {
+          body.storage[resourceName] = 0;
+        }
+      });
+      Object.keys(indTemp[bodyIndName].output).forEach((resourceName) => {
+        if (!body.storage[resourceName]) {
+          body.storage[resourceName] = 0;
+        }
+      });
     }
-    // Object.keys(indTemp[bodyIndName].storage).forEach((resource) => {
-    //   console.log(resource);
-    //   if (!body.storage[resource]) {
-    //     console.log("Here");
-    //     Object.assign(body.storage, indTemp[bodyIndName].storage[resource]);
-    //   }
-    // });
     if (!body.holding) {
       body.holding = {};
     }
@@ -467,9 +471,6 @@ module.exports={
     "input": {},
     "output": {
       "ore": 1
-    },
-    "storage": {
-      "ore": 10
     }
   },
 
@@ -480,10 +481,6 @@ module.exports={
     },
     "output": {
       "metal": 1
-    },
-    "storage": {
-      "ore": 10,
-      "metal": 0
     }
   }
 }
