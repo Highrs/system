@@ -4,9 +4,6 @@
     "input": {},
     "output": {
       "ore": 1
-    },
-    "storage": {
-      "ore": 10
     }
   },
 
@@ -17,10 +14,6 @@
     },
     "output": {
       "metal": 1
-    },
-    "storage": {
-      "ore": 10,
-      "metal": 0
     }
   }
 }
