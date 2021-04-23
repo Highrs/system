@@ -55,6 +55,7 @@ const craftAI = async (crafto, indSites) => {
         ind.loadCraft(crafto.route[0], crafto, "ore", crafto.cargoCap);
       } else if (crafto.route.length === 1) {
         ind.unloadCraft(crafto.route[0], crafto, "ore", crafto.cargoCap);
+        ind.initInd(crafto.route[0]);
       } else {
         console.log("ERROR in craftAI");
       }
@@ -372,14 +373,26 @@ module.exports={
 // Industry manager
 const indTemp = require('./industryTemp.json');
 
+
+const initInd = (body) => {
+  industryStoreCheck(body);
+};
+exports.initInd = initInd;
+
 const industryStoreCheck = (body) => {
+  // console.log(body.name);
   body.industry && body.industry.forEach((bodyIndName) => {
+    // console.log(bodyIndName);
     if (!body.storage) {
-      body.storage = {};
+      body.storage = indTemp[bodyIndName].storage;
     }
-    if (!body.storage[indTemp[bodyIndName].storage]) {
-      Object.assign(body.storage, indTemp[bodyIndName].storage);
-    }
+    // Object.keys(indTemp[bodyIndName].storage).forEach((resource) => {
+    //   console.log(resource);
+    //   if (!body.storage[resource]) {
+    //     console.log("Here");
+    //     Object.assign(body.storage, indTemp[bodyIndName].storage[resource]);
+    //   }
+    // });
     if (!body.holding) {
       body.holding = {};
     }
@@ -387,11 +400,6 @@ const industryStoreCheck = (body) => {
   });
 
 };
-
-const initInd = (body) => {
-  industryStoreCheck(body);
-};
-exports.initInd = initInd;
 
 const indWork = (body, industry) => {
   let workGo = true;
@@ -474,7 +482,7 @@ module.exports={
       "metal": 1
     },
     "storage": {
-      "ore": 100,
+      "ore": 10,
       "metal": 0
     }
   }

@@ -2,14 +2,26 @@
 // Industry manager
 const indTemp = require('./industryTemp.json');
 
+
+const initInd = (body) => {
+  industryStoreCheck(body);
+};
+exports.initInd = initInd;
+
 const industryStoreCheck = (body) => {
+  // console.log(body.name);
   body.industry && body.industry.forEach((bodyIndName) => {
+    // console.log(bodyIndName);
     if (!body.storage) {
-      body.storage = {};
+      body.storage = indTemp[bodyIndName].storage;
     }
-    if (!body.storage[indTemp[bodyIndName].storage]) {
-      Object.assign(body.storage, indTemp[bodyIndName].storage);
-    }
+    // Object.keys(indTemp[bodyIndName].storage).forEach((resource) => {
+    //   console.log(resource);
+    //   if (!body.storage[resource]) {
+    //     console.log("Here");
+    //     Object.assign(body.storage, indTemp[bodyIndName].storage[resource]);
+    //   }
+    // });
     if (!body.holding) {
       body.holding = {};
     }
@@ -17,11 +29,6 @@ const industryStoreCheck = (body) => {
   });
 
 };
-
-const initInd = (body) => {
-  industryStoreCheck(body);
-};
-exports.initInd = initInd;
 
 const indWork = (body, industry) => {
   let workGo = true;

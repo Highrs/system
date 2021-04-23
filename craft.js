@@ -54,6 +54,7 @@ const craftAI = async (crafto, indSites) => {
         ind.loadCraft(crafto.route[0], crafto, "ore", crafto.cargoCap);
       } else if (crafto.route.length === 1) {
         ind.unloadCraft(crafto.route[0], crafto, "ore", crafto.cargoCap);
+        ind.initInd(crafto.route[0]);
       } else {
         console.log("ERROR in craftAI");
       }
