@@ -1,6 +1,6 @@
 'use strict';
 const mech = require('./mechanics.js');
-const majObj = require('./majorObjects2.json');
+// const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
 
 function getRandomInt(min, max) {

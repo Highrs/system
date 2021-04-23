@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 'use strict';
 const mech = require('./mechanics.js');
-const majObj = require('./majorObjects2.json');
+// const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
 
 function getRandomInt(min, max) {
@@ -86,7 +86,7 @@ const calcVector =  (crafto, targeto) => {
   crafto.z += crafto.speed * ((targeto.z - crafto.z) / dist );
 };
 
-},{"./industry.js":5,"./majorObjects2.json":8,"./mechanics.js":9}],2:[function(require,module,exports){
+},{"./industry.js":5,"./mechanics.js":9}],2:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
@@ -188,7 +188,7 @@ const indDisplay = (body) => {
       width: 100,
       height:
         body.industry.length * 10
-          + Object.keys(body.storage).length * 10 + 25,
+          + Object.keys(body.store).length * 10 + 25,
       class: 'dataWindow'
     }]
   ];
@@ -207,12 +207,12 @@ const indDisplay = (body) => {
       ]
     );
   });
-  Object.keys(body.storage).forEach((e, idx) => {
+  Object.keys(body.store).forEach((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9,
           y: (body.industry.length + idx + 2) * 10,
-          class: 'dataText'}, e + " - " + body.storage[e]
+          class: 'dataText'}, e + " - " + body.store[e]
         ]
       ]
     );
@@ -383,22 +383,22 @@ const industryStoreCheck = (body) => {
   // console.log(body);
   body.industry && body.industry.forEach((bodyIndName) => {
     // console.log(bodyIndName);
-    if (!body.storage) {
-      body.storage = {};
-      Object.keys(indTemp[bodyIndName].input).forEach((resourceName) => {
-        // console.log(resourceName);
-        if (!body.storage[resourceName]) {
-          body.storage[resourceName] = 0;
+    if (!body.store) {
+      body.store = {};
+      Object.keys(indTemp[bodyIndName].input).forEach((resName) => {
+        // console.log(resName);
+        if (!body.store[resName]) {
+          body.store[resName] = 0;
         }
       });
-      Object.keys(indTemp[bodyIndName].output).forEach((resourceName) => {
-        if (!body.storage[resourceName]) {
-          body.storage[resourceName] = 0;
+      Object.keys(indTemp[bodyIndName].output).forEach((resName) => {
+        if (!body.store[resName]) {
+          body.store[resName] = 0;
         }
       });
     }
-    if (!body.holding) {
-      body.holding = {};
+    if (!body.hold) {
+      body.hold = {};
     }
     indWork(body, bodyIndName);
   });
@@ -410,8 +410,8 @@ const indWork = (body, industry) => {
 
   Object.keys(indTemp[industry].input).forEach((inRes) => {
     if (
-      (!body.storage[inRes]) ||
-      (indTemp[industry].input[inRes] > body.storage[inRes])
+      (!body.store[inRes]) ||
+      (indTemp[industry].input[inRes] > body.store[inRes])
     ) {
       workGo = false;
     }
@@ -419,13 +419,13 @@ const indWork = (body, industry) => {
 
   if (workGo === true) {
     Object.keys(indTemp[industry].input).forEach((inRes) => {
-      body.storage[inRes] -= indTemp[industry].input[inRes];
+      body.store[inRes] -= indTemp[industry].input[inRes];
     });
 
     setTimeout(
       function(){
         Object.keys(indTemp[industry].output).forEach((outRes) => {
-          body.storage[outRes] += indTemp[industry].output[outRes];
+          body.store[outRes] += indTemp[industry].output[outRes];
         });
         indWork(body, industry);
       },
@@ -434,33 +434,33 @@ const indWork = (body, industry) => {
 };
 exports.indWork = indWork;
 
-const moveToHolding = (bodyo, crafto, resource, quant) => {
-  bodyo.storage[resource] -= quant;
-  if (!bodyo.holding[crafto.name]) {
-    bodyo.holding[crafto.name] = {};
+const moveTohold = (bodyo, crafto, res, quant) => {
+  bodyo.store[res] -= quant;
+  if (!bodyo.hold[crafto.name]) {
+    bodyo.hold[crafto.name] = {};
   }
-  if (!bodyo.holding[crafto.name][resource]) {
-    bodyo.holding[crafto.name][resource] = 0;
+  if (!bodyo.hold[crafto.name][res]) {
+    bodyo.hold[crafto.name][res] = 0;
   }
-  bodyo.holding[crafto.name][resource] += quant;
+  bodyo.hold[crafto.name][res] += quant;
 };
-exports.moveToHolding = moveToHolding;
+exports.moveTohold = moveTohold;
 
-const loadCraft = (bodyo, crafto, resource, quant) => {
-  if (!crafto.cargo[resource]) {
-    crafto.cargo[resource] = 0;
+const loadCraft = (bodyo, crafto, res, quant) => {
+  if (!crafto.cargo[res]) {
+    crafto.cargo[res] = 0;
   }
-  crafto.cargo[resource] += quant;
-  bodyo.storage[resource] -= quant;
+  crafto.cargo[res] += quant;
+  bodyo.store[res] -= quant;
 };
 exports.loadCraft = loadCraft;
 
-const unloadCraft = (bodyo, crafto, resource, quant) => {
-  if (!bodyo.storage[resource]) {
-    bodyo.storage[resource] = 0;
+const unloadCraft = (bodyo, crafto, res, quant) => {
+  if (!bodyo.store[res]) {
+    bodyo.store[res] = 0;
   }
-  bodyo.storage[resource] += quant;
-  crafto.cargo[resource] -= quant;
+  bodyo.store[res] += quant;
+  crafto.cargo[res] -= quant;
 };
 exports.unloadCraft = unloadCraft;
 

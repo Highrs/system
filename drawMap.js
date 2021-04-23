@@ -99,7 +99,7 @@ const indDisplay = (body) => {
       width: 100,
       height:
         body.industry.length * 10
-          + Object.keys(body.storage).length * 10 + 25,
+          + Object.keys(body.store).length * 10 + 25,
       class: 'dataWindow'
     }]
   ];
@@ -118,12 +118,12 @@ const indDisplay = (body) => {
       ]
     );
   });
-  Object.keys(body.storage).forEach((e, idx) => {
+  Object.keys(body.store).forEach((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9,
           y: (body.industry.length + idx + 2) * 10,
-          class: 'dataText'}, e + " - " + body.storage[e]
+          class: 'dataText'}, e + " - " + body.store[e]
         ]
       ]
     );

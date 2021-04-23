@@ -12,22 +12,22 @@ const industryStoreCheck = (body) => {
   // console.log(body);
   body.industry && body.industry.forEach((bodyIndName) => {
     // console.log(bodyIndName);
-    if (!body.storage) {
-      body.storage = {};
-      Object.keys(indTemp[bodyIndName].input).forEach((resourceName) => {
-        // console.log(resourceName);
-        if (!body.storage[resourceName]) {
-          body.storage[resourceName] = 0;
+    if (!body.store) {
+      body.store = {};
+      Object.keys(indTemp[bodyIndName].input).forEach((resName) => {
+        // console.log(resName);
+        if (!body.store[resName]) {
+          body.store[resName] = 0;
         }
       });
-      Object.keys(indTemp[bodyIndName].output).forEach((resourceName) => {
-        if (!body.storage[resourceName]) {
-          body.storage[resourceName] = 0;
+      Object.keys(indTemp[bodyIndName].output).forEach((resName) => {
+        if (!body.store[resName]) {
+          body.store[resName] = 0;
         }
       });
     }
-    if (!body.holding) {
-      body.holding = {};
+    if (!body.hold) {
+      body.hold = {};
     }
     indWork(body, bodyIndName);
   });
@@ -39,8 +39,8 @@ const indWork = (body, industry) => {
 
   Object.keys(indTemp[industry].input).forEach((inRes) => {
     if (
-      (!body.storage[inRes]) ||
-      (indTemp[industry].input[inRes] > body.storage[inRes])
+      (!body.store[inRes]) ||
+      (indTemp[industry].input[inRes] > body.store[inRes])
     ) {
       workGo = false;
     }
@@ -48,13 +48,13 @@ const indWork = (body, industry) => {
 
   if (workGo === true) {
     Object.keys(indTemp[industry].input).forEach((inRes) => {
-      body.storage[inRes] -= indTemp[industry].input[inRes];
+      body.store[inRes] -= indTemp[industry].input[inRes];
     });
 
     setTimeout(
       function(){
         Object.keys(indTemp[industry].output).forEach((outRes) => {
-          body.storage[outRes] += indTemp[industry].output[outRes];
+          body.store[outRes] += indTemp[industry].output[outRes];
         });
         indWork(body, industry);
       },
@@ -63,32 +63,32 @@ const indWork = (body, industry) => {
 };
 exports.indWork = indWork;
 
-const moveToHolding = (bodyo, crafto, resource, quant) => {
-  bodyo.storage[resource] -= quant;
-  if (!bodyo.holding[crafto.name]) {
-    bodyo.holding[crafto.name] = {};
+const moveTohold = (bodyo, crafto, res, quant) => {
+  bodyo.store[res] -= quant;
+  if (!bodyo.hold[crafto.name]) {
+    bodyo.hold[crafto.name] = {};
   }
-  if (!bodyo.holding[crafto.name][resource]) {
-    bodyo.holding[crafto.name][resource] = 0;
+  if (!bodyo.hold[crafto.name][res]) {
+    bodyo.hold[crafto.name][res] = 0;
   }
-  bodyo.holding[crafto.name][resource] += quant;
+  bodyo.hold[crafto.name][res] += quant;
 };
-exports.moveToHolding = moveToHolding;
+exports.moveTohold = moveTohold;
 
-const loadCraft = (bodyo, crafto, resource, quant) => {
-  if (!crafto.cargo[resource]) {
-    crafto.cargo[resource] = 0;
+const loadCraft = (bodyo, crafto, res, quant) => {
+  if (!crafto.cargo[res]) {
+    crafto.cargo[res] = 0;
   }
-  crafto.cargo[resource] += quant;
-  bodyo.storage[resource] -= quant;
+  crafto.cargo[res] += quant;
+  bodyo.store[res] -= quant;
 };
 exports.loadCraft = loadCraft;
 
-const unloadCraft = (bodyo, crafto, resource, quant) => {
-  if (!bodyo.storage[resource]) {
-    bodyo.storage[resource] = 0;
+const unloadCraft = (bodyo, crafto, res, quant) => {
+  if (!bodyo.store[res]) {
+    bodyo.store[res] = 0;
   }
-  bodyo.storage[resource] += quant;
-  crafto.cargo[resource] -= quant;
+  bodyo.store[res] += quant;
+  crafto.cargo[res] -= quant;
 };
 exports.unloadCraft = unloadCraft;
