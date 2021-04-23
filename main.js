@@ -63,11 +63,6 @@ const main = async () => {
     }
   });
 
-  for (let i = 0; i < 1; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.brick));
-  }
-
-  // console.log(listOfcraft);
 
   renderer(document.getElementById('content'))(drawMap.drawStatic(stars, planets));
   const render2 = renderer(document.getElementById('moving'));
@@ -75,7 +70,22 @@ const main = async () => {
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
 
-  craft.startCraftLife(listOfcraft, indSites);
+  for (let i = 0; i < 1; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.brick));
+  }
+  // console.log(listOfcraft);
+
+  const craftStart = () => {
+    Object.keys(listOfcraft).forEach((craftID) => {
+      listOfcraft[craftID].x = majObj[listOfcraft[0].home].x;
+      listOfcraft[craftID].y = majObj[listOfcraft[0].home].y;
+      listOfcraft[craftID].z = majObj[listOfcraft[0].home].z;
+    });
+
+    craft.startCraftLife(listOfcraft, indSites);
+  };
+
+
 
   while (Date.now()) {
     const clock = Date.now();
@@ -89,9 +99,12 @@ const main = async () => {
       movBod[i].z = newData.z;
     }
 
+    if (!listOfcraft[0].x) {craftStart();}
+
     render2(drawMap.drawMoving(clock2, planets, moons, ast, listOfcraft));
     await delay(50);
   }
+
 };
 
 window.onload = main;

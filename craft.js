@@ -1,5 +1,7 @@
 'use strict';
 const mech = require('./mechanics.js');
+const majObj = require('./majorObjects2.json');
+const ind = require('./industry.js');
 
 function getRandomInt(min, max) {
   min = Math.ceil(min);
@@ -19,8 +21,8 @@ const makeCraft = (crafto) => {
     crafto,
     {
       name: getRandomInt(1000, 9999),
-      x: 150,
-      y: 150,
+      x: 0,
+      y: 0,
       z: 0,
       route: []
     }
@@ -48,6 +50,13 @@ const craftAI = async (crafto, indSites) => {
     }
   } else {
     if (mech.calcDist(crafto, crafto.route[0]) < crafto.speed) {
+      if (crafto.route.length === 2) {
+        ind.loadCraft(crafto.route[0], crafto, "ore", crafto.cargoCap);
+      } else if (crafto.route.length === 1) {
+        ind.unloadCraft(crafto.route[0], crafto, "ore", crafto.cargoCap);
+      } else {
+        console.log("ERROR in craftAI");
+      }
       crafto.route.shift();
       craftAI(crafto, indSites);
     } else {

@@ -1,8 +1,9 @@
 {
   "brick": {
     "class": "Brick",
-    "cargoCao": 10,
+    "cargoCap": 10,
     "cargo": {},
-    "speed": 5
+    "speed": 5,
+    "home": "alpha"
   }
 }
