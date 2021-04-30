@@ -2,39 +2,40 @@
 // Industry manager
 const indTemp = require('./industryTemp.json');
 
+async function delay(ms) {
+  return await new Promise(resolve => setTimeout(resolve, ms));
+}
 
 const initInd = (body) => {
-  industryStoreCheck(body);
-};
-exports.initInd = initInd;
-
-const industryStoreCheck = (body) => {
   // console.log(body);
   body.industry && body.industry.forEach((bodyIndName) => {
     // console.log(bodyIndName);
     if (!body.store) {
       body.store = {};
-      Object.keys(indTemp[bodyIndName].input).forEach((resName) => {
-        // console.log(resName);
-        if (!body.store[resName]) {
-          body.store[resName] = 0;
-        }
-      });
+
       Object.keys(indTemp[bodyIndName].output).forEach((resName) => {
         if (!body.store[resName]) {
           body.store[resName] = 0;
         }
       });
+
+      Object.keys(indTemp[bodyIndName].input).forEach((resName) => {
+        if (!body.store[resName]) {
+          body.store[resName] = 0;
+        }
+      });
     }
+
     if (!body.hold) {
       body.hold = {};
     }
+
     indWork(body, bodyIndName);
   });
-
 };
+exports.initInd = initInd;
 
-const indWork = (body, industry) => {
+const indWork = async (body, industry) => {
   let workGo = true;
 
   Object.keys(indTemp[industry].input).forEach((inRes) => {
@@ -50,16 +51,15 @@ const indWork = (body, industry) => {
     Object.keys(indTemp[industry].input).forEach((inRes) => {
       body.store[inRes] -= indTemp[industry].input[inRes];
     });
-
-    setTimeout(
-      function(){
-        Object.keys(indTemp[industry].output).forEach((outRes) => {
-          body.store[outRes] += indTemp[industry].output[outRes];
-        });
-        indWork(body, industry);
-      },
-      indTemp[industry].cycle);
+    await delay(indTemp[industry].cycle);
+    Object.keys(indTemp[industry].output).forEach((outRes) => {
+      body.store[outRes] += indTemp[industry].output[outRes];
+    });
+  } else {
+    await delay(1000);
   }
+
+  indWork(body, industry);
 };
 exports.indWork = indWork;
 
@@ -80,7 +80,7 @@ const loadCraft = (bodyo, crafto, res, quant) => {
     crafto.cargo[res] = 0;
   }
   crafto.cargo[res] += quant;
-  bodyo.store[res] -= quant;
+  bodyo.hold[res] -= quant;
 };
 exports.loadCraft = loadCraft;
 

@@ -1,7 +1,7 @@
 {
   "brick": {
     "class": "Brick",
-    "cargoCap": 10,
+    "cargoCap": 5,
     "cargo": {},
     "speed": 5,
     "home": "alpha"

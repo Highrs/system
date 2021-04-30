@@ -70,7 +70,7 @@ const main = async () => {
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
 
-  for (let i = 0; i < 1; i++) {
+  for (let i = 0; i < 10; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick));
   }
   // console.log(listOfcraft);
@@ -84,8 +84,6 @@ const main = async () => {
 
     craft.startCraftLife(listOfcraft, indSites);
   };
-
-
 
   while (Date.now()) {
     const clock = Date.now();
