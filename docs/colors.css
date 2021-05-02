@@ -71,6 +71,11 @@ html, body {
   stroke: #00ff66ff;
   stroke-dasharray: 3 3;
 }
+.vectorLine {
+  fill: none;
+  stroke-width: 0.5px;
+  stroke: #00ff66ff;
+}
 .craft {
   fill: #363636;
   stroke-width: 1px;

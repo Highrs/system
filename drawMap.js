@@ -219,13 +219,33 @@ const drawStar = (staro) =>{
   return star;
 };
 
-const drawCraft = (craft) => {
+const drawCraftIcon = (hullClass) => {
+  return ['path', {d: 'M 0,3 L 3,0 L 0,-3 L -3,0 Z', class: 'craft'}];
+};
+
+const drawCraft = (listOfCraft) => {
   let drawnCraft = ['g', {}];
 
-  Object.keys(craft).forEach((craftID) => {
-    drawnCraft.push(['g', tt(craft[craftID].x, craft[craftID].y),
-      ['path', {d: 'M 0,3 L 3,0 L 0,-3 L -3,0 Z', class: 'craft'}]
-    ]);
+  Object.keys(listOfCraft).forEach((craftID) => {
+    let partCraft = ['g', {}];
+    let crafto = listOfCraft[craftID];
+    if (crafto.x !== 0 && crafto.y !== 0) {
+      partCraft.push(['line', {
+        x1: crafto.x,
+        y1: crafto.y,
+        x2: crafto.x + (crafto.vx * 10),
+        y2: crafto.y + (crafto.vy * 10),
+        class: 'vectorLine'
+      }]);
+    }
+    partCraft.push(
+      ['g', tt(crafto.x, crafto.y),
+        drawCraftIcon(crafto.class),
+        ['g', tt(crafto.vx * 10, crafto.vy * 10), ['circle', {r : 1, class: 'majorObject'}]]
+      ]
+
+    );
+    drawnCraft.push(partCraft);
   });
 
   return drawnCraft;

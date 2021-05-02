@@ -70,8 +70,11 @@ const main = async () => {
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 5; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick));
+  }
+  for (let i = 0; i < 2; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.mountain));
   }
   // console.log(listOfcraft);
 
@@ -85,10 +88,13 @@ const main = async () => {
     craft.startCraftLife(listOfcraft, indSites);
   };
 
+  let clock = Date.now();
+
   while (Date.now()) {
-    const clock = Date.now();
-    const t = clock / Math.pow(10, 2);
-    const clock2 = Date(clock);
+
+    clock += 10;
+    let t = clock / Math.pow(10, 2);
+    let clock2 = Date(clock);
 
     for (let i = 0; i < movBod.length; i++) {
       let newData = mech.kepCalc(t, movBod[i]);

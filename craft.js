@@ -25,6 +25,9 @@ const makeCraft = (crafto) => {
       x: 0,
       y: 0,
       z: 0,
+      vx: 0,
+      vy: 0,
+      vz: 0,
       route: [],
       lastStop: []
     }
@@ -51,6 +54,10 @@ const craftAI = async (crafto, indSites) => {
       crafto.x = crafto.lastStop.x;
       crafto.y = crafto.lastStop.y;
       crafto.z = crafto.lastStop.z;
+
+      crafto.vx = 0;
+      crafto.vy = 0;
+      crafto.vz = 0;
       // await delay(50);
     }
   } else {
@@ -107,7 +114,12 @@ const deviseRoute = (crafto, indSites) => {
 
 const calcVector =  (crafto, targeto) => {
   const dist = mech.calcDist(crafto, targeto);
-  crafto.x += crafto.speed * ((targeto.x - crafto.x) / dist );
-  crafto.y += crafto.speed * ((targeto.y - crafto.y) / dist );
-  crafto.z += crafto.speed * ((targeto.z - crafto.z) / dist );
+
+  crafto.vx = crafto.speed * ((targeto.x - crafto.x) / dist );
+  crafto.vy = crafto.speed * ((targeto.y - crafto.y) / dist );
+  crafto.vz = crafto.speed * ((targeto.z - crafto.z) / dist );
+
+  crafto.x += crafto.vx;
+  crafto.y += crafto.vy;
+  crafto.z += crafto.vz;
 };

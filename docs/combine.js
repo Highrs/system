@@ -26,6 +26,9 @@ const makeCraft = (crafto) => {
       x: 0,
       y: 0,
       z: 0,
+      vx: 0,
+      vy: 0,
+      vz: 0,
       route: [],
       lastStop: []
     }
@@ -52,6 +55,10 @@ const craftAI = async (crafto, indSites) => {
       crafto.x = crafto.lastStop.x;
       crafto.y = crafto.lastStop.y;
       crafto.z = crafto.lastStop.z;
+
+      crafto.vx = 0;
+      crafto.vy = 0;
+      crafto.vz = 0;
       // await delay(50);
     }
   } else {
@@ -108,9 +115,14 @@ const deviseRoute = (crafto, indSites) => {
 
 const calcVector =  (crafto, targeto) => {
   const dist = mech.calcDist(crafto, targeto);
-  crafto.x += crafto.speed * ((targeto.x - crafto.x) / dist );
-  crafto.y += crafto.speed * ((targeto.y - crafto.y) / dist );
-  crafto.z += crafto.speed * ((targeto.z - crafto.z) / dist );
+
+  crafto.vx = crafto.speed * ((targeto.x - crafto.x) / dist );
+  crafto.vy = crafto.speed * ((targeto.y - crafto.y) / dist );
+  crafto.vz = crafto.speed * ((targeto.z - crafto.z) / dist );
+
+  crafto.x += crafto.vx;
+  crafto.y += crafto.vy;
+  crafto.z += crafto.vz;
 };
 
 },{"./industry.js":5,"./industryTemp.json":6,"./majorObjects2.json":8,"./mechanics.js":9}],2:[function(require,module,exports){
@@ -335,13 +347,33 @@ const drawStar = (staro) =>{
   return star;
 };
 
-const drawCraft = (craft) => {
+const drawCraftIcon = (hullClass) => {
+  return ['path', {d: 'M 0,3 L 3,0 L 0,-3 L -3,0 Z', class: 'craft'}];
+};
+
+const drawCraft = (listOfCraft) => {
   let drawnCraft = ['g', {}];
 
-  Object.keys(craft).forEach((craftID) => {
-    drawnCraft.push(['g', tt(craft[craftID].x, craft[craftID].y),
-      ['path', {d: 'M 0,3 L 3,0 L 0,-3 L -3,0 Z', class: 'craft'}]
-    ]);
+  Object.keys(listOfCraft).forEach((craftID) => {
+    let partCraft = ['g', {}];
+    let crafto = listOfCraft[craftID];
+    if (crafto.x !== 0 && crafto.y !== 0) {
+      partCraft.push(['line', {
+        x1: crafto.x,
+        y1: crafto.y,
+        x2: crafto.x + (crafto.vx * 10),
+        y2: crafto.y + (crafto.vy * 10),
+        class: 'vectorLine'
+      }]);
+    }
+    partCraft.push(
+      ['g', tt(crafto.x, crafto.y),
+        drawCraftIcon(crafto.class),
+        ['g', tt(crafto.vx * 10, crafto.vy * 10), ['circle', {r : 1, class: 'majorObject'}]]
+      ]
+
+    );
+    drawnCraft.push(partCraft);
   });
 
   return drawnCraft;
@@ -390,7 +422,14 @@ module.exports={
     "class": "Brick",
     "cargoCap": 5,
     "cargo": {},
-    "speed": 5,
+    "speed": 2,
+    "home": "alpha"
+  },
+  "mountain": {
+    "class": "Mountain",
+    "cargoCap": 15,
+    "cargo": {},
+    "speed": 1,
     "home": "alpha"
   }
 }
@@ -585,8 +624,11 @@ const main = async () => {
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 5; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick));
+  }
+  for (let i = 0; i < 2; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.mountain));
   }
   // console.log(listOfcraft);
 
@@ -600,10 +642,13 @@ const main = async () => {
     craft.startCraftLife(listOfcraft, indSites);
   };
 
+  let clock = Date.now();
+
   while (Date.now()) {
-    const clock = Date.now();
-    const t = clock / Math.pow(10, 2);
-    const clock2 = Date(clock);
+
+    clock += 10;
+    let t = clock / Math.pow(10, 2);
+    let clock2 = Date(clock);
 
     for (let i = 0; i < movBod.length; i++) {
       let newData = mech.kepCalc(t, movBod[i]);

@@ -3,7 +3,14 @@
     "class": "Brick",
     "cargoCap": 5,
     "cargo": {},
-    "speed": 5,
+    "speed": 2,
+    "home": "alpha"
+  },
+  "mountain": {
+    "class": "Mountain",
+    "cargoCap": 15,
+    "cargo": {},
+    "speed": 1,
     "home": "alpha"
   }
 }
