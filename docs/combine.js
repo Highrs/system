@@ -156,8 +156,8 @@ const pageH = 1200;
 // const centerY = pageH/2;
 //Artistic properties-------------
 // const starRadius = 10;
-let windowWidth = 120; // width of planet data rectangles
-let windowHeight = 25;
+// let windowWidth = 120; // width of planet data rectangles
+// let windowHeight = 25;
 let distanceWindowLength = 44;
 //--------------------------------
 
@@ -246,7 +246,7 @@ const drawOrbit = (bodies) => {
 };
 
 const indDisplay = (body) => {
-  let display = ['g', tt(0, 30),
+  let display = ['g', tt(0, 32),
     ['rect', {
       width: 100,
       height:
@@ -284,28 +284,38 @@ const indDisplay = (body) => {
   return display;
 };
 
-const drawData = (body) => {
+const drawData = (bodyo) => {
   let dataDisp = ['g', {}];
-  if (body.type === 'planet' || body.industry) {
+  if (bodyo.type === 'planet' || bodyo.industry) {
     dataDisp.push(
       ['rect', {
-        width: windowWidth,
-        height: windowHeight,
+        width: ((bodyo.name.length * 6.5) + 12),
+        height: 14,
         class: 'dataWindow'
       }],
-      ['text', {x: 8, y: 10, class: 'dataText'}, body.name],
-      ['text', {x: 3, y: 20, class: 'dataText'},
-        'XYZ:' +
-        (body.x).toFixed(0) +
-        ' ' +
-        (body.y).toFixed(0) +
-        ' ' +
-        (body.z).toFixed(0)
-      ]
+      ['text', {x: 8, y: 10, class: 'dataText'}, bodyo.name]
     );
   }
-  if (body.industry) {
-    dataDisp.push(indDisplay(body, 4));
+
+  if (bodyo.industry) {
+    dataDisp.push(
+      ['g', tt(0, 16),
+        ['rect', {
+          width: 120,
+          height: 14,
+          class: 'dataWindow'
+        }],
+        ['text', {x: 3, y: 10, class: 'dataText'},
+          'XYZ:' +
+          (bodyo.x).toFixed(0) +
+          ' ' +
+          (bodyo.y).toFixed(0) +
+          ' ' +
+          (bodyo.z).toFixed(0)
+        ]
+      ]
+    );
+    dataDisp.push(indDisplay(bodyo, 4));
   }
   return dataDisp;
 };
