@@ -15,5 +15,15 @@
     "output": {
       "metal": 1
     }
+  },
+
+  "factory": {
+    "cycle": 3000,
+    "input": {
+      "metal": 5
+    },
+    "output": {
+      "supplies": 1
+    }
   }
 }

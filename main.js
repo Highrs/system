@@ -31,6 +31,16 @@ async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
 }
 
+const craftStart = (listOfcraft, indSites) => {
+  listOfcraft.forEach((crafto) => {
+    ['x', 'y', 'z'].map(e => {
+      crafto[e] = majObj[crafto.home][e];
+    });
+  });
+
+  craft.startCraftLife(listOfcraft, indSites);
+};
+
 const main = async () => {
   console.log("Giant alien spiders are no joke!");
 
@@ -70,45 +80,37 @@ const main = async () => {
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 2; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick));
   }
-  for (let i = 0; i < 2; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.mountain));
-  }
-  // console.log(listOfcraft);
+  // for (let i = 0; i < 2; i++) {
+  //   listOfcraft.push(craft.makeCraft(hulls.mountain));
+  // }
 
-  const craftStart = () => {
-    Object.keys(listOfcraft).forEach((craftID) => {
-      listOfcraft[craftID].x = majObj[listOfcraft[0].home].x;
-      listOfcraft[craftID].y = majObj[listOfcraft[0].home].y;
-      listOfcraft[craftID].z = majObj[listOfcraft[0].home].z;
-    });
-
-    craft.startCraftLife(listOfcraft, indSites);
-  };
-
-  let clock = Date.now();
+  // let clock = Date.now();
+  let clock = 1;
 
   while (Date.now()) {
 
     clock += 10;
     let t = clock / Math.pow(10, 2);
-    let clock2 = Date(clock);
+    // let clock2 = Date(clock);
+    let clock2 = clock;
 
     for (let i = 0; i < movBod.length; i++) {
       let newData = mech.kepCalc(t, movBod[i]);
-      movBod[i].x = newData.x;
-      movBod[i].y = newData.y;
-      movBod[i].z = newData.z;
+      ['x', 'y', 'z'].map(e => {
+        movBod[i][e] = newData[e];
+      });
     }
 
-    if (!listOfcraft[0].x) {craftStart();}
+    if (!listOfcraft[0].x) {
+      craftStart(listOfcraft, indSites);
+    }
 
     render2(drawMap.drawMoving(clock2, planets, moons, ast, listOfcraft));
     await delay(50);
   }
-
 };
 
 window.onload = main;

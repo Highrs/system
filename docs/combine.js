@@ -5,12 +5,15 @@ const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
 const indTemp = require('./industryTemp.json');
 
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min);
-  //The maximum is exclusive and the minimum is inclusive
-} //Thanks stock
+const genNamer = () => {
+  let id = 0;
+  return () => {
+    id += 1;
+    return id;
+  };
+};
+
+const namer = genNamer();
 
 async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
@@ -22,7 +25,7 @@ const makeCraft = (crafto) => {
     newCrafto,
     crafto,
     {
-      name: getRandomInt(1000, 9999),
+      name: namer(),
       x: 0,
       y: 0,
       z: 0,
@@ -35,13 +38,14 @@ const makeCraft = (crafto) => {
   );
   // console.log(crafto);
   return newCrafto;
-}; exports.makeCraft = makeCraft;
+};
+exports.makeCraft = makeCraft;
 
 const startCraftLife = (listOfcraft, indSites) => {
-  Object.keys(listOfcraft).forEach((craftID) => {
+  listOfcraft.forEach((crafto) => {
     // console.log(craftID);
-    listOfcraft[craftID].lastStop = majObj[listOfcraft[craftID].home];
-    craftAI(listOfcraft[craftID], indSites);
+    crafto.lastStop = majObj[crafto.home];
+    craftAI(crafto, indSites);
   });
 };
 exports.startCraftLife = startCraftLife;
@@ -49,80 +53,100 @@ exports.startCraftLife = startCraftLife;
 const craftAI = async (crafto, indSites) => {
   await delay(50);
   if (crafto.route.length === 0) {
-    if (!deviseRoute(crafto, indSites)) {
-      // console.log("No Route");
-      // console.log(crafto.lastStop);
-      crafto.x = crafto.lastStop.x;
-      crafto.y = crafto.lastStop.y;
-      crafto.z = crafto.lastStop.z;
 
-      crafto.vx = 0;
-      crafto.vy = 0;
-      crafto.vz = 0;
-      // await delay(50);
+    if (!deviseRoute(crafto, indSites)) {
+      ['x', 'y', 'z'].map(e => {
+        crafto[e] = crafto.lastStop[e];
+      });
+      ['vx', 'vy', 'vz'].map(e => {
+        crafto[e] = 0;
+      });
     }
+
   } else {
-    if (mech.calcDist(crafto, crafto.route[0]) < crafto.speed) {
-      if (crafto.route.length === 2) {
-        ind.loadCraft(crafto.route[0], crafto, "ore", crafto.cargoCap);
-      } else if (crafto.route.length === 1) {
-        ind.unloadCraft(crafto.route[0], crafto, "ore", crafto.cargoCap);
-        // ind.initInd(crafto.route[0]);
-      } else {
-        console.log("ERROR in craftAI");
-      }
-      crafto.lastStop = crafto.route[0];
-      // console.log(crafto.lastStop.name);
+
+    if (mech.calcDist(crafto, crafto.route[0].location) < crafto.speed) {
+      ind.unLoadCraft(crafto);
+      crafto.lastStop = crafto.route[0].location;
       crafto.route.shift();
     } else {
-      calcVector(crafto, crafto.route[0]);
+      calcVector(crafto, crafto.route[0].location);
     }
+
   }
   craftAI(crafto, indSites);
 };
 
+const buildWaypoint = (bodyo) => {
+  let waypoint = {
+    location: bodyo,
+    pickup: {},
+    dropoff: {}
+  };
+
+  return waypoint;
+};
+
 const deviseRoute = (crafto, indSites) => {
+  if (crafto.route.length > 0) {
+    console.log("ERROR at craft.deviseRoute: Route not empty!");
+    crafto.route = [];
+  }
   if (indSites.length < 2) {
     console.log("ERROR at craft.deviseRoute: Too few industry sites.");
     return false;
   }
   //Forgive me for I have sinned
-  return indSites.find((prodSite) => {
-    return prodSite.industry.find((prodInd) => {
-      return Object.keys(indTemp[prodInd].output).find((prodRes) => {
-        return indSites.find((consSite) => {
+  return indSites.find((prodSite) =>
+    prodSite.industry.find((prodInd) =>
+      Object.keys(indTemp[prodInd].output).find((prodRes) =>
+        indSites.find((consSite) => {
           if (prodSite !== consSite) {
-            return consSite.industry.find((consInd) => {
-              return Object.keys(indTemp[consInd].input).find((consRes) => {
+            return consSite.industry.find((consInd) =>
+              Object.keys(indTemp[consInd].input).find((consRes) => {
                 if (
                   prodRes === consRes &&
-                  prodSite.store[prodRes] > crafto.cargoCap
+                  prodSite.store[prodRes] >= crafto.cargoCap
                 ) {
                   // console.log(crafto.name + " route found!");
-                  crafto.route = [prodSite, consSite];
-                  ind.moveTohold(prodSite, crafto, prodRes, crafto.cargoCap);
+                  crafto.route.push(buildWaypoint(prodSite));
+                  crafto.route.push(buildWaypoint(consSite));
+
+                  crafto.route[0].pickup = {
+                    [prodRes]: crafto.cargoCap
+                  };
+                  crafto.route[1].dropoff = {
+                    [prodRes]: crafto.cargoCap
+                  };
+                  ind.moveTohold(prodSite, prodRes, crafto);
+
+                  console.log(
+                    crafto.class + " " + crafto.name + ", " +
+                    crafto.route[0].location.name + " to " +
+                    crafto.route[1].location.name + ", " +
+                    crafto.cargoCap + " " + prodRes
+                  );
+
                   return true;
                 }
-              });
-            });
+              })
+            );
+
           }
-        });
-      });
-    });
-  });
+        })
+      )
+    )
+  );
 };
 //Replace this part later. Make it so each planet has exports and imports list.
 
 const calcVector =  (crafto, targeto) => {
   const dist = mech.calcDist(crafto, targeto);
 
-  crafto.vx = crafto.speed * ((targeto.x - crafto.x) / dist );
-  crafto.vy = crafto.speed * ((targeto.y - crafto.y) / dist );
-  crafto.vz = crafto.speed * ((targeto.z - crafto.z) / dist );
-
-  crafto.x += crafto.vx;
-  crafto.y += crafto.vy;
-  crafto.z += crafto.vz;
+  ['x', 'y', 'z'].map(e => {
+    crafto['v' + e] = crafto.speed * ((targeto[e] - crafto[e]) / dist );
+    crafto[e] += crafto['v' + e];
+  });
 };
 
 },{"./industry.js":5,"./industryTemp.json":6,"./majorObjects2.json":8,"./mechanics.js":9}],2:[function(require,module,exports){
@@ -348,7 +372,19 @@ const drawStar = (staro) =>{
 };
 
 const drawCraftIcon = (hullClass) => {
-  return ['path', {d: 'M 0,3 L 3,0 L 0,-3 L -3,0 Z', class: 'craft'}];
+  let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
+
+  const icono = {
+    Mountain: 'M 5,3 L 5,-3 L -5,-3 L -5,3 Z',
+    Brick: 'M 3,3 L 3,-3 L -3,-3 L -3,3 Z'
+  };
+
+  if (icono[hullClass]) {
+    // console.log("Here!");
+    iconString = icono[hullClass];
+  }
+
+  return ['path', {d: iconString, class: 'craft'}];
 };
 
 const drawCraft = (listOfCraft) => {
@@ -420,16 +456,16 @@ module.exports = cfg => {
 module.exports={
   "brick": {
     "class": "Brick",
-    "cargoCap": 5,
+    "cargoCap": 10,
     "cargo": {},
-    "speed": 2,
+    "speed": 4,
     "home": "alpha"
   },
   "mountain": {
     "class": "Mountain",
-    "cargoCap": 15,
+    "cargoCap": 30,
     "cargo": {},
-    "speed": 1,
+    "speed": 2,
     "home": "alpha"
   }
 }
@@ -444,28 +480,18 @@ async function delay(ms) {
 }
 
 const initInd = (body) => {
-  // console.log(body);
+  body.store = body.store || {};
   body.industry && body.industry.forEach((bodyIndName) => {
-    // console.log(bodyIndName);
-    if (!body.store) {
-      body.store = {};
 
-      Object.keys(indTemp[bodyIndName].output).forEach((resName) => {
-        if (!body.store[resName]) {
-          body.store[resName] = 0;
-        }
-      });
+    Object.keys(indTemp[bodyIndName].output).forEach((resName) => {
+      body.store[resName] |= 0;
+    });
 
-      Object.keys(indTemp[bodyIndName].input).forEach((resName) => {
-        if (!body.store[resName]) {
-          body.store[resName] = 0;
-        }
-      });
-    }
+    Object.keys(indTemp[bodyIndName].input).forEach((resName) => {
+      body.store[resName] |= 0;
+    });
 
-    if (!body.hold) {
-      body.hold = {};
-    }
+    body.hold = body.hold || {};
 
     indWork(body, bodyIndName);
   });
@@ -476,8 +502,9 @@ const indWork = async (body, industry) => {
   let workGo = true;
 
   Object.keys(indTemp[industry].input).forEach((inRes) => {
+  // for (const inRes of indTemp[industry].input) {
     if (
-      (!body.store[inRes]) ||
+      (body.store[inRes] === undefined) ||
       (indTemp[industry].input[inRes] > body.store[inRes])
     ) {
       workGo = false;
@@ -500,35 +527,59 @@ const indWork = async (body, industry) => {
 };
 exports.indWork = indWork;
 
-const moveTohold = (bodyo, crafto, res, quant) => {
+const moveTohold = (bodyo, res, crafto) => {
+  let quant = crafto.cargoCap;
+
+  bodyo.hold[crafto.name] = bodyo.hold[crafto.name] || {};
+  bodyo.hold[crafto.name][res] = bodyo.hold[crafto.name][res] || 0;
+
   bodyo.store[res] -= quant;
-  if (!bodyo.hold[crafto.name]) {
-    bodyo.hold[crafto.name] = {};
-  }
-  if (!bodyo.hold[crafto.name][res]) {
-    bodyo.hold[crafto.name][res] = 0;
-  }
   bodyo.hold[crafto.name][res] += quant;
 };
 exports.moveTohold = moveTohold;
 
-const loadCraft = (bodyo, crafto, res, quant) => {
-  if (!crafto.cargo[res]) {
-    crafto.cargo[res] = 0;
-  }
-  crafto.cargo[res] += quant;
-  bodyo.hold[res] -= quant;
-};
-exports.loadCraft = loadCraft;
+const unLoadCraft = (crafto) => {
+  let bodyo = crafto.route[0].location;
+  // let cargoCap = crafto.cargoCap;
 
-const unloadCraft = (bodyo, crafto, res, quant) => {
-  if (!bodyo.store[res]) {
-    bodyo.store[res] = 0;
-  }
-  bodyo.store[res] += quant;
-  crafto.cargo[res] -= quant;
+  Object.keys(crafto.route[0].dropoff).forEach((res) => {
+    const quant = crafto.route[0].dropoff[res];
+    bodyo.store[res] |= 0;
+    crafto.cargo[res] |= 0;
+    console.log(crafto.name + " " + res + " " + crafto.cargo[res]);
+
+    if (crafto.cargo[res] >= quant) {
+      bodyo.store[res] += quant;
+      crafto.cargo[res] -= quant;
+    } else {
+      console.log("ERROR AT UNLOAD");
+      console.log(JSON.stringify(crafto, null, 2));
+      // throw new Error();
+    }
+  });
+
+  Object.keys(crafto.route[0].pickup).forEach((res) => {
+    const quant = crafto.route[0].pickup[res];
+    bodyo.store[res] |= 0;
+    crafto.cargo[res] |= 0;
+
+    if (
+      (crafto.cargoCap >= quant) &&
+      ( (crafto.cargo[res] + quant) <= crafto.cargoCap)
+    ) {
+      crafto.cargo[res] += quant;
+      bodyo.hold[crafto.name][res] -= quant;
+    } else {
+      console.log("ERROR AT LOAD");
+      console.log(JSON.stringify(crafto, null, 2));
+      // throw new Error();
+    }
+    // console.log(crafto.name + " " + res + " " + crafto.cargo[res]);
+  });
+
+  console.log(crafto.cargo);
 };
-exports.unloadCraft = unloadCraft;
+exports.unLoadCraft = unLoadCraft;
 
 },{"./industryTemp.json":6}],6:[function(require,module,exports){
 module.exports={
@@ -547,6 +598,16 @@ module.exports={
     },
     "output": {
       "metal": 1
+    }
+  },
+
+  "factory": {
+    "cycle": 3000,
+    "input": {
+      "metal": 5
+    },
+    "output": {
+      "supplies": 1
     }
   }
 }
@@ -584,6 +645,16 @@ const makeBody = (planeto) => {
 async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
 }
+
+const craftStart = (listOfcraft, indSites) => {
+  listOfcraft.forEach((crafto) => {
+    ['x', 'y', 'z'].map(e => {
+      crafto[e] = majObj[crafto.home][e];
+    });
+  });
+
+  craft.startCraftLife(listOfcraft, indSites);
+};
 
 const main = async () => {
   console.log("Giant alien spiders are no joke!");
@@ -624,45 +695,37 @@ const main = async () => {
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 2; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick));
   }
-  for (let i = 0; i < 2; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.mountain));
-  }
-  // console.log(listOfcraft);
+  // for (let i = 0; i < 2; i++) {
+  //   listOfcraft.push(craft.makeCraft(hulls.mountain));
+  // }
 
-  const craftStart = () => {
-    Object.keys(listOfcraft).forEach((craftID) => {
-      listOfcraft[craftID].x = majObj[listOfcraft[0].home].x;
-      listOfcraft[craftID].y = majObj[listOfcraft[0].home].y;
-      listOfcraft[craftID].z = majObj[listOfcraft[0].home].z;
-    });
-
-    craft.startCraftLife(listOfcraft, indSites);
-  };
-
-  let clock = Date.now();
+  // let clock = Date.now();
+  let clock = 1;
 
   while (Date.now()) {
 
     clock += 10;
     let t = clock / Math.pow(10, 2);
-    let clock2 = Date(clock);
+    // let clock2 = Date(clock);
+    let clock2 = clock;
 
     for (let i = 0; i < movBod.length; i++) {
       let newData = mech.kepCalc(t, movBod[i]);
-      movBod[i].x = newData.x;
-      movBod[i].y = newData.y;
-      movBod[i].z = newData.z;
+      ['x', 'y', 'z'].map(e => {
+        movBod[i][e] = newData[e];
+      });
     }
 
-    if (!listOfcraft[0].x) {craftStart();}
+    if (!listOfcraft[0].x) {
+      craftStart(listOfcraft, indSites);
+    }
 
     render2(drawMap.drawMoving(clock2, planets, moons, ast, listOfcraft));
     await delay(50);
   }
-
 };
 
 window.onload = main;
@@ -707,7 +770,7 @@ module.exports={
     "inc":  0.1,
     "maz":  0,
     "objectRadius": 5,
-    "industry": ["mining", "mining"]
+    "industry": ["mining", "mining", "mining", "refining"]
   },
   "alpha": {
     "name": "Alpha",
@@ -783,7 +846,8 @@ module.exports={
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "objectRadius": 1
+    "objectRadius": 1,
+    "industry": ["factory"]
   }
 }
 

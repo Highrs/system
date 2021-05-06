@@ -220,7 +220,19 @@ const drawStar = (staro) =>{
 };
 
 const drawCraftIcon = (hullClass) => {
-  return ['path', {d: 'M 0,3 L 3,0 L 0,-3 L -3,0 Z', class: 'craft'}];
+  let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
+
+  const icono = {
+    Mountain: 'M 5,3 L 5,-3 L -5,-3 L -5,3 Z',
+    Brick: 'M 3,3 L 3,-3 L -3,-3 L -3,3 Z'
+  };
+
+  if (icono[hullClass]) {
+    // console.log("Here!");
+    iconString = icono[hullClass];
+  }
+
+  return ['path', {d: iconString, class: 'craft'}];
 };
 
 const drawCraft = (listOfCraft) => {

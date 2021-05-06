@@ -1,16 +1,16 @@
 {
   "brick": {
     "class": "Brick",
-    "cargoCap": 5,
+    "cargoCap": 10,
     "cargo": {},
-    "speed": 2,
+    "speed": 4,
     "home": "alpha"
   },
   "mountain": {
     "class": "Mountain",
-    "cargoCap": 15,
+    "cargoCap": 30,
     "cargo": {},
-    "speed": 1,
+    "speed": 2,
     "home": "alpha"
   }
 }
