@@ -175,6 +175,20 @@ const drawGrid = () => {
       );
     }
   }
+  let polarMap = ['g', tt(pageW/2, pageH/2)];
+
+  for (let i = 1; i < 5; i++) {
+    polarMap.push(['circle', {r: 150 * i, class: 'grid'}]);
+    for (let j = 0; j < 16; j++) {
+      polarMap.push(['line', {
+        transform: 'rotate(' + ((360 / 16) * j) +')',
+        x1: 150 * i + 15,
+        x2: 150 * i - 5,
+        class: 'grid'}]);
+    }
+  }
+
+  grid.push(polarMap);
 
   return grid;
 };
@@ -435,14 +449,14 @@ module.exports = {
 
   brick: () => ({
     class: 'Brick',
-    cargoCap: 2,
+    cargoCap: 5,
     cargo: {},
     speed: 4,
     home: 'alpha'
   }),
   mountain: () => ({
     class: 'Mountain',
-    cargoCap: 4,
+    cargoCap: 10,
     cargo: {},
     speed: 2,
     home: 'alpha'
@@ -666,7 +680,7 @@ const main = async () => {
   for (let i = 0; i < 10; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 8; i++) {
     listOfcraft.push(craft.makeCraft(hulls.mountain()));
   }
 
@@ -714,7 +728,7 @@ module.exports={
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
-    "a":    450,
+    "a":    425,
     "e":    0.01,
     "t":    0,
     "t0":   0,

@@ -83,7 +83,7 @@ const main = async () => {
   for (let i = 0; i < 10; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 8; i++) {
     listOfcraft.push(craft.makeCraft(hulls.mountain()));
   }
 

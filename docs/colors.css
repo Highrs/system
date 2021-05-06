@@ -41,7 +41,8 @@ html, body {
 }
 .grid {
   stroke-width: 0.2px;
-  stroke: #00ff66ff;
+  stroke: #a3a3a3ff;
+  fill: none;
 }
 .dataWindow {
   stroke-width: 0.5px;

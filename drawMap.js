@@ -37,6 +37,20 @@ const drawGrid = () => {
       );
     }
   }
+  let polarMap = ['g', tt(pageW/2, pageH/2)];
+
+  for (let i = 1; i < 5; i++) {
+    polarMap.push(['circle', {r: 150 * i, class: 'grid'}]);
+    for (let j = 0; j < 16; j++) {
+      polarMap.push(['line', {
+        transform: 'rotate(' + ((360 / 16) * j) +')',
+        x1: 150 * i + 15,
+        x2: 150 * i - 5,
+        class: 'grid'}]);
+    }
+  }
+
+  grid.push(polarMap);
 
   return grid;
 };
