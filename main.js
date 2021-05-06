@@ -5,7 +5,7 @@ const drawMap = require('./drawMap.js');
 const renderer = require('onml/renderer.js');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
-const hulls = require('./hulls.json');
+const hulls = require('./hulls.js');
 const craft = require('./craft.js');
 
 const makeStar = (staro) => {
@@ -42,7 +42,7 @@ const craftStart = (listOfcraft, indSites) => {
 };
 
 const main = async () => {
-  console.log("Giant alien spiders are no joke!");
+  console.log('Giant alien spiders are no joke!');
 
   let stars = [];
   let planets = [];
@@ -57,19 +57,19 @@ const main = async () => {
       indSites.push(majObj[objName]);
     }
 
-    if (majObj[objName].type === "star") {
+    if (majObj[objName].type === 'star') {
       stars.push(makeStar(majObj[objName]));
     } else
-    if (majObj[objName].type === "planet") {
+    if (majObj[objName].type === 'planet') {
       planets.push(makeBody(majObj[objName]));
     } else
-    if (majObj[objName].type === "moon") {
+    if (majObj[objName].type === 'moon') {
       moons.push(makeBody(majObj[objName]));
     } else
-    if (majObj[objName].type === "asteroid") {
+    if (majObj[objName].type === 'asteroid') {
       ast.push(makeBody(majObj[objName]));
     } else {
-      console.log("ERROR at make. Skipping.");
+      console.log('ERROR at make. Skipping.');
     }
   });
 
@@ -80,22 +80,22 @@ const main = async () => {
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
 
-  for (let i = 0; i < 2; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.brick));
+  for (let i = 0; i < 10; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
-  // for (let i = 0; i < 2; i++) {
-  //   listOfcraft.push(craft.makeCraft(hulls.mountain));
-  // }
+  for (let i = 0; i < 4; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.mountain()));
+  }
 
-  // let clock = Date.now();
-  let clock = 1;
+  let clock = Date.now();
+  // let clock = 1;
 
   while (Date.now()) {
 
     clock += 10;
     let t = clock / Math.pow(10, 2);
-    // let clock2 = Date(clock);
-    let clock2 = clock;
+    let clock2 = Date(clock);
+    // let clock2 = clock;
 
     for (let i = 0; i < movBod.length; i++) {
       let newData = mech.kepCalc(t, movBod[i]);

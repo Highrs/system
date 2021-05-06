@@ -35,14 +35,13 @@ const makeCraft = (crafto) => {
       lastStop: []
     }
   );
-  // console.log(crafto);
+
   return newCrafto;
 };
 exports.makeCraft = makeCraft;
 
 const startCraftLife = (listOfcraft, indSites) => {
   listOfcraft.forEach((crafto) => {
-    // console.log(craftID);
     crafto.lastStop = majObj[crafto.home];
     craftAI(crafto, indSites);
   });
@@ -52,7 +51,6 @@ exports.startCraftLife = startCraftLife;
 const craftAI = async (crafto, indSites) => {
   await delay(50);
   if (crafto.route.length === 0) {
-
     if (!deviseRoute(crafto, indSites)) {
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
@@ -61,9 +59,7 @@ const craftAI = async (crafto, indSites) => {
         crafto[e] = 0;
       });
     }
-
   } else {
-
     if (mech.calcDist(crafto, crafto.route[0].location) < crafto.speed) {
       ind.unLoadCraft(crafto);
       crafto.lastStop = crafto.route[0].location;
@@ -71,7 +67,6 @@ const craftAI = async (crafto, indSites) => {
     } else {
       calcVector(crafto, crafto.route[0].location);
     }
-
   }
   craftAI(crafto, indSites);
 };
@@ -88,11 +83,11 @@ const buildWaypoint = (bodyo) => {
 
 const deviseRoute = (crafto, indSites) => {
   if (crafto.route.length > 0) {
-    console.log("ERROR at craft.deviseRoute: Route not empty!");
+    console.log('ERROR at craft.deviseRoute: Route not empty!');
     crafto.route = [];
   }
   if (indSites.length < 2) {
-    console.log("ERROR at craft.deviseRoute: Too few industry sites.");
+    console.log('ERROR at craft.deviseRoute: Too few industry sites.');
     return false;
   }
   //Forgive me for I have sinned
@@ -107,7 +102,6 @@ const deviseRoute = (crafto, indSites) => {
                   prodRes === consRes &&
                   prodSite.store[prodRes] >= crafto.cargoCap
                 ) {
-                  // console.log(crafto.name + " route found!");
                   crafto.route.push(buildWaypoint(prodSite));
                   crafto.route.push(buildWaypoint(consSite));
 
@@ -119,18 +113,10 @@ const deviseRoute = (crafto, indSites) => {
                   };
                   ind.moveTohold(prodSite, prodRes, crafto);
 
-                  console.log(
-                    crafto.class + " " + crafto.name + ", " +
-                    crafto.route[0].location.name + " to " +
-                    crafto.route[1].location.name + ", " +
-                    crafto.cargoCap + " " + prodRes
-                  );
-
                   return true;
                 }
               })
             );
-
           }
         })
       )

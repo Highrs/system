@@ -52,7 +52,7 @@ const drawOrbit = (bodies) => {
     let body = bodies[i];
     let coords = 'M ';
     let points = 128;
-    if (body.type === "moon") {
+    if (body.type === 'moon') {
       points = 32;
     }
 
@@ -106,9 +106,9 @@ const indDisplay = (body) => {
   display.push(
     ['g', tt(0, 10),
     ['text', {x: 3, y: 0,
-      class: 'dataText'}, "Industry:"],
+      class: 'dataText'}, 'Industry:'],
       ['text', {x: 3, y: (body.industry.length + 1)*10,
-        class: 'dataText'}, "Storage:"]
+        class: 'dataText'}, 'Storage:']
     ]
   );
   body.industry.forEach((e, idx) => {
@@ -123,7 +123,7 @@ const indDisplay = (body) => {
       ['g', tt(0, 10),
         ['text', {x: 9,
           y: (body.industry.length + idx + 2) * 10,
-          class: 'dataText'}, e + " - " + body.store[e]
+          class: 'dataText'}, e + ' - ' + body.store[e]
         ]
       ]
     );
@@ -134,7 +134,7 @@ const indDisplay = (body) => {
 
 const drawData = (body) => {
   let dataDisp = ['g', {}];
-  if (body.type === "planet" || body.industry) {
+  if (body.type === 'planet' || body.industry) {
     dataDisp.push(
       ['rect', {
         width: windowWidth,
@@ -162,9 +162,9 @@ const drawBodies = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
-    if (bodies[i].type === "planet") {
+    if (bodies[i].type === 'planet') {
       for (let j = i + 1; j < bodies.length; j++) {
-        if (bodies[j].type === "planet") {
+        if (bodies[j].type === 'planet') {
           let dist = mech.calcDist(bodies[i], bodies[j]);
           bodiesDrawn.push(['line', {
             x1: bodies[i].x,
@@ -206,7 +206,6 @@ const drawTime = (clock) => {
 
 const drawStar = (staro) =>{
   let star = ['g', {}, ];
-
   Object.keys(staro).forEach((starName) => {
     star.push(['g', tt(staro[starName].x, staro[starName].y),
       ['circle', {
@@ -215,23 +214,16 @@ const drawStar = (staro) =>{
       }]
     ]);
   });
-
   return star;
 };
 
 const drawCraftIcon = (hullClass) => {
   let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
-
   const icono = {
     Mountain: 'M 5,3 L 5,-3 L -5,-3 L -5,3 Z',
     Brick: 'M 3,3 L 3,-3 L -3,-3 L -3,3 Z'
   };
-
-  if (icono[hullClass]) {
-    // console.log("Here!");
-    iconString = icono[hullClass];
-  }
-
+  if (icono[hullClass]) {iconString = icono[hullClass];}
   return ['path', {d: iconString, class: 'craft'}];
 };
 

@@ -36,14 +36,13 @@ const makeCraft = (crafto) => {
       lastStop: []
     }
   );
-  // console.log(crafto);
+
   return newCrafto;
 };
 exports.makeCraft = makeCraft;
 
 const startCraftLife = (listOfcraft, indSites) => {
   listOfcraft.forEach((crafto) => {
-    // console.log(craftID);
     crafto.lastStop = majObj[crafto.home];
     craftAI(crafto, indSites);
   });
@@ -53,7 +52,6 @@ exports.startCraftLife = startCraftLife;
 const craftAI = async (crafto, indSites) => {
   await delay(50);
   if (crafto.route.length === 0) {
-
     if (!deviseRoute(crafto, indSites)) {
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
@@ -62,9 +60,7 @@ const craftAI = async (crafto, indSites) => {
         crafto[e] = 0;
       });
     }
-
   } else {
-
     if (mech.calcDist(crafto, crafto.route[0].location) < crafto.speed) {
       ind.unLoadCraft(crafto);
       crafto.lastStop = crafto.route[0].location;
@@ -72,7 +68,6 @@ const craftAI = async (crafto, indSites) => {
     } else {
       calcVector(crafto, crafto.route[0].location);
     }
-
   }
   craftAI(crafto, indSites);
 };
@@ -89,11 +84,11 @@ const buildWaypoint = (bodyo) => {
 
 const deviseRoute = (crafto, indSites) => {
   if (crafto.route.length > 0) {
-    console.log("ERROR at craft.deviseRoute: Route not empty!");
+    console.log('ERROR at craft.deviseRoute: Route not empty!');
     crafto.route = [];
   }
   if (indSites.length < 2) {
-    console.log("ERROR at craft.deviseRoute: Too few industry sites.");
+    console.log('ERROR at craft.deviseRoute: Too few industry sites.');
     return false;
   }
   //Forgive me for I have sinned
@@ -108,7 +103,6 @@ const deviseRoute = (crafto, indSites) => {
                   prodRes === consRes &&
                   prodSite.store[prodRes] >= crafto.cargoCap
                 ) {
-                  // console.log(crafto.name + " route found!");
                   crafto.route.push(buildWaypoint(prodSite));
                   crafto.route.push(buildWaypoint(consSite));
 
@@ -120,18 +114,10 @@ const deviseRoute = (crafto, indSites) => {
                   };
                   ind.moveTohold(prodSite, prodRes, crafto);
 
-                  console.log(
-                    crafto.class + " " + crafto.name + ", " +
-                    crafto.route[0].location.name + " to " +
-                    crafto.route[1].location.name + ", " +
-                    crafto.cargoCap + " " + prodRes
-                  );
-
                   return true;
                 }
               })
             );
-
           }
         })
       )
@@ -204,7 +190,7 @@ const drawOrbit = (bodies) => {
     let body = bodies[i];
     let coords = 'M ';
     let points = 128;
-    if (body.type === "moon") {
+    if (body.type === 'moon') {
       points = 32;
     }
 
@@ -258,9 +244,9 @@ const indDisplay = (body) => {
   display.push(
     ['g', tt(0, 10),
     ['text', {x: 3, y: 0,
-      class: 'dataText'}, "Industry:"],
+      class: 'dataText'}, 'Industry:'],
       ['text', {x: 3, y: (body.industry.length + 1)*10,
-        class: 'dataText'}, "Storage:"]
+        class: 'dataText'}, 'Storage:']
     ]
   );
   body.industry.forEach((e, idx) => {
@@ -275,7 +261,7 @@ const indDisplay = (body) => {
       ['g', tt(0, 10),
         ['text', {x: 9,
           y: (body.industry.length + idx + 2) * 10,
-          class: 'dataText'}, e + " - " + body.store[e]
+          class: 'dataText'}, e + ' - ' + body.store[e]
         ]
       ]
     );
@@ -286,7 +272,7 @@ const indDisplay = (body) => {
 
 const drawData = (body) => {
   let dataDisp = ['g', {}];
-  if (body.type === "planet" || body.industry) {
+  if (body.type === 'planet' || body.industry) {
     dataDisp.push(
       ['rect', {
         width: windowWidth,
@@ -314,9 +300,9 @@ const drawBodies = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
-    if (bodies[i].type === "planet") {
+    if (bodies[i].type === 'planet') {
       for (let j = i + 1; j < bodies.length; j++) {
-        if (bodies[j].type === "planet") {
+        if (bodies[j].type === 'planet') {
           let dist = mech.calcDist(bodies[i], bodies[j]);
           bodiesDrawn.push(['line', {
             x1: bodies[i].x,
@@ -358,7 +344,6 @@ const drawTime = (clock) => {
 
 const drawStar = (staro) =>{
   let star = ['g', {}, ];
-
   Object.keys(staro).forEach((starName) => {
     star.push(['g', tt(staro[starName].x, staro[starName].y),
       ['circle', {
@@ -367,23 +352,16 @@ const drawStar = (staro) =>{
       }]
     ]);
   });
-
   return star;
 };
 
 const drawCraftIcon = (hullClass) => {
   let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
-
   const icono = {
     Mountain: 'M 5,3 L 5,-3 L -5,-3 L -5,3 Z',
     Brick: 'M 3,3 L 3,-3 L -3,-3 L -3,3 Z'
   };
-
-  if (icono[hullClass]) {
-    // console.log("Here!");
-    iconString = icono[hullClass];
-  }
-
+  if (icono[hullClass]) {iconString = icono[hullClass];}
   return ['path', {d: iconString, class: 'craft'}];
 };
 
@@ -453,22 +431,24 @@ module.exports = cfg => {
 }
 
 },{}],4:[function(require,module,exports){
-module.exports={
-  "brick": {
-    "class": "Brick",
-    "cargoCap": 10,
-    "cargo": {},
-    "speed": 4,
-    "home": "alpha"
-  },
-  "mountain": {
-    "class": "Mountain",
-    "cargoCap": 30,
-    "cargo": {},
-    "speed": 2,
-    "home": "alpha"
-  }
-}
+module.exports = {
+
+  brick: () => ({
+    class: 'Brick',
+    cargoCap: 2,
+    cargo: {},
+    speed: 4,
+    home: 'alpha'
+  }),
+  mountain: () => ({
+    class: 'Mountain',
+    cargoCap: 4,
+    cargo: {},
+    speed: 2,
+    home: 'alpha'
+  })
+
+};
 
 },{}],5:[function(require,module,exports){
 'use strict';
@@ -486,11 +466,9 @@ const initInd = (body) => {
     Object.keys(indTemp[bodyIndName].output).forEach((resName) => {
       body.store[resName] |= 0;
     });
-
     Object.keys(indTemp[bodyIndName].input).forEach((resName) => {
       body.store[resName] |= 0;
     });
-
     body.hold = body.hold || {};
 
     indWork(body, bodyIndName);
@@ -502,7 +480,6 @@ const indWork = async (body, industry) => {
   let workGo = true;
 
   Object.keys(indTemp[industry].input).forEach((inRes) => {
-  // for (const inRes of indTemp[industry].input) {
     if (
       (body.store[inRes] === undefined) ||
       (indTemp[industry].input[inRes] > body.store[inRes])
@@ -540,21 +517,17 @@ exports.moveTohold = moveTohold;
 
 const unLoadCraft = (crafto) => {
   let bodyo = crafto.route[0].location;
-  // let cargoCap = crafto.cargoCap;
 
   Object.keys(crafto.route[0].dropoff).forEach((res) => {
     const quant = crafto.route[0].dropoff[res];
     bodyo.store[res] |= 0;
     crafto.cargo[res] |= 0;
-    console.log(crafto.name + " " + res + " " + crafto.cargo[res]);
 
     if (crafto.cargo[res] >= quant) {
       bodyo.store[res] += quant;
       crafto.cargo[res] -= quant;
     } else {
-      console.log("ERROR AT UNLOAD");
-      console.log(JSON.stringify(crafto, null, 2));
-      // throw new Error();
+      console.log('ERROR AT UNLOAD');
     }
   });
 
@@ -570,14 +543,9 @@ const unLoadCraft = (crafto) => {
       crafto.cargo[res] += quant;
       bodyo.hold[crafto.name][res] -= quant;
     } else {
-      console.log("ERROR AT LOAD");
-      console.log(JSON.stringify(crafto, null, 2));
-      // throw new Error();
+      console.log('ERROR AT LOAD');
     }
-    // console.log(crafto.name + " " + res + " " + crafto.cargo[res]);
   });
-
-  console.log(crafto.cargo);
 };
 exports.unLoadCraft = unLoadCraft;
 
@@ -620,7 +588,7 @@ const drawMap = require('./drawMap.js');
 const renderer = require('onml/renderer.js');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
-const hulls = require('./hulls.json');
+const hulls = require('./hulls.js');
 const craft = require('./craft.js');
 
 const makeStar = (staro) => {
@@ -657,7 +625,7 @@ const craftStart = (listOfcraft, indSites) => {
 };
 
 const main = async () => {
-  console.log("Giant alien spiders are no joke!");
+  console.log('Giant alien spiders are no joke!');
 
   let stars = [];
   let planets = [];
@@ -672,19 +640,19 @@ const main = async () => {
       indSites.push(majObj[objName]);
     }
 
-    if (majObj[objName].type === "star") {
+    if (majObj[objName].type === 'star') {
       stars.push(makeStar(majObj[objName]));
     } else
-    if (majObj[objName].type === "planet") {
+    if (majObj[objName].type === 'planet') {
       planets.push(makeBody(majObj[objName]));
     } else
-    if (majObj[objName].type === "moon") {
+    if (majObj[objName].type === 'moon') {
       moons.push(makeBody(majObj[objName]));
     } else
-    if (majObj[objName].type === "asteroid") {
+    if (majObj[objName].type === 'asteroid') {
       ast.push(makeBody(majObj[objName]));
     } else {
-      console.log("ERROR at make. Skipping.");
+      console.log('ERROR at make. Skipping.');
     }
   });
 
@@ -695,22 +663,22 @@ const main = async () => {
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
 
-  for (let i = 0; i < 2; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.brick));
+  for (let i = 0; i < 10; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
-  // for (let i = 0; i < 2; i++) {
-  //   listOfcraft.push(craft.makeCraft(hulls.mountain));
-  // }
+  for (let i = 0; i < 4; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.mountain()));
+  }
 
-  // let clock = Date.now();
-  let clock = 1;
+  let clock = Date.now();
+  // let clock = 1;
 
   while (Date.now()) {
 
     clock += 10;
     let t = clock / Math.pow(10, 2);
-    // let clock2 = Date(clock);
-    let clock2 = clock;
+    let clock2 = Date(clock);
+    // let clock2 = clock;
 
     for (let i = 0; i < movBod.length; i++) {
       let newData = mech.kepCalc(t, movBod[i]);
@@ -730,7 +698,7 @@ const main = async () => {
 
 window.onload = main;
 
-},{"./craft.js":1,"./drawMap.js":2,"./hulls.json":4,"./industry.js":5,"./majorObjects2.json":8,"./mechanics.js":9,"onml/renderer.js":10}],8:[function(require,module,exports){
+},{"./craft.js":1,"./drawMap.js":2,"./hulls.js":4,"./industry.js":5,"./majorObjects2.json":8,"./mechanics.js":9,"onml/renderer.js":10}],8:[function(require,module,exports){
 module.exports={
   "prime": {
     "name": "Prime",
