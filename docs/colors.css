@@ -20,6 +20,11 @@ html, body {
   stroke-width: 2px;
   stroke: #00ff66ff;
 }
+.minorObject {
+  fill: #363636;
+  stroke-width: 1px;
+  stroke: #00ff66ff;
+}
 .majorOrbit {
   fill: none;
   stroke-width: 0.8px;

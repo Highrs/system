@@ -224,6 +224,22 @@ const drawBodies = (bodies) => {
   return bodiesDrawn;
 };
 
+const drawBelts = (belts) => {
+  let rocksDrawn = ['g', {}];
+
+  belts.forEach(e => {
+    e.rocks.forEach(r => {
+      rocksDrawn.push(
+        ['g', tt((r.x), (r.y)),
+          ['circle', { r: r.objectRadius, class: 'minorObject'}]
+        ]
+      );
+    });
+  });
+
+  return rocksDrawn;
+};
+
 const drawTime = (clock) => {
   return ['g', tt(10, 20), ['text', {class: 'dataText'}, clock]];
 };
@@ -280,9 +296,10 @@ const drawCraft = (listOfCraft) => {
 
 };
 
-exports.drawMoving = (clock, planets, moons, ast, craft) => {
+exports.drawMoving = (clock, planets, moons, ast, belts, craft) => {
   return ['g', {},
     drawTime(clock),
+    drawBelts(belts),
     drawOrbit(moons),
     drawBodies(moons),
     drawBodies(planets),

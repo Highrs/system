@@ -1,6 +1,5 @@
 'use strict';
 const majObj = require('./majorObjects2.json');
-// Initialization and run
 const drawMap = require('./drawMap.js');
 const renderer = require('onml/renderer.js');
 const mech = require('./mechanics.js');
@@ -12,19 +11,72 @@ const makeStar = (staro) => {
   return staro;
 };
 
-const makeBody = (planeto) => {
-  ind.initInd(planeto);
-  const planDat = mech.kepCalc(0, planeto);
-  const planet = Object.assign(
-    planeto,
+const makeBody = (bodyo) => {
+  ind.initInd(bodyo);
+  const bodyDat = mech.kepCalc(0, bodyo);
+  const body = Object.assign(
+    bodyo,
     {
-      focalShift: planDat.focalShift,
-      x: planDat.x,
-      y: planDat.y,
-      z: planDat.z
+      focalShift: bodyDat.focalShift,
+      x: bodyDat.x,
+      y: bodyDat.y,
+      z: bodyDat.z
     }
   );
-  return planet;
+  return body;
+};
+
+const rockNamer = () => {
+  let id = 0;
+  return () => {
+    id += 1;
+    return id;
+  };
+};
+const namer = rockNamer();
+
+function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
+  let max = mean + deviation;
+  if (max > upper) {max = upper;}
+  let min = mean - deviation;
+  if (min < lower) {min = lower;}
+
+  return (
+    ( Math.round(
+      (Math.random() * (max - min) + min) * Math.pow(10, prec)
+      ) / Math.pow(10, prec)
+    )
+  );
+}
+
+let rock = (belto) => {
+  return {
+    name: namer(),
+    type: 'asteroid',
+    primary: 'prime',
+    mass: rand(belto.mass, belto.massd),
+    a:    rand(belto.a, belto.ad),
+    e:    rand(belto.e, belto.ed, 2),
+    t:    0,
+    t0:   0,
+    w:    rand(belto.w, belto.wd, 2),
+    lang: rand(belto.lang, belto.langd, 2),
+    inc:  rand(belto.inc, belto.incd, 2),
+    maz:  rand(belto.maz, belto.mazd, 2),
+    objectRadius: rand(belto.objectRadius, belto.objectRadiusD, 1),
+  };
+};
+
+const makeBelt = (belto) => {
+  const belt = Object.assign(
+    belto,
+    {rocks: []}
+  );
+  for (let i = 0; i < belto.count; i++) {
+    belt.rocks.push(makeBody(rock(belto)));
+  }
+
+  return belt;
 };
 
 async function delay(ms) {
@@ -49,6 +101,7 @@ const main = async () => {
   let moons = [];
   let ast = [];
   let indSites = [];
+  let belts = [];
 
   const listOfcraft = [];
 
@@ -68,7 +121,11 @@ const main = async () => {
     } else
     if (majObj[objName].type === 'asteroid') {
       ast.push(makeBody(majObj[objName]));
-    } else {
+    } else
+    if (majObj[objName].type === 'belt') {
+      belts.push(makeBelt(majObj[objName]));
+    } else
+    {
       console.log('ERROR at make. Skipping.');
     }
   });
@@ -79,8 +136,9 @@ const main = async () => {
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
+  belts.forEach(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 2; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
   for (let i = 0; i < 8; i++) {
@@ -108,7 +166,7 @@ const main = async () => {
       craftStart(listOfcraft, indSites);
     }
 
-    render2(drawMap.drawMoving(clock2, planets, moons, ast, listOfcraft));
+    render2(drawMap.drawMoving(clock2, planets, moons, ast, belts, listOfcraft));
     await delay(50);
   }
 };

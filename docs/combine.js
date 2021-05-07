@@ -362,6 +362,22 @@ const drawBodies = (bodies) => {
   return bodiesDrawn;
 };
 
+const drawBelts = (belts) => {
+  let rocksDrawn = ['g', {}];
+
+  belts.forEach(e => {
+    e.rocks.forEach(r => {
+      rocksDrawn.push(
+        ['g', tt((r.x), (r.y)),
+          ['circle', { r: r.objectRadius, class: 'minorObject'}]
+        ]
+      );
+    });
+  });
+
+  return rocksDrawn;
+};
+
 const drawTime = (clock) => {
   return ['g', tt(10, 20), ['text', {class: 'dataText'}, clock]];
 };
@@ -418,9 +434,10 @@ const drawCraft = (listOfCraft) => {
 
 };
 
-exports.drawMoving = (clock, planets, moons, ast, craft) => {
+exports.drawMoving = (clock, planets, moons, ast, belts, craft) => {
   return ['g', {},
     drawTime(clock),
+    drawBelts(belts),
     drawOrbit(moons),
     drawBodies(moons),
     drawBodies(planets),
@@ -459,16 +476,16 @@ module.exports = {
 
   brick: () => ({
     class: 'Brick',
-    cargoCap: 5,
+    cargoCap: 10,
     cargo: {},
-    speed: 4,
+    speed: 3,
     home: 'alpha'
   }),
   mountain: () => ({
     class: 'Mountain',
-    cargoCap: 10,
+    cargoCap: 20,
     cargo: {},
-    speed: 2,
+    speed: 1.5,
     home: 'alpha'
   })
 
@@ -607,7 +624,6 @@ module.exports={
 },{}],7:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
-// Initialization and run
 const drawMap = require('./drawMap.js');
 const renderer = require('onml/renderer.js');
 const mech = require('./mechanics.js');
@@ -619,19 +635,72 @@ const makeStar = (staro) => {
   return staro;
 };
 
-const makeBody = (planeto) => {
-  ind.initInd(planeto);
-  const planDat = mech.kepCalc(0, planeto);
-  const planet = Object.assign(
-    planeto,
+const makeBody = (bodyo) => {
+  ind.initInd(bodyo);
+  const bodyDat = mech.kepCalc(0, bodyo);
+  const body = Object.assign(
+    bodyo,
     {
-      focalShift: planDat.focalShift,
-      x: planDat.x,
-      y: planDat.y,
-      z: planDat.z
+      focalShift: bodyDat.focalShift,
+      x: bodyDat.x,
+      y: bodyDat.y,
+      z: bodyDat.z
     }
   );
-  return planet;
+  return body;
+};
+
+const rockNamer = () => {
+  let id = 0;
+  return () => {
+    id += 1;
+    return id;
+  };
+};
+const namer = rockNamer();
+
+function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
+  let max = mean + deviation;
+  if (max > upper) {max = upper;}
+  let min = mean - deviation;
+  if (min < lower) {min = lower;}
+
+  return (
+    ( Math.round(
+      (Math.random() * (max - min) + min) * Math.pow(10, prec)
+      ) / Math.pow(10, prec)
+    )
+  );
+}
+
+let rock = (belto) => {
+  return {
+    name: namer(),
+    type: 'asteroid',
+    primary: 'prime',
+    mass: rand(belto.mass, belto.massd),
+    a:    rand(belto.a, belto.ad),
+    e:    rand(belto.e, belto.ed, 2),
+    t:    0,
+    t0:   0,
+    w:    rand(belto.w, belto.wd, 2),
+    lang: rand(belto.lang, belto.langd, 2),
+    inc:  rand(belto.inc, belto.incd, 2),
+    maz:  rand(belto.maz, belto.mazd, 2),
+    objectRadius: rand(belto.objectRadius, belto.objectRadiusD, 1),
+  };
+};
+
+const makeBelt = (belto) => {
+  const belt = Object.assign(
+    belto,
+    {rocks: []}
+  );
+  for (let i = 0; i < belto.count; i++) {
+    belt.rocks.push(makeBody(rock(belto)));
+  }
+
+  return belt;
 };
 
 async function delay(ms) {
@@ -656,6 +725,7 @@ const main = async () => {
   let moons = [];
   let ast = [];
   let indSites = [];
+  let belts = [];
 
   const listOfcraft = [];
 
@@ -675,7 +745,11 @@ const main = async () => {
     } else
     if (majObj[objName].type === 'asteroid') {
       ast.push(makeBody(majObj[objName]));
-    } else {
+    } else
+    if (majObj[objName].type === 'belt') {
+      belts.push(makeBelt(majObj[objName]));
+    } else
+    {
       console.log('ERROR at make. Skipping.');
     }
   });
@@ -686,8 +760,9 @@ const main = async () => {
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
+  belts.forEach(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 2; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
   for (let i = 0; i < 8; i++) {
@@ -715,7 +790,7 @@ const main = async () => {
       craftStart(listOfcraft, indSites);
     }
 
-    render2(drawMap.drawMoving(clock2, planets, moons, ast, listOfcraft));
+    render2(drawMap.drawMoving(clock2, planets, moons, ast, belts, listOfcraft));
     await delay(50);
   }
 };
@@ -738,7 +813,7 @@ module.exports={
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
-    "a":    425,
+    "a":    375,
     "e":    0.01,
     "t":    0,
     "t0":   0,
@@ -753,7 +828,7 @@ module.exports={
     "type": "planet",
     "primary": "prime",
     "mass": 60000000,
-    "a":    250,
+    "a":    225,
     "e":    0.05,
     "t":    0,
     "t0":   0,
@@ -762,7 +837,7 @@ module.exports={
     "inc":  0.1,
     "maz":  0,
     "objectRadius": 5,
-    "industry": ["mining", "mining", "mining", "refining"]
+    "industry": ["mining", "mining", "mining"]
   },
   "alpha": {
     "name": "Alpha",
@@ -830,7 +905,7 @@ module.exports={
     "type": "asteroid",
     "primary": "prime",
     "mass": 1,
-    "a":    550,
+    "a":    475,
     "e":    0,
     "t":    0,
     "t0":   0,
@@ -838,8 +913,56 @@ module.exports={
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "objectRadius": 1,
+    "objectRadius": 3,
     "industry": ["factory"]
+  },
+  "beltDelta": {
+    "name":     "Belt Delta",
+    "type":     "belt",
+    "primary":  "prime",
+    "count":  500,
+    "mass":   10,
+    "massd":  9,
+    "t":      0,
+    "a":      500,
+    "ad":     5,
+    "e":      0,
+    "ed":     0.15,
+    "t0":     0,
+    "w":      0,
+    "wd":     6,
+    "lang":   0,
+    "langd":  6,
+    "inc":    0,
+    "incd":   0.5,
+    "maz":    0,
+    "mazd":   6,
+    "objectRadius": 1.5,
+    "objectRadiusD": 1
+  },
+  "beltAlpha": {
+    "name":     "Alpha Delta",
+    "type":     "belt",
+    "primary":  "prime",
+    "count":  100,
+    "mass":   10,
+    "massd":  9,
+    "t":      0,
+    "a":      150,
+    "ad":     5,
+    "e":      0,
+    "ed":     0.1,
+    "t0":     0,
+    "w":      0,
+    "wd":     6,
+    "lang":   0,
+    "langd":  6,
+    "inc":    3,
+    "incd":   0.5,
+    "maz":    0,
+    "mazd":   6,
+    "objectRadius": 1.5,
+    "objectRadiusD": 1
   }
 }
 

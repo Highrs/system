@@ -2,16 +2,16 @@ module.exports = {
 
   brick: () => ({
     class: 'Brick',
-    cargoCap: 5,
+    cargoCap: 10,
     cargo: {},
-    speed: 4,
+    speed: 3,
     home: 'alpha'
   }),
   mountain: () => ({
     class: 'Mountain',
-    cargoCap: 10,
+    cargoCap: 20,
     cargo: {},
-    speed: 2,
+    speed: 1.5,
     home: 'alpha'
   })
 
