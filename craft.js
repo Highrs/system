@@ -41,7 +41,7 @@ const makeCraft = (crafto) => {
 exports.makeCraft = makeCraft;
 
 const startCraftLife = (listOfcraft, indSites) => {
-  listOfcraft.forEach((crafto) => {
+  listOfcraft.map(crafto => {
     crafto.lastStop = majObj[crafto.home];
     craftAI(crafto, indSites);
   });
@@ -91,13 +91,13 @@ const deviseRoute = (crafto, indSites) => {
     return false;
   }
   //Forgive me for I have sinned
-  return indSites.find((prodSite) =>
-    prodSite.industry.find((prodInd) =>
-      Object.keys(indTemp[prodInd].output).find((prodRes) =>
-        indSites.find((consSite) => {
+  return indSites.find(prodSite =>
+    prodSite.industry.find(prodInd =>
+      Object.keys(indTemp[prodInd].output).find(prodRes =>
+        indSites.find(consSite => {
           if (prodSite !== consSite) {
-            return consSite.industry.find((consInd) =>
-              Object.keys(indTemp[consInd].input).find((consRes) => {
+            return consSite.industry.find(consInd =>
+              Object.keys(indTemp[consInd].input).find(consRes => {
                 if (
                   prodRes === consRes &&
                   prodSite.store[prodRes] >= crafto.cargoCap

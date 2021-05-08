@@ -8,12 +8,12 @@ async function delay(ms) {
 
 const initInd = (body) => {
   body.store = body.store || {};
-  body.industry && body.industry.forEach((bodyIndName) => {
+  body.industry && body.industry.map(bodyIndName => {
 
-    Object.keys(indTemp[bodyIndName].output).forEach((resName) => {
+    Object.keys(indTemp[bodyIndName].output).map(resName => {
       body.store[resName] |= 0;
     });
-    Object.keys(indTemp[bodyIndName].input).forEach((resName) => {
+    Object.keys(indTemp[bodyIndName].input).map(resName => {
       body.store[resName] |= 0;
     });
     body.hold = body.hold || {};
@@ -26,7 +26,7 @@ exports.initInd = initInd;
 const indWork = async (body, industry) => {
   let workGo = true;
 
-  Object.keys(indTemp[industry].input).forEach((inRes) => {
+  Object.keys(indTemp[industry].input).map(inRes => {
     if (
       (body.store[inRes] === undefined) ||
       (indTemp[industry].input[inRes] > body.store[inRes])
@@ -36,11 +36,11 @@ const indWork = async (body, industry) => {
   });
 
   if (workGo === true) {
-    Object.keys(indTemp[industry].input).forEach((inRes) => {
+    Object.keys(indTemp[industry].input).map(inRes => {
       body.store[inRes] -= indTemp[industry].input[inRes];
     });
     await delay(indTemp[industry].cycle);
-    Object.keys(indTemp[industry].output).forEach((outRes) => {
+    Object.keys(indTemp[industry].output).map(outRes => {
       body.store[outRes] += indTemp[industry].output[outRes];
     });
   } else {
@@ -65,7 +65,7 @@ exports.moveTohold = moveTohold;
 const unLoadCraft = (crafto) => {
   let bodyo = crafto.route[0].location;
 
-  Object.keys(crafto.route[0].dropoff).forEach((res) => {
+  Object.keys(crafto.route[0].dropoff).map(res => {
     const quant = crafto.route[0].dropoff[res];
     bodyo.store[res] |= 0;
     crafto.cargo[res] |= 0;
@@ -78,7 +78,7 @@ const unLoadCraft = (crafto) => {
     }
   });
 
-  Object.keys(crafto.route[0].pickup).forEach((res) => {
+  Object.keys(crafto.route[0].pickup).map(res => {
     const quant = crafto.route[0].pickup[res];
     bodyo.store[res] |= 0;
     crafto.cargo[res] |= 0;

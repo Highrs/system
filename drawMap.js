@@ -125,14 +125,14 @@ const indDisplay = (body) => {
         class: 'dataText'}, 'Storage:']
     ]
   );
-  body.industry.forEach((e, idx) => {
+  body.industry.map((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'}, e]
       ]
     );
   });
-  Object.keys(body.store).forEach((e, idx) => {
+  Object.keys(body.store).map((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9,
@@ -227,8 +227,8 @@ const drawBodies = (bodies) => {
 const drawBelts = (belts) => {
   let rocksDrawn = ['g', {}];
 
-  belts.forEach(e => {
-    e.rocks.forEach(r => {
+  belts.map(e => {
+    e.rocks.map(r => {
       rocksDrawn.push(
         ['g', tt((r.x), (r.y)),
           ['circle', { r: r.objectRadius, class: 'minorObject'}]
@@ -246,7 +246,7 @@ const drawTime = (clock) => {
 
 const drawStar = (staro) =>{
   let star = ['g', {}, ];
-  Object.keys(staro).forEach((starName) => {
+  Object.keys(staro).map((starName) => {
     star.push(['g', tt(staro[starName].x, staro[starName].y),
       ['circle', {
         r: staro[starName].objectRadius,
@@ -270,9 +270,9 @@ const drawCraftIcon = (hullClass) => {
 const drawCraft = (listOfCraft) => {
   let drawnCraft = ['g', {}];
 
-  Object.keys(listOfCraft).forEach((craftID) => {
+  listOfCraft.map(crafto => {
     let partCraft = ['g', {}];
-    let crafto = listOfCraft[craftID];
+    // let crafto = listOfCraft[craftID];
     if (crafto.x !== 0 && crafto.y !== 0) {
       partCraft.push(['line', {
         x1: crafto.x,

@@ -42,7 +42,7 @@ const makeCraft = (crafto) => {
 exports.makeCraft = makeCraft;
 
 const startCraftLife = (listOfcraft, indSites) => {
-  listOfcraft.forEach((crafto) => {
+  listOfcraft.map(crafto => {
     crafto.lastStop = majObj[crafto.home];
     craftAI(crafto, indSites);
   });
@@ -92,13 +92,13 @@ const deviseRoute = (crafto, indSites) => {
     return false;
   }
   //Forgive me for I have sinned
-  return indSites.find((prodSite) =>
-    prodSite.industry.find((prodInd) =>
-      Object.keys(indTemp[prodInd].output).find((prodRes) =>
-        indSites.find((consSite) => {
+  return indSites.find(prodSite =>
+    prodSite.industry.find(prodInd =>
+      Object.keys(indTemp[prodInd].output).find(prodRes =>
+        indSites.find(consSite => {
           if (prodSite !== consSite) {
-            return consSite.industry.find((consInd) =>
-              Object.keys(indTemp[consInd].input).find((consRes) => {
+            return consSite.industry.find(consInd =>
+              Object.keys(indTemp[consInd].input).find(consRes => {
                 if (
                   prodRes === consRes &&
                   prodSite.store[prodRes] >= crafto.cargoCap
@@ -263,14 +263,14 @@ const indDisplay = (body) => {
         class: 'dataText'}, 'Storage:']
     ]
   );
-  body.industry.forEach((e, idx) => {
+  body.industry.map((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'}, e]
       ]
     );
   });
-  Object.keys(body.store).forEach((e, idx) => {
+  Object.keys(body.store).map((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9,
@@ -365,8 +365,8 @@ const drawBodies = (bodies) => {
 const drawBelts = (belts) => {
   let rocksDrawn = ['g', {}];
 
-  belts.forEach(e => {
-    e.rocks.forEach(r => {
+  belts.map(e => {
+    e.rocks.map(r => {
       rocksDrawn.push(
         ['g', tt((r.x), (r.y)),
           ['circle', { r: r.objectRadius, class: 'minorObject'}]
@@ -384,7 +384,7 @@ const drawTime = (clock) => {
 
 const drawStar = (staro) =>{
   let star = ['g', {}, ];
-  Object.keys(staro).forEach((starName) => {
+  Object.keys(staro).map((starName) => {
     star.push(['g', tt(staro[starName].x, staro[starName].y),
       ['circle', {
         r: staro[starName].objectRadius,
@@ -408,9 +408,9 @@ const drawCraftIcon = (hullClass) => {
 const drawCraft = (listOfCraft) => {
   let drawnCraft = ['g', {}];
 
-  Object.keys(listOfCraft).forEach((craftID) => {
+  listOfCraft.map(crafto => {
     let partCraft = ['g', {}];
-    let crafto = listOfCraft[craftID];
+    // let crafto = listOfCraft[craftID];
     if (crafto.x !== 0 && crafto.y !== 0) {
       partCraft.push(['line', {
         x1: crafto.x,
@@ -502,12 +502,12 @@ async function delay(ms) {
 
 const initInd = (body) => {
   body.store = body.store || {};
-  body.industry && body.industry.forEach((bodyIndName) => {
+  body.industry && body.industry.map(bodyIndName => {
 
-    Object.keys(indTemp[bodyIndName].output).forEach((resName) => {
+    Object.keys(indTemp[bodyIndName].output).map(resName => {
       body.store[resName] |= 0;
     });
-    Object.keys(indTemp[bodyIndName].input).forEach((resName) => {
+    Object.keys(indTemp[bodyIndName].input).map(resName => {
       body.store[resName] |= 0;
     });
     body.hold = body.hold || {};
@@ -520,7 +520,7 @@ exports.initInd = initInd;
 const indWork = async (body, industry) => {
   let workGo = true;
 
-  Object.keys(indTemp[industry].input).forEach((inRes) => {
+  Object.keys(indTemp[industry].input).map(inRes => {
     if (
       (body.store[inRes] === undefined) ||
       (indTemp[industry].input[inRes] > body.store[inRes])
@@ -530,11 +530,11 @@ const indWork = async (body, industry) => {
   });
 
   if (workGo === true) {
-    Object.keys(indTemp[industry].input).forEach((inRes) => {
+    Object.keys(indTemp[industry].input).map(inRes => {
       body.store[inRes] -= indTemp[industry].input[inRes];
     });
     await delay(indTemp[industry].cycle);
-    Object.keys(indTemp[industry].output).forEach((outRes) => {
+    Object.keys(indTemp[industry].output).map(outRes => {
       body.store[outRes] += indTemp[industry].output[outRes];
     });
   } else {
@@ -559,7 +559,7 @@ exports.moveTohold = moveTohold;
 const unLoadCraft = (crafto) => {
   let bodyo = crafto.route[0].location;
 
-  Object.keys(crafto.route[0].dropoff).forEach((res) => {
+  Object.keys(crafto.route[0].dropoff).map(res => {
     const quant = crafto.route[0].dropoff[res];
     bodyo.store[res] |= 0;
     crafto.cargo[res] |= 0;
@@ -572,7 +572,7 @@ const unLoadCraft = (crafto) => {
     }
   });
 
-  Object.keys(crafto.route[0].pickup).forEach((res) => {
+  Object.keys(crafto.route[0].pickup).map(res => {
     const quant = crafto.route[0].pickup[res];
     bodyo.store[res] |= 0;
     crafto.cargo[res] |= 0;
@@ -708,7 +708,7 @@ async function delay(ms) {
 }
 
 const craftStart = (listOfcraft, indSites) => {
-  listOfcraft.forEach((crafto) => {
+  listOfcraft.map(crafto => {
     ['x', 'y', 'z'].map(e => {
       crafto[e] = majObj[crafto.home][e];
     });
@@ -729,7 +729,7 @@ const main = async () => {
 
   const listOfcraft = [];
 
-  Object.keys(majObj).forEach((objName) => {
+  Object.keys(majObj).map(objName => {
     if (majObj[objName].industry && majObj[objName].industry.length > 0) {
       indSites.push(majObj[objName]);
     }
@@ -760,7 +760,7 @@ const main = async () => {
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
-  belts.forEach(e => movBod = movBod.concat(e.rocks));
+  belts.map(e => movBod = movBod.concat(e.rocks));
 
   for (let i = 0; i < 2; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
@@ -920,7 +920,7 @@ module.exports={
     "name":     "Belt Delta",
     "type":     "belt",
     "primary":  "prime",
-    "count":  500,
+    "count":  300,
     "mass":   10,
     "massd":  9,
     "t":      0,
@@ -944,7 +944,7 @@ module.exports={
     "name":     "Alpha Delta",
     "type":     "belt",
     "primary":  "prime",
-    "count":  100,
+    "count":  50,
     "mass":   10,
     "massd":  9,
     "t":      0,

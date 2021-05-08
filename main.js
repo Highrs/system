@@ -84,7 +84,7 @@ async function delay(ms) {
 }
 
 const craftStart = (listOfcraft, indSites) => {
-  listOfcraft.forEach((crafto) => {
+  listOfcraft.map(crafto => {
     ['x', 'y', 'z'].map(e => {
       crafto[e] = majObj[crafto.home][e];
     });
@@ -105,7 +105,7 @@ const main = async () => {
 
   const listOfcraft = [];
 
-  Object.keys(majObj).forEach((objName) => {
+  Object.keys(majObj).map(objName => {
     if (majObj[objName].industry && majObj[objName].industry.length > 0) {
       indSites.push(majObj[objName]);
     }
@@ -136,7 +136,7 @@ const main = async () => {
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, ast);
-  belts.forEach(e => movBod = movBod.concat(e.rocks));
+  belts.map(e => movBod = movBod.concat(e.rocks));
 
   for (let i = 0; i < 2; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
