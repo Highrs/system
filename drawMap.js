@@ -271,24 +271,31 @@ const drawCraft = (listOfCraft) => {
   let drawnCraft = ['g', {}];
 
   listOfCraft.map(crafto => {
-    let partCraft = ['g', {}];
+    let partCraft = ['g', tt(crafto.x, crafto.y)];
     // let crafto = listOfCraft[craftID];
     if (crafto.x !== 0 && crafto.y !== 0) {
       partCraft.push(['line', {
-        x1: crafto.x,
-        y1: crafto.y,
-        x2: crafto.x + (crafto.vx * 10),
-        y2: crafto.y + (crafto.vy * 10),
+        x1: 0,
+        y1: 0,
+        x2: crafto.vx * 10,
+        y2: crafto.vy * 10,
         class: 'vectorLine'
       }]);
     }
     partCraft.push(
-      ['g', tt(crafto.x, crafto.y),
+      ['g', {},
         drawCraftIcon(crafto.class),
-        ['g', tt(crafto.vx * 10, crafto.vy * 10), ['circle', {r : 1, class: 'majorObject'}]]
+        ['g', tt(crafto.vx * 10, crafto.vy * 10), [
+          'circle',
+          {r : 1, class: 'majorObject'}
+        ]],
       ]
-
     );
+    if (crafto.status === 'traveling') {
+      partCraft.push(
+        ['g', tt(-3, 12), ['text', {class: 'rangeText'}, crafto.name]]
+      );
+    }
     drawnCraft.push(partCraft);
   });
 

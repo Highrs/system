@@ -32,7 +32,8 @@ const makeCraft = (crafto) => {
       vy: 0,
       vz: 0,
       route: [],
-      lastStop: []
+      lastStop: [],
+      status: 'parked'
     }
   );
 
@@ -52,6 +53,7 @@ const craftAI = async (crafto, indSites) => {
   await delay(50);
   if (crafto.route.length === 0) {
     if (!deviseRoute(crafto, indSites)) {
+      crafto.status = 'parked';
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
       });
@@ -112,6 +114,8 @@ const deviseRoute = (crafto, indSites) => {
                     [prodRes]: crafto.cargoCap
                   };
                   ind.moveTohold(prodSite, prodRes, crafto);
+
+                  crafto.status = 'traveling';
 
                   return true;
                 }

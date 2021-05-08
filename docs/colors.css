@@ -61,7 +61,8 @@ html, body {
 .rangeText {
   font: 10px B612 Mono;
   fill: #00ff66ff;
-  text-align: center;
+  /* width: auto; */
+  /* text-align: center; */
 }
 .updateIcon {
   stroke-width: 3px;

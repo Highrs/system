@@ -138,10 +138,10 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, ast);
   belts.map(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 5; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 5; i++) {
     listOfcraft.push(craft.makeCraft(hulls.mountain()));
   }
 

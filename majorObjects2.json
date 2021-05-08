@@ -120,7 +120,7 @@
     "name":     "Belt Delta",
     "type":     "belt",
     "primary":  "prime",
-    "count":  300,
+    "count":  150,
     "mass":   10,
     "massd":  9,
     "t":      0,

@@ -33,7 +33,8 @@ const makeCraft = (crafto) => {
       vy: 0,
       vz: 0,
       route: [],
-      lastStop: []
+      lastStop: [],
+      status: 'parked'
     }
   );
 
@@ -53,6 +54,7 @@ const craftAI = async (crafto, indSites) => {
   await delay(50);
   if (crafto.route.length === 0) {
     if (!deviseRoute(crafto, indSites)) {
+      crafto.status = 'parked';
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
       });
@@ -113,6 +115,8 @@ const deviseRoute = (crafto, indSites) => {
                     [prodRes]: crafto.cargoCap
                   };
                   ind.moveTohold(prodSite, prodRes, crafto);
+
+                  crafto.status = 'traveling';
 
                   return true;
                 }
@@ -409,24 +413,31 @@ const drawCraft = (listOfCraft) => {
   let drawnCraft = ['g', {}];
 
   listOfCraft.map(crafto => {
-    let partCraft = ['g', {}];
+    let partCraft = ['g', tt(crafto.x, crafto.y)];
     // let crafto = listOfCraft[craftID];
     if (crafto.x !== 0 && crafto.y !== 0) {
       partCraft.push(['line', {
-        x1: crafto.x,
-        y1: crafto.y,
-        x2: crafto.x + (crafto.vx * 10),
-        y2: crafto.y + (crafto.vy * 10),
+        x1: 0,
+        y1: 0,
+        x2: crafto.vx * 10,
+        y2: crafto.vy * 10,
         class: 'vectorLine'
       }]);
     }
     partCraft.push(
-      ['g', tt(crafto.x, crafto.y),
+      ['g', {},
         drawCraftIcon(crafto.class),
-        ['g', tt(crafto.vx * 10, crafto.vy * 10), ['circle', {r : 1, class: 'majorObject'}]]
+        ['g', tt(crafto.vx * 10, crafto.vy * 10), [
+          'circle',
+          {r : 1, class: 'majorObject'}
+        ]],
       ]
-
     );
+    if (crafto.status === 'traveling') {
+      partCraft.push(
+        ['g', tt(-3, 12), ['text', {class: 'rangeText'}, crafto.name]]
+      );
+    }
     drawnCraft.push(partCraft);
   });
 
@@ -762,10 +773,10 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, ast);
   belts.map(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 5; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 5; i++) {
     listOfcraft.push(craft.makeCraft(hulls.mountain()));
   }
 
@@ -920,7 +931,7 @@ module.exports={
     "name":     "Belt Delta",
     "type":     "belt",
     "primary":  "prime",
-    "count":  300,
+    "count":  150,
     "mass":   10,
     "massd":  9,
     "t":      0,
