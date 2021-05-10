@@ -28,20 +28,20 @@ html, body {
 .majorOrbit {
   fill: none;
   stroke-width: 0.8px;
-  stroke: #00ff66ff;
+  stroke: #c3c3c3ff;
   stroke-dasharray: 20 5;
   fill: #363636;
 }
 .minorOrbit {
   fill: none;
   stroke-width: 0.3px;
-  stroke: #00ff66ff;
+  stroke: #c3c3c3ff;
   stroke-dasharray: 20 5;
 }
 .symbolLine {
   fill: none;
   stroke-width: 1px;
-  stroke: #00ff66ff;
+  stroke: #a3a3a3ff;
   fill: #1a1a1a;
 }
 .grid {
@@ -51,42 +51,44 @@ html, body {
 }
 .dataWindow {
   stroke-width: 0.5px;
-  stroke: #00ff66ff;
+  stroke: #c3c3c3ff;
   fill: #363636;
 }
 .dataText {
   font: 10px B612 Mono;
-  fill: #00ff66ff;
+  fill: #ffffffff;
+}
+.rangeWindow {
+  stroke-width: 0.25px;
+  stroke: #c3c3c3ff;
+  fill: #363636;
 }
 .rangeText {
   font: 10px B612 Mono;
-  fill: #00ff66ff;
+  fill: #a3a3a3ff;
   /* width: auto; */
   /* text-align: center; */
-}
-.updateIcon {
-  stroke-width: 3px;
-  stroke: #00ff66ff;
-  fill: none;
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  animation: stroke 25s ease-out forwards;
 }
 .rangeLine {
   fill: none;
   stroke-width: 0.5px;
-  stroke: #00ff66ff;
-  stroke-dasharray: 3 3;
+  stroke: #a3a3a3ff;
+  stroke-dasharray: 2 5;
 }
-.vectorLine {
+.vector {
   fill: none;
   stroke-width: 0.5px;
-  stroke: #00ff66ff;
+  stroke: #a3a3a3ff;
+  fill: none;
 }
 .craft {
   fill: #363636;
   stroke-width: 1px;
   stroke: #00ff66ff;
+}
+.craftDataText {
+  font: 10px B612 Mono;
+  fill: #ffffffff;
 }
 @keyframes stroke {
   to {

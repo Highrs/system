@@ -162,7 +162,7 @@ const pageH = 1200;
 // const starRadius = 10;
 // let windowWidth = 120; // width of planet data rectangles
 // let windowHeight = 25;
-let distanceWindowLength = 44;
+// let distanceWindowLength = 44;
 //--------------------------------
 
 const drawGrid = () => {
@@ -330,33 +330,6 @@ const drawBodies = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
-    if (bodies[i].type === 'planet') {
-      for (let j = i + 1; j < bodies.length; j++) {
-        if (bodies[j].type === 'planet') {
-          let dist = mech.calcDist(bodies[i], bodies[j]);
-          bodiesDrawn.push(['line', {
-            x1: bodies[i].x,
-            y1: bodies[i].y,
-            x2: bodies[j].x,
-            y2: bodies[j].y,
-            class: 'rangeLine'
-          }]);
-          bodiesDrawn.push(['g',
-          tt((((bodies[j].x) + (bodies[i].x)) / 2 - 22),
-            (((bodies[j].y) + (bodies[i].y)) / 2 - 4.5)),
-            ['rect', {
-              width: distanceWindowLength,
-              height: 10,
-              class: 'dataWindow'
-            }],
-            ['text', {
-              x: 2, y: 9, class: 'rangeText'
-            }, (dist).toFixed(2)]
-          ]);
-        }
-      }
-    }
-
     bodiesDrawn.push(
       ['g', tt( (bodies[i].x), (bodies[i].y)),
         drawData(bodies[i]),
@@ -388,17 +361,28 @@ const drawTime = (clock) => {
   return ['g', tt(10, 20), ['text', {class: 'dataText'}, clock]];
 };
 
-const drawStar = (staro) =>{
-  let star = ['g', {}, ];
-  Object.keys(staro).map((starName) => {
-    star.push(['g', tt(staro[starName].x, staro[starName].y),
+const drawStars = (stars) =>{
+  let drawnStars = ['g', {}];
+  stars.map((staro) => {
+    let drawnStar = ['g', tt(staro.x, staro.y)];
+    drawnStar.push(
       ['circle', {
-        r: staro[starName].objectRadius,
+        r: staro.objectRadius,
         class: 'majorObject'
       }]
-    ]);
+    );
+
+    for (let j = 0; j < 16; j++) {
+      drawnStar.push(['line', {
+        transform: 'rotate(' + ((360 / 16) * j) +')',
+        x1: staro.objectRadius + 5,
+        x2: staro.objectRadius + 15,
+        class: 'minorOrbit'}]);
+    }
+
+    drawnStars.push(drawnStar);
   });
-  return star;
+  return drawnStars;
 };
 
 const drawCraftIcon = (hullClass) => {
@@ -416,14 +400,13 @@ const drawCraft = (listOfCraft) => {
 
   listOfCraft.map(crafto => {
     let partCraft = ['g', tt(crafto.x, crafto.y)];
-    // let crafto = listOfCraft[craftID];
     if (crafto.x !== 0 && crafto.y !== 0) {
       partCraft.push(['line', {
         x1: 0,
         y1: 0,
         x2: crafto.vx * 10,
         y2: crafto.vy * 10,
-        class: 'vectorLine'
+        class: 'vector'
       }]);
     }
     partCraft.push(
@@ -431,13 +414,13 @@ const drawCraft = (listOfCraft) => {
         drawCraftIcon(crafto.class),
         ['g', tt(crafto.vx * 10, crafto.vy * 10), [
           'circle',
-          {r : 1, class: 'majorObject'}
+          {r : 1, class: 'vector'}
         ]],
       ]
     );
     if (crafto.status === 'traveling') {
       partCraft.push(
-        ['g', tt(-3, 12), ['text', {class: 'rangeText'}, crafto.name]]
+        ['g', tt(-3, 12), ['text', {class: 'craftDataText'}, crafto.name]]
       );
     }
     drawnCraft.push(partCraft);
@@ -447,11 +430,57 @@ const drawCraft = (listOfCraft) => {
 
 };
 
+const drawRanges = (bodyArr) => {
+  let linesDrawn = ['g', {}];
+
+  for (let i = 0; i < bodyArr.length; i++) {
+    if (bodyArr[i].industry) {
+      for (let j = i + 1; j < bodyArr.length; j++) {
+        if (bodyArr[j].industry) {
+
+          linesDrawn.push(['line', {
+            x1: bodyArr[i].x,
+            y1: bodyArr[i].y,
+            x2: bodyArr[j].x,
+            y2: bodyArr[j].y,
+            class: 'rangeLine'
+          }]);
+
+          let dist = mech.calcDist(bodyArr[i], bodyArr[j]);
+
+          linesDrawn.push(['g',
+          tt((((bodyArr[j].x) + (bodyArr[i].x)) / 2 - 22),
+            (((bodyArr[j].y) + (bodyArr[i].y)) / 2 - 4.5)),
+            ['rect', {
+              width: 44,
+              height: 13,
+              class: 'rangeWindow'
+            }],
+            ['text', {
+              x: 2, y: 10, class: 'rangeText'
+            }, (dist).toFixed(2)]
+          ]);
+
+        }
+      }
+    }
+  }
+
+  return linesDrawn;
+};
+
 exports.drawMoving = (clock, planets, moons, ast, belts, craft) => {
+  let rangeCandidates = [].concat(
+    planets,
+    moons,
+    ast
+  );
+
   return ['g', {},
     drawTime(clock),
     drawBelts(belts),
     drawOrbit(moons),
+    drawRanges(rangeCandidates),
     drawBodies(moons),
     drawBodies(planets),
     drawBodies(ast),
@@ -464,7 +493,7 @@ exports.drawStatic = (stars, planets) => {
     ['g', {},
       drawOrbit(planets),
       drawGrid(),
-      drawStar(stars),
+      drawStars(stars),
       ['g', {id: 'moving'}],
     ]
   ]);
@@ -955,7 +984,7 @@ module.exports={
     "objectRadius": 3,
     "industryList": ["mining"]
   },
-  "astroDektaA": {
+  "astroDeltaB": {
     "name": "Asteroid Delta B",
     "type": "asteroid",
     "primary": "prime",
@@ -980,9 +1009,9 @@ module.exports={
     "e":    0.045,
     "t":    0,
     "t0":   0,
-    "w":    0,
+    "w":    6,
     "lang": 0,
-    "inc":  0,
+    "inc":  3,
     "maz":  4,
     "objectRadius": 3,
     "industryList": ["mining"]

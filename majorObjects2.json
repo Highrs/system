@@ -116,7 +116,7 @@
     "objectRadius": 3,
     "industryList": ["mining"]
   },
-  "astroDektaA": {
+  "astroDeltaB": {
     "name": "Asteroid Delta B",
     "type": "asteroid",
     "primary": "prime",
@@ -141,9 +141,9 @@
     "e":    0.045,
     "t":    0,
     "t0":   0,
-    "w":    0,
+    "w":    6,
     "lang": 0,
-    "inc":  0,
+    "inc":  3,
     "maz":  4,
     "objectRadius": 3,
     "industryList": ["mining"]
