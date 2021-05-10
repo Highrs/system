@@ -78,7 +78,7 @@ html, body {
 .vector {
   fill: none;
   stroke-width: 0.5px;
-  stroke: #a3a3a3ff;
+  stroke: #ffffffff;
   fill: none;
 }
 .craft {

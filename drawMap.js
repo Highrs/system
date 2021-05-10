@@ -153,7 +153,8 @@ const drawData = (bodyo) => {
   if (bodyo.type === 'planet' || bodyo.industry) {
     dataDisp.push(
       ['rect', {
-        width: ((bodyo.name.length * 6.5) + 12),
+        // width: ((bodyo.name.length * 6.5) + 12),
+        width: 120,
         height: 14,
         class: 'dataWindow'
       }],
@@ -171,10 +172,8 @@ const drawData = (bodyo) => {
         }],
         ['text', {x: 3, y: 10, class: 'dataText'},
           'XYZ:' +
-          (bodyo.x).toFixed(0) +
-          ' ' +
-          (bodyo.y).toFixed(0) +
-          ' ' +
+          (bodyo.x).toFixed(0) + '|' +
+          (bodyo.y).toFixed(0) + '|' +
           (bodyo.z).toFixed(0)
         ]
       ]
@@ -246,8 +245,8 @@ const drawStars = (stars) =>{
 const drawCraftIcon = (hullClass) => {
   let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
   const icono = {
-    Mountain: 'M 5,3 L 5,-3 L -5,-3 L -5,3 Z',
-    Brick: 'M 3,3 L 3,-3 L -3,-3 L -3,3 Z'
+    Mountain: 'M 5,3 L 5,-3 L -5,-3 L -2,0 L -5,3 Z',
+    Brick: 'M 3,3 L 3,-3 L -3,-3 L 0,0 L -3,3 Z'
   };
   if (icono[hullClass]) {iconString = icono[hullClass];}
   return ['path', {d: iconString, class: 'craft'}];
@@ -269,7 +268,9 @@ const drawCraft = (listOfCraft) => {
     }
     partCraft.push(
       ['g', {},
-        drawCraftIcon(crafto.class),
+        ['g', {transform: 'rotate(' + crafto.course + ')'},
+          drawCraftIcon(crafto.class)
+        ],
         ['g', tt(crafto.vx * 10, crafto.vy * 10), [
           'circle',
           {r : 1, class: 'vector'}
@@ -285,7 +286,6 @@ const drawCraft = (listOfCraft) => {
   });
 
   return drawnCraft;
-
 };
 
 const drawRanges = (bodyArr) => {

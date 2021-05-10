@@ -33,7 +33,8 @@ const makeCraft = (crafto) => {
       vz: 0,
       route: [],
       lastStop: [],
-      status: 'parked'
+      status: 'parked',
+      course: 0
     }
   );
 
@@ -136,4 +137,6 @@ const calcVector =  (crafto, targeto) => {
     crafto['v' + e] = crafto.speed * ((targeto[e] - crafto[e]) / dist );
     crafto[e] += crafto['v' + e];
   });
+
+  crafto.course = Math.atan2(crafto.vy, crafto.vx) * 180 / Math.PI;
 };

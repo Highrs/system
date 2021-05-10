@@ -34,7 +34,8 @@ const makeCraft = (crafto) => {
       vz: 0,
       route: [],
       lastStop: [],
-      status: 'parked'
+      status: 'parked',
+      course: 0
     }
   );
 
@@ -137,6 +138,8 @@ const calcVector =  (crafto, targeto) => {
     crafto['v' + e] = crafto.speed * ((targeto[e] - crafto[e]) / dist );
     crafto[e] += crafto['v' + e];
   });
+
+  crafto.course = Math.atan2(crafto.vy, crafto.vx) * 180 / Math.PI;
 };
 
 },{"./industry.js":5,"./majorObjects2.json":8,"./mechanics.js":9}],2:[function(require,module,exports){
@@ -295,7 +298,8 @@ const drawData = (bodyo) => {
   if (bodyo.type === 'planet' || bodyo.industry) {
     dataDisp.push(
       ['rect', {
-        width: ((bodyo.name.length * 6.5) + 12),
+        // width: ((bodyo.name.length * 6.5) + 12),
+        width: 120,
         height: 14,
         class: 'dataWindow'
       }],
@@ -313,10 +317,8 @@ const drawData = (bodyo) => {
         }],
         ['text', {x: 3, y: 10, class: 'dataText'},
           'XYZ:' +
-          (bodyo.x).toFixed(0) +
-          ' ' +
-          (bodyo.y).toFixed(0) +
-          ' ' +
+          (bodyo.x).toFixed(0) + '|' +
+          (bodyo.y).toFixed(0) + '|' +
           (bodyo.z).toFixed(0)
         ]
       ]
@@ -388,8 +390,8 @@ const drawStars = (stars) =>{
 const drawCraftIcon = (hullClass) => {
   let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
   const icono = {
-    Mountain: 'M 5,3 L 5,-3 L -5,-3 L -5,3 Z',
-    Brick: 'M 3,3 L 3,-3 L -3,-3 L -3,3 Z'
+    Mountain: 'M 5,3 L 5,-3 L -5,-3 L -2,0 L -5,3 Z',
+    Brick: 'M 3,3 L 3,-3 L -3,-3 L 0,0 L -3,3 Z'
   };
   if (icono[hullClass]) {iconString = icono[hullClass];}
   return ['path', {d: iconString, class: 'craft'}];
@@ -411,7 +413,9 @@ const drawCraft = (listOfCraft) => {
     }
     partCraft.push(
       ['g', {},
-        drawCraftIcon(crafto.class),
+        ['g', {transform: 'rotate(' + crafto.course + ')'},
+          drawCraftIcon(crafto.class)
+        ],
         ['g', tt(crafto.vx * 10, crafto.vy * 10), [
           'circle',
           {r : 1, class: 'vector'}
@@ -427,7 +431,6 @@ const drawCraft = (listOfCraft) => {
   });
 
   return drawnCraft;
-
 };
 
 const drawRanges = (bodyArr) => {
@@ -830,10 +833,10 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, ast);
   belts.map(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 4; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 2; i++) {
     listOfcraft.push(craft.makeCraft(hulls.mountain()));
   }
 
