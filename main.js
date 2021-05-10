@@ -106,10 +106,6 @@ const main = async () => {
   const listOfcraft = [];
 
   Object.keys(majObj).map(objName => {
-    if (majObj[objName].industry && majObj[objName].industry.length > 0) {
-      indSites.push(majObj[objName]);
-    }
-
     if (majObj[objName].type === 'star') {
       stars.push(makeStar(majObj[objName]));
     } else
@@ -128,6 +124,10 @@ const main = async () => {
     {
       console.log('ERROR at make. Skipping.');
     }
+
+    if (majObj[objName].industry) {
+      indSites.push(majObj[objName]);
+    }
   });
 
 
@@ -138,7 +138,7 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, ast);
   belts.map(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
   for (let i = 0; i < 5; i++) {

@@ -3,7 +3,7 @@
 const mech = require('./mechanics.js');
 const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
-const indTemp = require('./industryTemp.json');
+// const indTemp = require('./industryTemp.js');
 
 const genNamer = () => {
   let id = 0;
@@ -96,11 +96,11 @@ const deviseRoute = (crafto, indSites) => {
   //Forgive me for I have sinned
   return indSites.find(prodSite =>
     prodSite.industry.find(prodInd =>
-      Object.keys(indTemp[prodInd].output).find(prodRes =>
+      Object.keys(prodInd.output).find(prodRes =>
         indSites.find(consSite => {
           if (prodSite !== consSite) {
             return consSite.industry.find(consInd =>
-              Object.keys(indTemp[consInd].input).find(consRes => {
+              Object.keys(consInd.input).find(consRes => {
                 if (
                   prodRes === consRes &&
                   prodSite.store[prodRes] >= crafto.cargoCap
@@ -139,7 +139,7 @@ const calcVector =  (crafto, targeto) => {
   });
 };
 
-},{"./industry.js":5,"./industryTemp.json":6,"./majorObjects2.json":8,"./mechanics.js":9}],2:[function(require,module,exports){
+},{"./industry.js":5,"./majorObjects2.json":8,"./mechanics.js":9}],2:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
@@ -252,7 +252,7 @@ const drawOrbit = (bodies) => {
 const indDisplay = (body) => {
   let display = ['g', tt(0, 32),
     ['rect', {
-      width: 100,
+      width: 120,
       height:
         body.industry.length * 10
           + Object.keys(body.store).length * 10 + 25,
@@ -270,7 +270,9 @@ const indDisplay = (body) => {
   body.industry.map((e, idx) => {
     display.push(
       ['g', tt(0, 10),
-        ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'}, e]
+        ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'},
+          e.name +":" + e.status
+        ]
       ]
     );
   });
@@ -490,14 +492,15 @@ module.exports = {
     cargoCap: 10,
     cargo: {},
     speed: 3,
-    home: 'alpha'
+    home: 'beta'
   }),
+
   mountain: () => ({
     class: 'Mountain',
     cargoCap: 20,
     cargo: {},
     speed: 1.5,
-    home: 'alpha'
+    home: 'beta'
   })
 
 };
@@ -505,7 +508,7 @@ module.exports = {
 },{}],5:[function(require,module,exports){
 'use strict';
 // Industry manager
-const indTemp = require('./industryTemp.json');
+const indTemp = require('./industryTemp.js');
 
 async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
@@ -513,46 +516,63 @@ async function delay(ms) {
 
 const initInd = (body) => {
   body.store = body.store || {};
-  body.industry && body.industry.map(bodyIndName => {
 
-    Object.keys(indTemp[bodyIndName].output).map(resName => {
-      body.store[resName] |= 0;
-    });
-    Object.keys(indTemp[bodyIndName].input).map(resName => {
-      body.store[resName] |= 0;
-    });
+
+
+
+
+  body.industryList && body.industryList.map(bodyIndName => {
     body.hold = body.hold || {};
+    body.industry = body.industry || [];
 
-    indWork(body, bodyIndName);
+    let newInd = {};
+    Object.assign(
+      newInd,
+      indTemp[bodyIndName](),
+      {
+        status: 'New',
+        cycles: 0
+      }
+    );
+
+    body.industry.push(newInd);
+
+    Object.keys(newInd.output).map(resName => {body.store[resName] |= 0;});
+
+    Object.keys(newInd.input ).map(resName => {body.store[resName] |= 0;});
+
+    indWork(body, newInd);
   });
 };
 exports.initInd = initInd;
 
-const indWork = async (body, industry) => {
+const indWork = async (body, ind) => {
   let workGo = true;
 
-  Object.keys(indTemp[industry].input).map(inRes => {
+  Object.keys(ind.input).map(inRes => {
     if (
       (body.store[inRes] === undefined) ||
-      (indTemp[industry].input[inRes] > body.store[inRes])
+      (ind.input[inRes] > body.store[inRes])
     ) {
       workGo = false;
+      ind.status = 'Idle';
     }
   });
 
   if (workGo === true) {
-    Object.keys(indTemp[industry].input).map(inRes => {
-      body.store[inRes] -= indTemp[industry].input[inRes];
+    ind.status = 'Working';
+    Object.keys(ind.input).map(inRes => {
+      body.store[inRes] -= ind.input[inRes];
     });
-    await delay(indTemp[industry].cycle);
-    Object.keys(indTemp[industry].output).map(outRes => {
-      body.store[outRes] += indTemp[industry].output[outRes];
+    await delay(ind.cycle);
+    Object.keys(ind.output).map(outRes => {
+      body.store[outRes] += ind.output[outRes];
     });
   } else {
     await delay(1000);
   }
 
-  indWork(body, industry);
+  indWork(body, ind);
 };
 exports.indWork = indWork;
 
@@ -601,36 +621,44 @@ const unLoadCraft = (crafto) => {
 };
 exports.unLoadCraft = unLoadCraft;
 
-},{"./industryTemp.json":6}],6:[function(require,module,exports){
-module.exports={
-  "mining": {
-    "cycle": 1000,
-    "input": {},
-    "output": {
-      "ore": 1
-    }
-  },
+},{"./industryTemp.js":6}],6:[function(require,module,exports){
+module.exports = {
 
-  "refining": {
-    "cycle": 2000,
-    "input": {
-      "ore": 2
-    },
-    "output": {
-      "metal": 1
+  mining: () => ({
+    name: 'Mining',
+    abr: 'MNG',
+    cycle: 1000,
+    input: {},
+    output: {
+      ore: 1
     }
-  },
+  }),
 
-  "factory": {
-    "cycle": 3000,
-    "input": {
-      "metal": 5
+  refining: () => ({
+    name: 'Refining',
+    abr: 'REF',
+    cycle: 2000,
+    input: {
+      ore: 10
     },
-    "output": {
-      "supplies": 1
+    output: {
+      metal: 1
     }
-  }
-}
+  }),
+
+  factory: () => ({
+    name: 'Factory',
+    abr: 'FRY',
+    cycle: 3000,
+    input: {
+      metal: 5
+    },
+    output: {
+      supplies: 1
+    }
+  })
+
+};
 
 },{}],7:[function(require,module,exports){
 'use strict';
@@ -741,10 +769,6 @@ const main = async () => {
   const listOfcraft = [];
 
   Object.keys(majObj).map(objName => {
-    if (majObj[objName].industry && majObj[objName].industry.length > 0) {
-      indSites.push(majObj[objName]);
-    }
-
     if (majObj[objName].type === 'star') {
       stars.push(makeStar(majObj[objName]));
     } else
@@ -763,6 +787,10 @@ const main = async () => {
     {
       console.log('ERROR at make. Skipping.');
     }
+
+    if (majObj[objName].industry) {
+      indSites.push(majObj[objName]);
+    }
   });
 
 
@@ -773,7 +801,7 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, ast);
   belts.map(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
   for (let i = 0; i < 5; i++) {
@@ -847,8 +875,7 @@ module.exports={
     "lang": 0,
     "inc":  0.1,
     "maz":  0,
-    "objectRadius": 5,
-    "industry": ["mining", "mining", "mining"]
+    "objectRadius": 5
   },
   "alpha": {
     "name": "Alpha",
@@ -863,7 +890,8 @@ module.exports={
     "lang": 1.6,
     "inc":  0.9,
     "maz":  0,
-    "objectRadius": 5
+    "objectRadius": 5,
+    "industryList": ["refining", "refining", "refining"]
   },
   "gMinB": {
     "name": "Gamma Minor B",
@@ -879,7 +907,7 @@ module.exports={
     "inc":  0,
     "maz":  0,
     "objectRadius": 2,
-    "industry": ["refining"]
+    "industryList": ["factory"]
   },
   "gMinA": {
     "name": "Gamma Minor A",
@@ -911,13 +939,29 @@ module.exports={
     "maz":  0,
     "objectRadius": 2
   },
-  "astroDelta": {
-    "name": "Asteroid Delta",
+  "astroDeltaA": {
+    "name": "Asteroid Delta A",
     "type": "asteroid",
     "primary": "prime",
     "mass": 1,
     "a":    475,
-    "e":    0,
+    "e":    0.01,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  2.45,
+    "objectRadius": 3,
+    "industryList": ["mining"]
+  },
+  "astroDektaA": {
+    "name": "Asteroid Delta B",
+    "type": "asteroid",
+    "primary": "prime",
+    "mass": 1,
+    "a":    475,
+    "e":    0.05,
     "t":    0,
     "t0":   0,
     "w":    0,
@@ -925,7 +969,23 @@ module.exports={
     "inc":  0,
     "maz":  0,
     "objectRadius": 3,
-    "industry": ["factory"]
+    "industryList": ["mining"]
+  },
+  "astroAlphaA": {
+    "name": "Asteroid Alpha A",
+    "type": "asteroid",
+    "primary": "prime",
+    "mass": 1,
+    "a":    150,
+    "e":    0.045,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  4,
+    "objectRadius": 3,
+    "industryList": ["mining"]
   },
   "beltDelta": {
     "name":     "Belt Delta",

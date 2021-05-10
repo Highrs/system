@@ -36,8 +36,7 @@
     "lang": 0,
     "inc":  0.1,
     "maz":  0,
-    "objectRadius": 5,
-    "industry": ["mining", "mining", "mining"]
+    "objectRadius": 5
   },
   "alpha": {
     "name": "Alpha",
@@ -52,7 +51,8 @@
     "lang": 1.6,
     "inc":  0.9,
     "maz":  0,
-    "objectRadius": 5
+    "objectRadius": 5,
+    "industryList": ["refining", "refining", "refining"]
   },
   "gMinB": {
     "name": "Gamma Minor B",
@@ -68,7 +68,7 @@
     "inc":  0,
     "maz":  0,
     "objectRadius": 2,
-    "industry": ["refining"]
+    "industryList": ["factory"]
   },
   "gMinA": {
     "name": "Gamma Minor A",
@@ -100,13 +100,29 @@
     "maz":  0,
     "objectRadius": 2
   },
-  "astroDelta": {
-    "name": "Asteroid Delta",
+  "astroDeltaA": {
+    "name": "Asteroid Delta A",
     "type": "asteroid",
     "primary": "prime",
     "mass": 1,
     "a":    475,
-    "e":    0,
+    "e":    0.01,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  2.45,
+    "objectRadius": 3,
+    "industryList": ["mining"]
+  },
+  "astroDektaA": {
+    "name": "Asteroid Delta B",
+    "type": "asteroid",
+    "primary": "prime",
+    "mass": 1,
+    "a":    475,
+    "e":    0.05,
     "t":    0,
     "t0":   0,
     "w":    0,
@@ -114,7 +130,23 @@
     "inc":  0,
     "maz":  0,
     "objectRadius": 3,
-    "industry": ["factory"]
+    "industryList": ["mining"]
+  },
+  "astroAlphaA": {
+    "name": "Asteroid Alpha A",
+    "type": "asteroid",
+    "primary": "prime",
+    "mass": 1,
+    "a":    150,
+    "e":    0.045,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  4,
+    "objectRadius": 3,
+    "industryList": ["mining"]
   },
   "beltDelta": {
     "name":     "Belt Delta",

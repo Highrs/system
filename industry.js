@@ -1,6 +1,6 @@
 'use strict';
 // Industry manager
-const indTemp = require('./industryTemp.json');
+const indTemp = require('./industryTemp.js');
 
 async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
@@ -8,46 +8,63 @@ async function delay(ms) {
 
 const initInd = (body) => {
   body.store = body.store || {};
-  body.industry && body.industry.map(bodyIndName => {
 
-    Object.keys(indTemp[bodyIndName].output).map(resName => {
-      body.store[resName] |= 0;
-    });
-    Object.keys(indTemp[bodyIndName].input).map(resName => {
-      body.store[resName] |= 0;
-    });
+
+
+
+
+  body.industryList && body.industryList.map(bodyIndName => {
     body.hold = body.hold || {};
+    body.industry = body.industry || [];
 
-    indWork(body, bodyIndName);
+    let newInd = {};
+    Object.assign(
+      newInd,
+      indTemp[bodyIndName](),
+      {
+        status: 'New',
+        cycles: 0
+      }
+    );
+
+    body.industry.push(newInd);
+
+    Object.keys(newInd.output).map(resName => {body.store[resName] |= 0;});
+
+    Object.keys(newInd.input ).map(resName => {body.store[resName] |= 0;});
+
+    indWork(body, newInd);
   });
 };
 exports.initInd = initInd;
 
-const indWork = async (body, industry) => {
+const indWork = async (body, ind) => {
   let workGo = true;
 
-  Object.keys(indTemp[industry].input).map(inRes => {
+  Object.keys(ind.input).map(inRes => {
     if (
       (body.store[inRes] === undefined) ||
-      (indTemp[industry].input[inRes] > body.store[inRes])
+      (ind.input[inRes] > body.store[inRes])
     ) {
       workGo = false;
+      ind.status = 'Idle';
     }
   });
 
   if (workGo === true) {
-    Object.keys(indTemp[industry].input).map(inRes => {
-      body.store[inRes] -= indTemp[industry].input[inRes];
+    ind.status = 'Working';
+    Object.keys(ind.input).map(inRes => {
+      body.store[inRes] -= ind.input[inRes];
     });
-    await delay(indTemp[industry].cycle);
-    Object.keys(indTemp[industry].output).map(outRes => {
-      body.store[outRes] += indTemp[industry].output[outRes];
+    await delay(ind.cycle);
+    Object.keys(ind.output).map(outRes => {
+      body.store[outRes] += ind.output[outRes];
     });
   } else {
     await delay(1000);
   }
 
-  indWork(body, industry);
+  indWork(body, ind);
 };
 exports.indWork = indWork;
 

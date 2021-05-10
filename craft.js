@@ -2,7 +2,7 @@
 const mech = require('./mechanics.js');
 const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
-const indTemp = require('./industryTemp.json');
+// const indTemp = require('./industryTemp.js');
 
 const genNamer = () => {
   let id = 0;
@@ -95,11 +95,11 @@ const deviseRoute = (crafto, indSites) => {
   //Forgive me for I have sinned
   return indSites.find(prodSite =>
     prodSite.industry.find(prodInd =>
-      Object.keys(indTemp[prodInd].output).find(prodRes =>
+      Object.keys(prodInd.output).find(prodRes =>
         indSites.find(consSite => {
           if (prodSite !== consSite) {
             return consSite.industry.find(consInd =>
-              Object.keys(indTemp[consInd].input).find(consRes => {
+              Object.keys(consInd.input).find(consRes => {
                 if (
                   prodRes === consRes &&
                   prodSite.store[prodRes] >= crafto.cargoCap

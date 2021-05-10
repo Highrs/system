@@ -110,7 +110,7 @@ const drawOrbit = (bodies) => {
 const indDisplay = (body) => {
   let display = ['g', tt(0, 32),
     ['rect', {
-      width: 100,
+      width: 120,
       height:
         body.industry.length * 10
           + Object.keys(body.store).length * 10 + 25,
@@ -128,7 +128,9 @@ const indDisplay = (body) => {
   body.industry.map((e, idx) => {
     display.push(
       ['g', tt(0, 10),
-        ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'}, e]
+        ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'},
+          e.name +":" + e.status
+        ]
       ]
     );
   });
