@@ -189,7 +189,7 @@ const drawBodies = (bodies) => {
   for (let i = 0; i < bodies.length; i++) {
     let tempBod = ['g', tt( (bodies[i].x), (bodies[i].y))];
     tempBod.push(
-      drawData(bodies[i]),
+      // drawData(bodies[i]),
       ['circle', { r: bodies[i].objectRadius, class: 'majorObject'}]
     );
     if (bodies[i].industry) {

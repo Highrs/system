@@ -370,7 +370,7 @@ const drawBodies = (bodies) => {
   for (let i = 0; i < bodies.length; i++) {
     let tempBod = ['g', tt( (bodies[i].x), (bodies[i].y))];
     tempBod.push(
-      drawData(bodies[i]),
+      // drawData(bodies[i]),
       ['circle', { r: bodies[i].objectRadius, class: 'majorObject'}]
     );
     if (bodies[i].industry) {
@@ -938,7 +938,7 @@ module.exports={
     "name": "Gamma",
     "type": "planet",
     "primary": "prime",
-    "mass": 60000000,
+    "mass": 600000000,
     "a":    375,
     "e":    0.01,
     "t":    0,
@@ -1134,7 +1134,7 @@ const sin = Math.sin;
 const PI = Math.PI;
 const sqrt = Math.sqrt;
 
-exports.kepCalc = (bodyo, t = bodyo.t) => {
+const kepCalc = (bodyo, t = bodyo.t) => {
   // console.log(t);
   let primaryo = majObj[bodyo.primary];
 
@@ -1208,12 +1208,30 @@ exports.kepCalc = (bodyo, t = bodyo.t) => {
     + oy * ( (cos(w) * cos(inc) * cos(lang)) - (sin(w) * sin(lang)) ) );
   const z = ( ox * ( sin(w) * sin(inc) ) + oy * ( cos(w) * sin(inc) ) );
 
+  let bodyCoords = {
+    x: (x / Math.pow(10, 9)),
+    y: (y / Math.pow(10, 9)),
+    z: (z / Math.pow(10, 9))
+  };
+
+  let primaryCoords = {
+    x: primaryo.x,
+    y: primaryo.y,
+    z: primaryo.z
+  };
+
+  if (primaryo.type !== 'star') {
+    primaryCoords = kepCalc(primaryo, t);
+  }
+
   return {
-    x: (x / Math.pow(10, 9)) + primaryo.x,
-    y: (y / Math.pow(10, 9)) + primaryo.y,
-    z: (z / Math.pow(10, 9)) + primaryo.z,
-    focalShift: focalShift };
+    x: bodyCoords.x + primaryCoords.x,
+    y: bodyCoords.y + primaryCoords.y,
+    z: bodyCoords.z + primaryCoords.z,
+    focalShift: focalShift
+  };
 };
+exports.kepCalc = kepCalc;
 
 exports.orbitCoords = (mat, bodyo) => {
   let primaryo = majObj[bodyo.primary];
