@@ -7,20 +7,23 @@ const ind = require('./industry.js');
 const hulls = require('./hulls.js');
 const craft = require('./craft.js');
 
+const rate = craft.getRate();
+
 const makeStar = (staro) => {
   return staro;
 };
 
 const makeBody = (bodyo) => {
   ind.initInd(bodyo);
-  const bodyDat = mech.kepCalc(0, bodyo);
+  const bodyDat = mech.kepCalc(bodyo, 0);
   const body = Object.assign(
     bodyo,
     {
       focalShift: bodyDat.focalShift,
       x: bodyDat.x,
       y: bodyDat.y,
-      z: bodyDat.z
+      z: bodyDat.z,
+      soi: 10
     }
   );
   return body;
@@ -53,7 +56,7 @@ let rock = (belto) => {
   return {
     name: namer(),
     type: 'asteroid',
-    primary: 'prime',
+    primary: belto.primary,
     mass: rand(belto.mass, belto.massd),
     a:    rand(belto.a, belto.ad),
     e:    rand(belto.e, belto.ed, 2),
@@ -138,10 +141,10 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, ast);
   belts.map(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 8; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 4; i++) {
     listOfcraft.push(craft.makeCraft(hulls.mountain()));
   }
 
@@ -150,13 +153,14 @@ const main = async () => {
 
   while (Date.now()) {
 
-    clock += 10;
+    clock += (rate / 10) * 2;
     let t = clock / Math.pow(10, 2);
     let clock2 = Date(clock);
     // let clock2 = clock;
 
     for (let i = 0; i < movBod.length; i++) {
-      let newData = mech.kepCalc(t, movBod[i]);
+      movBod[i].t = t;
+      let newData = mech.kepCalc(movBod[i]);
       ['x', 'y', 'z'].map(e => {
         movBod[i][e] = newData[e];
       });
@@ -167,7 +171,7 @@ const main = async () => {
     }
 
     render2(drawMap.drawMoving(clock2, planets, moons, ast, belts, listOfcraft));
-    await delay(50);
+    await delay(rate);
   }
 };
 

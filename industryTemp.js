@@ -3,7 +3,7 @@ module.exports = {
   mining: () => ({
     name: 'Mining',
     abr: 'MNG',
-    cycle: 1000,
+    cycle: 2000,
     input: {},
     output: {
       ore: 1
@@ -13,7 +13,7 @@ module.exports = {
   refining: () => ({
     name: 'Refining',
     abr: 'REF',
-    cycle: 2000,
+    cycle: 10000,
     input: {
       ore: 10
     },
@@ -25,7 +25,7 @@ module.exports = {
   factory: () => ({
     name: 'Factory',
     abr: 'FRY',
-    cycle: 3000,
+    cycle: 20000,
     input: {
       metal: 5
     },

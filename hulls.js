@@ -4,7 +4,7 @@ module.exports = {
     class: 'Brick',
     cargoCap: 10,
     cargo: {},
-    speed: 3,
+    speed: 30,
     home: 'beta'
   }),
 
@@ -12,7 +12,7 @@ module.exports = {
     class: 'Mountain',
     cargoCap: 20,
     cargo: {},
-    speed: 1.5,
+    speed: 25,
     home: 'beta'
   })
 

@@ -49,6 +49,11 @@ html, body {
   stroke: #a3a3a3ff;
   fill: none;
 }
+.gridBold {
+  stroke-width: 1px;
+  stroke: #a3a3a3ff;
+  fill: none;
+}
 .dataWindow {
   stroke-width: 0.5px;
   stroke: #c3c3c3ff;
@@ -89,6 +94,11 @@ html, body {
 .craftDataText {
   font: 10px B612 Mono;
   fill: #ffffffff;
+}
+.intercept {
+  fill: none;
+  stroke-width: 1px;
+  stroke: #ffffffff;
 }
 @keyframes stroke {
   to {

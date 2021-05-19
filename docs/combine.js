@@ -5,6 +5,12 @@ const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
 // const indTemp = require('./industryTemp.js');
 
+const rate = 20;
+const getRate = () => {
+  return rate;
+};
+exports.getRate = getRate;
+
 const genNamer = () => {
   let id = 0;
   return () => {
@@ -35,7 +41,8 @@ const makeCraft = (crafto) => {
       route: [],
       lastStop: [],
       status: 'parked',
-      course: 0
+      course: 0,
+      intercept: {}
     }
   );
 
@@ -52,8 +59,9 @@ const startCraftLife = (listOfcraft, indSites) => {
 exports.startCraftLife = startCraftLife;
 
 const craftAI = async (crafto, indSites) => {
-  await delay(50);
+  await delay(rate);
   if (crafto.route.length === 0) {
+    crafto.intercept = {};
     if (!deviseRoute(crafto, indSites)) {
       crafto.status = 'parked';
       ['x', 'y', 'z'].map(e => {
@@ -64,12 +72,18 @@ const craftAI = async (crafto, indSites) => {
       });
     }
   } else {
-    if (mech.calcDist(crafto, crafto.route[0].location) < crafto.speed) {
+    if (mech.calcDist(
+      crafto,
+      crafto.route[0].location) < crafto.route[0].location.soi
+    ) {
       ind.unLoadCraft(crafto);
       crafto.lastStop = crafto.route[0].location;
       crafto.route.shift();
+      if (crafto.route.length != 0) {
+        crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
+      }
     } else {
-      calcVector(crafto, crafto.route[0].location);
+      calcMotion(crafto, crafto.intercept);
     }
   }
   craftAI(crafto, indSites);
@@ -119,6 +133,8 @@ const deviseRoute = (crafto, indSites) => {
 
                   crafto.status = 'traveling';
 
+                  crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
+
                   return true;
                 }
               })
@@ -131,15 +147,35 @@ const deviseRoute = (crafto, indSites) => {
 };
 //Replace this part later. Make it so each planet has exports and imports list.
 
-const calcVector =  (crafto, targeto) => {
+const calcMotion =  (crafto, targeto) => {
   const dist = mech.calcDist(crafto, targeto);
 
   ['x', 'y', 'z'].map(e => {
-    crafto['v' + e] = crafto.speed * ((targeto[e] - crafto[e]) / dist );
+    crafto['v' + e] = (
+      (crafto.speed * (rate / 1000)) * ((targeto[e] - crafto[e]) / dist)
+    );
     crafto[e] += crafto['v' + e];
   });
 
   crafto.course = Math.atan2(crafto.vy, crafto.vx) * 180 / Math.PI;
+};
+
+const calcIntercept = (crafto, bodyo) => {
+  let intercept = {
+    x: bodyo.x,
+    y: bodyo.y,
+    z: bodyo.z
+  };
+  let travelTime = 0;
+  let distance = 0;
+
+  for (let i = 0; i < 3; i++) {
+    distance   = mech.calcDist(crafto, intercept);
+    travelTime = mech.calcTravelTime(distance, crafto.speed);
+    intercept  = mech.kepCalc(bodyo, bodyo.t + travelTime);
+  } // Optimization of intercept, very imperfect, re-work later.
+
+  return intercept;
 };
 
 },{"./industry.js":5,"./majorObjects2.json":8,"./mechanics.js":9}],2:[function(require,module,exports){
@@ -332,13 +368,17 @@ const drawBodies = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
-    bodiesDrawn.push(
-      ['g', tt( (bodies[i].x), (bodies[i].y)),
-        drawData(bodies[i]),
-        ['circle', { r: bodies[i].objectRadius, class: 'majorObject'}]
-      ]
+    let tempBod = ['g', tt( (bodies[i].x), (bodies[i].y))];
+    tempBod.push(
+      drawData(bodies[i]),
+      ['circle', { r: bodies[i].objectRadius, class: 'majorObject'}]
     );
-
+    if (bodies[i].industry) {
+      tempBod.push(
+        ['circle', { r: bodies[i].soi, class: 'gridBold'}]
+      );
+    }
+    bodiesDrawn.push(tempBod);
   }
   return bodiesDrawn;
 };
@@ -402,31 +442,42 @@ const drawCraft = (listOfCraft) => {
 
   listOfCraft.map(crafto => {
     let partCraft = ['g', tt(crafto.x, crafto.y)];
-    if (crafto.x !== 0 && crafto.y !== 0) {
-      partCraft.push(['line', {
-        x1: 0,
-        y1: 0,
-        x2: crafto.vx * 10,
-        y2: crafto.vy * 10,
-        class: 'vector'
-      }]);
+    if (crafto.status === 'traveling') {
+
+      partCraft.push(
+        ['line', {
+          x1: 0,
+          y1: 0,
+          x2: crafto.vx * 100,
+          y2: crafto.vy * 100,
+          class: 'vector'
+        }],
+        ['g', tt(crafto.vx * 100, crafto.vy * 100), [
+          'circle',
+          {r : 1, class: 'vector'}
+        ]]
+      );
+
+      partCraft.push(
+        ['g', tt(-3, 12), ['text', {class: 'craftDataText'}, crafto.name]]
+      );
+
+      drawnCraft.push(
+        ['g', tt(crafto.intercept.x, crafto.intercept.y),
+          ['path', {d: 'M -5, 3 L -2, 2 L -3, 5', class: 'gridBold'}],
+          ['path', {d: 'M  5, 3 L  2, 2 L  3, 5', class: 'gridBold'}],
+          ['path', {d: 'M  5,-3 L  2,-2 L  3,-5', class: 'gridBold'}],
+          ['path', {d: 'M -5,-3 L -2,-2 L -3,-5', class: 'gridBold'}]
+        ]
+      );
     }
     partCraft.push(
       ['g', {},
         ['g', {transform: 'rotate(' + crafto.course + ')'},
           drawCraftIcon(crafto.class)
-        ],
-        ['g', tt(crafto.vx * 10, crafto.vy * 10), [
-          'circle',
-          {r : 1, class: 'vector'}
-        ]],
+        ]
       ]
     );
-    if (crafto.status === 'traveling') {
-      partCraft.push(
-        ['g', tt(-3, 12), ['text', {class: 'craftDataText'}, crafto.name]]
-      );
-    }
     drawnCraft.push(partCraft);
   });
 
@@ -523,7 +574,7 @@ module.exports = {
     class: 'Brick',
     cargoCap: 10,
     cargo: {},
-    speed: 3,
+    speed: 30,
     home: 'beta'
   }),
 
@@ -531,7 +582,7 @@ module.exports = {
     class: 'Mountain',
     cargoCap: 20,
     cargo: {},
-    speed: 1.5,
+    speed: 25,
     home: 'beta'
   })
 
@@ -659,7 +710,7 @@ module.exports = {
   mining: () => ({
     name: 'Mining',
     abr: 'MNG',
-    cycle: 1000,
+    cycle: 2000,
     input: {},
     output: {
       ore: 1
@@ -669,7 +720,7 @@ module.exports = {
   refining: () => ({
     name: 'Refining',
     abr: 'REF',
-    cycle: 2000,
+    cycle: 10000,
     input: {
       ore: 10
     },
@@ -681,7 +732,7 @@ module.exports = {
   factory: () => ({
     name: 'Factory',
     abr: 'FRY',
-    cycle: 3000,
+    cycle: 20000,
     input: {
       metal: 5
     },
@@ -702,20 +753,23 @@ const ind = require('./industry.js');
 const hulls = require('./hulls.js');
 const craft = require('./craft.js');
 
+const rate = craft.getRate();
+
 const makeStar = (staro) => {
   return staro;
 };
 
 const makeBody = (bodyo) => {
   ind.initInd(bodyo);
-  const bodyDat = mech.kepCalc(0, bodyo);
+  const bodyDat = mech.kepCalc(bodyo, 0);
   const body = Object.assign(
     bodyo,
     {
       focalShift: bodyDat.focalShift,
       x: bodyDat.x,
       y: bodyDat.y,
-      z: bodyDat.z
+      z: bodyDat.z,
+      soi: 10
     }
   );
   return body;
@@ -748,7 +802,7 @@ let rock = (belto) => {
   return {
     name: namer(),
     type: 'asteroid',
-    primary: 'prime',
+    primary: belto.primary,
     mass: rand(belto.mass, belto.massd),
     a:    rand(belto.a, belto.ad),
     e:    rand(belto.e, belto.ed, 2),
@@ -833,10 +887,10 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, ast);
   belts.map(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 8; i++) {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 4; i++) {
     listOfcraft.push(craft.makeCraft(hulls.mountain()));
   }
 
@@ -845,13 +899,14 @@ const main = async () => {
 
   while (Date.now()) {
 
-    clock += 10;
+    clock += (rate / 10) * 2;
     let t = clock / Math.pow(10, 2);
     let clock2 = Date(clock);
     // let clock2 = clock;
 
     for (let i = 0; i < movBod.length; i++) {
-      let newData = mech.kepCalc(t, movBod[i]);
+      movBod[i].t = t;
+      let newData = mech.kepCalc(movBod[i]);
       ['x', 'y', 'z'].map(e => {
         movBod[i][e] = newData[e];
       });
@@ -862,7 +917,7 @@ const main = async () => {
     }
 
     render2(drawMap.drawMoving(clock2, planets, moons, ast, belts, listOfcraft));
-    await delay(50);
+    await delay(rate);
   }
 };
 
@@ -1072,14 +1127,17 @@ module.exports={
 },{}],9:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
+// const craft = require('./craft.js');
 
 const cos = Math.cos;
 const sin = Math.sin;
 const PI = Math.PI;
 const sqrt = Math.sqrt;
 
-exports.kepCalc = (t, bodyo) => {
+exports.kepCalc = (bodyo, t = bodyo.t) => {
+  // console.log(t);
   let primaryo = majObj[bodyo.primary];
+
 
   let a    = bodyo.a;    // semi-major axis (a)
   let e    = bodyo.e;    // eccentricity (e)
@@ -1209,6 +1267,14 @@ const calcDist = (body1, body2) => {
   + Math.pow( (body1.z - body2.z), 2 ) );
 };
 exports.calcDist = calcDist;
+
+// const calcTravelTime = (dist, accel) => {
+//   return ( sqrt( ( ( 2 * dist ) / 2 ) / accel ) * 2 );
+// };
+const calcTravelTime = (dist, speed) => {
+  return ( dist / speed ) * 2;
+};
+exports.calcTravelTime = calcTravelTime;
 
 },{"./majorObjects2.json":8}],10:[function(require,module,exports){
 'use strict';

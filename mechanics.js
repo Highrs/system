@@ -1,13 +1,16 @@
 'use strict';
 const majObj = require('./majorObjects2.json');
+// const craft = require('./craft.js');
 
 const cos = Math.cos;
 const sin = Math.sin;
 const PI = Math.PI;
 const sqrt = Math.sqrt;
 
-exports.kepCalc = (t, bodyo) => {
+exports.kepCalc = (bodyo, t = bodyo.t) => {
+  // console.log(t);
   let primaryo = majObj[bodyo.primary];
+
 
   let a    = bodyo.a;    // semi-major axis (a)
   let e    = bodyo.e;    // eccentricity (e)
@@ -137,3 +140,11 @@ const calcDist = (body1, body2) => {
   + Math.pow( (body1.z - body2.z), 2 ) );
 };
 exports.calcDist = calcDist;
+
+// const calcTravelTime = (dist, accel) => {
+//   return ( sqrt( ( ( 2 * dist ) / 2 ) / accel ) * 2 );
+// };
+const calcTravelTime = (dist, speed) => {
+  return ( dist / speed ) * 2;
+};
+exports.calcTravelTime = calcTravelTime;

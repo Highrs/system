@@ -187,13 +187,17 @@ const drawBodies = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
-    bodiesDrawn.push(
-      ['g', tt( (bodies[i].x), (bodies[i].y)),
-        drawData(bodies[i]),
-        ['circle', { r: bodies[i].objectRadius, class: 'majorObject'}]
-      ]
+    let tempBod = ['g', tt( (bodies[i].x), (bodies[i].y))];
+    tempBod.push(
+      drawData(bodies[i]),
+      ['circle', { r: bodies[i].objectRadius, class: 'majorObject'}]
     );
-
+    if (bodies[i].industry) {
+      tempBod.push(
+        ['circle', { r: bodies[i].soi, class: 'gridBold'}]
+      );
+    }
+    bodiesDrawn.push(tempBod);
   }
   return bodiesDrawn;
 };
@@ -257,31 +261,42 @@ const drawCraft = (listOfCraft) => {
 
   listOfCraft.map(crafto => {
     let partCraft = ['g', tt(crafto.x, crafto.y)];
-    if (crafto.x !== 0 && crafto.y !== 0) {
-      partCraft.push(['line', {
-        x1: 0,
-        y1: 0,
-        x2: crafto.vx * 10,
-        y2: crafto.vy * 10,
-        class: 'vector'
-      }]);
+    if (crafto.status === 'traveling') {
+
+      partCraft.push(
+        ['line', {
+          x1: 0,
+          y1: 0,
+          x2: crafto.vx * 100,
+          y2: crafto.vy * 100,
+          class: 'vector'
+        }],
+        ['g', tt(crafto.vx * 100, crafto.vy * 100), [
+          'circle',
+          {r : 1, class: 'vector'}
+        ]]
+      );
+
+      partCraft.push(
+        ['g', tt(-3, 12), ['text', {class: 'craftDataText'}, crafto.name]]
+      );
+
+      drawnCraft.push(
+        ['g', tt(crafto.intercept.x, crafto.intercept.y),
+          ['path', {d: 'M -5, 3 L -2, 2 L -3, 5', class: 'gridBold'}],
+          ['path', {d: 'M  5, 3 L  2, 2 L  3, 5', class: 'gridBold'}],
+          ['path', {d: 'M  5,-3 L  2,-2 L  3,-5', class: 'gridBold'}],
+          ['path', {d: 'M -5,-3 L -2,-2 L -3,-5', class: 'gridBold'}]
+        ]
+      );
     }
     partCraft.push(
       ['g', {},
         ['g', {transform: 'rotate(' + crafto.course + ')'},
           drawCraftIcon(crafto.class)
-        ],
-        ['g', tt(crafto.vx * 10, crafto.vy * 10), [
-          'circle',
-          {r : 1, class: 'vector'}
-        ]],
+        ]
       ]
     );
-    if (crafto.status === 'traveling') {
-      partCraft.push(
-        ['g', tt(-3, 12), ['text', {class: 'craftDataText'}, crafto.name]]
-      );
-    }
     drawnCraft.push(partCraft);
   });
 
