@@ -162,6 +162,7 @@ exports.calcDist = calcDist;
 // const calcTravelTime = (dist, accel) => {
 //   return ( sqrt( ( ( 2 * dist ) / 2 ) / accel ) * 2 );
 // };
+
 const calcTravelTime = (dist, speed) => {
   return ( dist / speed ) * 2;
 };

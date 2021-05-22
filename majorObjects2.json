@@ -55,7 +55,7 @@
     "industryList": ["refining", "refining", "refining"]
   },
   "gMinB": {
-    "name": "Gamma Minor B",
+    "name": "Gamma B",
     "type": "moon",
     "primary": "gamma",
     "mass": 10000,
@@ -71,7 +71,7 @@
     "industryList": ["factory"]
   },
   "gMinA": {
-    "name": "Gamma Minor A",
+    "name": "Gamma A",
     "type": "moon",
     "primary": "gamma",
     "mass": 10000,
@@ -86,7 +86,7 @@
     "objectRadius": 2
   },
   "bMinA": {
-    "name": "Beta Minor A",
+    "name": "Beta A",
     "type": "moon",
     "primary": "beta",
     "mass": 10000,
@@ -101,7 +101,7 @@
     "objectRadius": 2
   },
   "astroDeltaA": {
-    "name": "Asteroid Delta A",
+    "name": "Ast. Delta A",
     "type": "asteroid",
     "primary": "prime",
     "mass": 1,
@@ -117,7 +117,7 @@
     "industryList": ["mining"]
   },
   "astroDeltaB": {
-    "name": "Asteroid Delta B",
+    "name": "Ast. Delta B",
     "type": "asteroid",
     "primary": "prime",
     "mass": 1,
@@ -133,7 +133,7 @@
     "industryList": ["mining"]
   },
   "astroAlphaA": {
-    "name": "Asteroid Alpha A",
+    "name": "Ast. Alpha A",
     "type": "asteroid",
     "primary": "prime",
     "mass": 1,

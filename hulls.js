@@ -8,11 +8,19 @@ module.exports = {
     home: 'beta'
   }),
 
+  boulder: () => ({
+    class: 'Boulder',
+    cargoCap: 15,
+    cargo: {},
+    speed: 25,
+    home: 'beta'
+  }),
+
   mountain: () => ({
     class: 'Mountain',
     cargoCap: 20,
     cargo: {},
-    speed: 25,
+    speed: 20,
     home: 'beta'
   })
 

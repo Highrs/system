@@ -156,7 +156,7 @@ const calcMotion =  (crafto, targeto) => {
     crafto[e] += crafto['v' + e];
   });
 
-  crafto.course = Math.atan2(crafto.vy, crafto.vx) * 180 / Math.PI;
+  crafto.course = (Math.atan2(crafto.vy, crafto.vx) * 180 / Math.PI) - 90;
 };
 
 const calcIntercept = (crafto, bodyo) => {

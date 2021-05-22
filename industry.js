@@ -22,7 +22,7 @@ const initInd = (body) => {
       newInd,
       indTemp[bodyIndName](),
       {
-        status: 'New',
+        status: 'NEW',
         cycles: 0
       }
     );
@@ -47,12 +47,12 @@ const indWork = async (body, ind) => {
       (ind.input[inRes] > body.store[inRes])
     ) {
       workGo = false;
-      ind.status = 'Idle';
+      ind.status = 'IDLE';
     }
   });
 
   if (workGo === true) {
-    ind.status = 'Working';
+    ind.status = 'WORK';
     Object.keys(ind.input).map(inRes => {
       body.store[inRes] -= ind.input[inRes];
     });

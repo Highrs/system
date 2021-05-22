@@ -87,21 +87,21 @@ const drawOrbit = (bodies) => {
     retGroup.push(['path',
       { d: coords, class: 'majorOrbit' }]);
     retGroup.push(['line',
-      {x1: divline1.x,
+      {
+        x1: divline1.x,
         y1: divline1.y,
         x2: divline2.x,
         y2: divline2.y,
-        class: 'minorOrbit'}]);
-    retGroup.push(['path', {
-      d: 'M ' + (divline1.x - 2) + ',' + (divline1.y - 5) + 'L' + (divline1.x)
-      + ',' + (divline1.y) + 'L' + (divline1.x + 2) + ',' + (divline1.y - 5)
-      + 'Z', class: 'symbolLine'
-    }]);
-    retGroup.push(['path', {
-      d: 'M ' + (divline2.x - 2) + ',' + (divline2.y + 5) + 'L' + (divline2.x)
-      + ',' + (divline2.y) + 'L' + (divline2.x + 2) + ',' + (divline2.y + 5)
-      + 'Z', class: 'symbolLine'
-    }]);
+        class: 'minorOrbit'
+      }]);
+    retGroup.push(
+      ['g', tt(divline1.x, divline1.y),
+        ['path', {d: 'M -2,-5 L 0,0 L 2,-5 Z', class: 'symbolLine'}]
+      ],
+      ['g', tt(divline2.x, divline2.y),
+        ['path', {d: 'M -2, 5 L 0,0 L 2, 5 Z', class: 'symbolLine'}]
+      ]
+    );
   }
 
   return retGroup;
@@ -110,7 +110,7 @@ const drawOrbit = (bodies) => {
 const indDisplay = (body) => {
   let display = ['g', tt(0, 32),
     ['rect', {
-      width: 120,
+      width: 90,
       height:
         body.industry.length * 10
           + Object.keys(body.store).length * 10 + 25,
@@ -120,16 +120,16 @@ const indDisplay = (body) => {
   display.push(
     ['g', tt(0, 10),
     ['text', {x: 3, y: 0,
-      class: 'dataText'}, 'Industry:'],
+      class: 'dataText'}, 'INDUSTRY:'],
       ['text', {x: 3, y: (body.industry.length + 1)*10,
-        class: 'dataText'}, 'Storage:']
+        class: 'dataText'}, 'STORE:']
     ]
   );
   body.industry.map((e, idx) => {
     display.push(
       ['g', tt(0, 10),
         ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'},
-          e.name +":" + e.status
+          e.abr +":" + e.status
         ]
       ]
     );
@@ -139,7 +139,7 @@ const indDisplay = (body) => {
       ['g', tt(0, 10),
         ['text', {x: 9,
           y: (body.industry.length + idx + 2) * 10,
-          class: 'dataText'}, e + ' - ' + body.store[e]
+          class: 'dataText'}, e.toUpperCase() + ':' + body.store[e]
         ]
       ]
     );
@@ -150,11 +150,14 @@ const indDisplay = (body) => {
 
 const drawData = (bodyo) => {
   let dataDisp = ['g', {}];
-  if (bodyo.type === 'planet' || bodyo.industry) {
+  if (
+    // bodyo.type === 'planet' ||
+    bodyo.industry
+  ) {
     dataDisp.push(
       ['rect', {
         // width: ((bodyo.name.length * 6.5) + 12),
-        width: 120,
+        width: 90,
         height: 14,
         class: 'dataWindow'
       }],
@@ -166,14 +169,14 @@ const drawData = (bodyo) => {
     dataDisp.push(
       ['g', tt(0, 16),
         ['rect', {
-          width: 120,
+          width: 90,
           height: 14,
           class: 'dataWindow'
         }],
         ['text', {x: 3, y: 10, class: 'dataText'},
-          'XYZ:' +
-          (bodyo.x).toFixed(0) + '|' +
-          (bodyo.y).toFixed(0) + '|' +
+          // 'XYZ:' +
+          (bodyo.x).toFixed(0) + ',' +
+          (bodyo.y).toFixed(0) + ',' +
           (bodyo.z).toFixed(0)
         ]
       ]
@@ -194,7 +197,7 @@ const drawBodies = (bodies) => {
     );
     if (bodies[i].industry) {
       tempBod.push(
-        ['circle', { r: bodies[i].soi, class: 'gridBold'}]
+        ['circle', { r: bodies[i].soi, class: 'bodyZone'}]
       );
     }
     bodiesDrawn.push(tempBod);
@@ -249,8 +252,9 @@ const drawStars = (stars) =>{
 const drawCraftIcon = (hullClass) => {
   let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
   const icono = {
-    Mountain: 'M 5,3 L 5,-3 L -5,-3 L -2,0 L -5,3 Z',
-    Brick: 'M 3,3 L 3,-3 L -3,-3 L 0,0 L -3,3 Z'
+    Brick:    'M 0,0 L 2,-2 L 2,2 L 1,3 L -1,3 L -2,2 L -2,-2 Z',
+    Boulder:  'M 0,-1 L 2,-3 L 3,-2 L 3,3 L 2,4 L -2,4 L -3,3 L -3,-2 L -2,-3 Z',
+    Mountain: 'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z'
   };
   if (icono[hullClass]) {iconString = icono[hullClass];}
   return ['path', {d: iconString, class: 'craft'}];
@@ -260,57 +264,60 @@ const drawCraft = (listOfCraft) => {
   let drawnCraft = ['g', {}];
 
   listOfCraft.map(crafto => {
-    let partCraft = ['g', tt(crafto.x, crafto.y)];
-    if (crafto.status === 'traveling') {
+    if (crafto.status !== 'parked') {
+      let partCraft = ['g', tt(crafto.x, crafto.y)];
+      if (crafto.status === 'traveling') {
 
+        partCraft.push(
+          ['line', {
+            x1: 0,
+            y1: 0,
+            x2: crafto.vx * 100,
+            y2: crafto.vy * 100,
+            class: 'vector'
+          }],
+          ['g', tt(crafto.vx * 100, crafto.vy * 100), [
+            'circle',
+            {r : 1, class: 'vector'}
+          ]]
+        );
+
+        partCraft.push(
+          ['g', tt(-3, 16), ['text', {class: 'craftDataText'}, crafto.name]]
+        );
+
+        drawnCraft.push(
+          ['g', tt(crafto.intercept.x, crafto.intercept.y),
+            ['path', {d: 'M -5, 3 L -2, 2 L -3, 5 L -5, 5 Z', class: 'gridBold'}],
+            ['path', {d: 'M  5, 3 L  2, 2 L  3, 5 L  5, 5 Z', class: 'gridBold'}],
+            ['path', {d: 'M  5,-3 L  2,-2 L  3,-5 L  5,-5 Z', class: 'gridBold'}],
+            ['path', {d: 'M -5,-3 L -2,-2 L -3,-5 L -5,-5 Z', class: 'gridBold'}]
+          ]
+        );
+      }
       partCraft.push(
-        ['line', {
-          x1: 0,
-          y1: 0,
-          x2: crafto.vx * 100,
-          y2: crafto.vy * 100,
-          class: 'vector'
-        }],
-        ['g', tt(crafto.vx * 100, crafto.vy * 100), [
-          'circle',
-          {r : 1, class: 'vector'}
-        ]]
-      );
-
-      partCraft.push(
-        ['g', tt(-3, 12), ['text', {class: 'craftDataText'}, crafto.name]]
-      );
-
-      drawnCraft.push(
-        ['g', tt(crafto.intercept.x, crafto.intercept.y),
-          ['path', {d: 'M -5, 3 L -2, 2 L -3, 5', class: 'gridBold'}],
-          ['path', {d: 'M  5, 3 L  2, 2 L  3, 5', class: 'gridBold'}],
-          ['path', {d: 'M  5,-3 L  2,-2 L  3,-5', class: 'gridBold'}],
-          ['path', {d: 'M -5,-3 L -2,-2 L -3,-5', class: 'gridBold'}]
+        ['g', {},
+          ['g', {transform: 'rotate(' + crafto.course + ')'},
+            drawCraftIcon(crafto.class)
+          ]
         ]
       );
+      drawnCraft.push(partCraft);
     }
-    partCraft.push(
-      ['g', {},
-        ['g', {transform: 'rotate(' + crafto.course + ')'},
-          drawCraftIcon(crafto.class)
-        ]
-      ]
-    );
-    drawnCraft.push(partCraft);
   });
 
   return drawnCraft;
 };
 
 const drawRanges = (bodyArr) => {
+  let rangesDrawn = ['g', {}];
   let linesDrawn = ['g', {}];
+  let windowsDrawn = ['g', {}];
 
   for (let i = 0; i < bodyArr.length; i++) {
     if (bodyArr[i].industry) {
       for (let j = i + 1; j < bodyArr.length; j++) {
         if (bodyArr[j].industry) {
-
           linesDrawn.push(['line', {
             x1: bodyArr[i].x,
             y1: bodyArr[i].y,
@@ -321,25 +328,25 @@ const drawRanges = (bodyArr) => {
 
           let dist = mech.calcDist(bodyArr[i], bodyArr[j]);
 
-          linesDrawn.push(['g',
-          tt((((bodyArr[j].x) + (bodyArr[i].x)) / 2 - 22),
-            (((bodyArr[j].y) + (bodyArr[i].y)) / 2 - 4.5)),
+          windowsDrawn.push(['g',
+          tt((((bodyArr[j].x) + (bodyArr[i].x)) / 2 - 11),
+            (((bodyArr[j].y) + (bodyArr[i].y)) / 2 - 2.25)),
             ['rect', {
-              width: 44,
-              height: 13,
+              width: 22,
+              height: 6.5,
               class: 'rangeWindow'
             }],
             ['text', {
-              x: 2, y: 10, class: 'rangeText'
+              x: 1, y: 5, class: 'rangeText'
             }, (dist).toFixed(2)]
           ]);
-
         }
       }
     }
   }
+  rangesDrawn.push(linesDrawn, windowsDrawn);
 
-  return linesDrawn;
+  return rangesDrawn;
 };
 
 exports.drawMoving = (clock, planets, moons, ast, belts, craft) => {

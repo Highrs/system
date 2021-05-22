@@ -145,6 +145,9 @@ const main = async () => {
     listOfcraft.push(craft.makeCraft(hulls.brick()));
   }
   for (let i = 0; i < 4; i++) {
+    listOfcraft.push(craft.makeCraft(hulls.boulder()));
+  }
+  for (let i = 0; i < 2; i++) {
     listOfcraft.push(craft.makeCraft(hulls.mountain()));
   }
 

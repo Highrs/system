@@ -17,12 +17,12 @@ html, body {
 }
 .majorObject {
   fill: #363636;
-  stroke-width: 2px;
+  stroke-width: 1px;
   stroke: #00ff66ff;
 }
 .minorObject {
   fill: #363636;
-  stroke-width: 1px;
+  stroke-width: 0.5px;
   stroke: #00ff66ff;
 }
 .majorOrbit {
@@ -42,7 +42,7 @@ html, body {
   fill: none;
   stroke-width: 1px;
   stroke: #a3a3a3ff;
-  fill: #1a1a1a;
+  fill: #363636;
 }
 .grid {
   stroke-width: 0.2px;
@@ -69,7 +69,7 @@ html, body {
   fill: #363636;
 }
 .rangeText {
-  font: 10px B612 Mono;
+  font: 5px B612 Mono;
   fill: #a3a3a3ff;
   /* width: auto; */
   /* text-align: center; */
@@ -78,7 +78,7 @@ html, body {
   fill: none;
   stroke-width: 0.5px;
   stroke: #a3a3a3ff;
-  stroke-dasharray: 2 5;
+  stroke-dasharray: 1 9;
 }
 .vector {
   fill: none;
@@ -99,6 +99,12 @@ html, body {
   fill: none;
   stroke-width: 1px;
   stroke: #ffffffff;
+}
+.bodyZone {
+  fill: none;
+  stroke-width: 0.5px;
+  stroke: #a3a3a3ff;
+  stroke-dasharray: 2 1;
 }
 @keyframes stroke {
   to {
