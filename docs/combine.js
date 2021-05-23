@@ -259,9 +259,7 @@ const drawOrbit = (bodies) => {
       } else if (Math.abs(points/2 - i) < 1) {
         divline2 = currCoord;
       }
-      coords += currCoord.x;
-      coords += ',';
-      coords += currCoord.y;
+      coords += currCoord.x + ',' + currCoord.y;
       (i === points - 1)?(coords += 'Z'):(coords += 'L');
     }
 
@@ -373,7 +371,7 @@ const drawBodies = (bodies) => {
   for (let i = 0; i < bodies.length; i++) {
     let tempBod = ['g', tt( (bodies[i].x), (bodies[i].y))];
     tempBod.push(
-      // drawData(bodies[i]),
+      drawData(bodies[i]),
       ['circle', { r: bodies[i].objectRadius, class: 'majorObject'}]
     );
     if (bodies[i].industry) {
@@ -1096,7 +1094,7 @@ module.exports={
     "name":     "Belt Delta",
     "type":     "belt",
     "primary":  "prime",
-    "count":  150,
+    "count":  100,
     "mass":   10,
     "massd":  9,
     "t":      0,
@@ -1120,7 +1118,7 @@ module.exports={
     "name":     "Alpha Delta",
     "type":     "belt",
     "primary":  "prime",
-    "count":  50,
+    "count":  30,
     "mass":   10,
     "massd":  9,
     "t":      0,
