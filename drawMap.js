@@ -3,6 +3,8 @@ const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
 const mech = require('./mechanics.js');
+const icons = require('./icons.js');
+
 // const cos = Math.cos;
 // const sin = Math.sin;
 const PI = Math.PI;
@@ -94,10 +96,10 @@ const drawOrbit = (bodies) => {
       }]);
     retGroup.push(
       ['g', tt(divline1.x, divline1.y),
-        ['path', {d: 'M -2,-5 L 0,0 L 2,-5 Z', class: 'symbolLine'}]
+        icons.apsis('-')
       ],
       ['g', tt(divline2.x, divline2.y),
-        ['path', {d: 'M -2, 5 L 0,0 L 2, 5 Z', class: 'symbolLine'}]
+        icons.apsis()
       ]
     );
   }
@@ -188,17 +190,12 @@ const drawBodies = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
-    let tempBod = ['g', tt( (bodies[i].x), (bodies[i].y))];
-    tempBod.push(
-      drawData(bodies[i]),
-      ['circle', { r: bodies[i].objectRadius, class: 'majorObject'}]
+    bodiesDrawn.push(
+      ['g', tt(bodies[i].x, bodies[i].y),
+        drawData(bodies[i]),
+      ],
+      icons.body(bodies[i])
     );
-    if (bodies[i].industry) {
-      tempBod.push(
-        ['circle', { r: bodies[i].soi, class: 'bodyZone'}]
-      );
-    }
-    bodiesDrawn.push(tempBod);
   }
   return bodiesDrawn;
 };
@@ -209,9 +206,7 @@ const drawBelts = (belts) => {
   belts.map(e => {
     e.rocks.map(r => {
       rocksDrawn.push(
-        ['g', tt((r.x), (r.y)),
-          ['circle', { r: r.objectRadius, class: 'minorObject'}]
-        ]
+        icons.body(r)
       );
     });
   });
@@ -226,36 +221,9 @@ const drawTime = (clock) => {
 const drawStars = (stars) =>{
   let drawnStars = ['g', {}];
   stars.map((staro) => {
-    let drawnStar = ['g', tt(staro.x, staro.y)];
-    drawnStar.push(
-      ['circle', {
-        r: staro.objectRadius,
-        class: 'majorObject'
-      }]
-    );
-
-    for (let j = 0; j < 16; j++) {
-      drawnStar.push(['line', {
-        transform: 'rotate(' + ((360 / 16) * j) +')',
-        x1: staro.objectRadius + 5,
-        x2: staro.objectRadius + 15,
-        class: 'minorOrbit'}]);
-    }
-
-    drawnStars.push(drawnStar);
+    drawnStars.push(icons.star(staro));
   });
   return drawnStars;
-};
-
-const drawCraftIcon = (hullClass) => {
-  let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
-  const icono = {
-    Brick:    'M 0,0 L 2,-2 L 2,2 L 1,3 L -1,3 L -2,2 L -2,-2 Z',
-    Boulder:  'M 0,-1 L 2,-3 L 3,-2 L 3,3 L 2,4 L -2,4 L -3,3 L -3,-2 L -2,-3 Z',
-    Mountain: 'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z'
-  };
-  if (icono[hullClass]) {iconString = icono[hullClass];}
-  return ['path', {d: iconString, class: 'craft'}];
 };
 
 const drawCraft = (listOfCraft) => {
@@ -285,18 +253,13 @@ const drawCraft = (listOfCraft) => {
         );
 
         drawnCraft.push(
-          ['g', tt(crafto.intercept.x, crafto.intercept.y),
-            ['path', {d: 'M -5, 3 L -2, 2 L -3, 5 L -5, 5 Z', class: 'gridBold'}],
-            ['path', {d: 'M  5, 3 L  2, 2 L  3, 5 L  5, 5 Z', class: 'gridBold'}],
-            ['path', {d: 'M  5,-3 L  2,-2 L  3,-5 L  5,-5 Z', class: 'gridBold'}],
-            ['path', {d: 'M -5,-3 L -2,-2 L -3,-5 L -5,-5 Z', class: 'gridBold'}]
-          ]
+          icons.intercept(crafto)
         );
       }
       partCraft.push(
         ['g', {},
           ['g', {transform: 'rotate(' + crafto.course + ')'},
-            drawCraftIcon(crafto.class)
+            icons.craft(crafto)
           ]
         ]
       );
@@ -334,9 +297,7 @@ const drawRanges = (bodyArr) => {
               height: 6.5,
               class: 'rangeWindow'
             }],
-            ['text', {
-              x: 1, y: 5, class: 'rangeText'
-            }, (dist).toFixed(2)]
+            ['text', {x: 1, y: 5, class: 'rangeText'}, (dist).toFixed(2)]
           ]);
         }
       }

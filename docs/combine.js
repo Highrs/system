@@ -178,12 +178,14 @@ const calcIntercept = (crafto, bodyo) => {
   return intercept;
 };
 
-},{"./industry.js":5,"./majorObjects2.json":8,"./mechanics.js":9}],2:[function(require,module,exports){
+},{"./industry.js":6,"./majorObjects2.json":9,"./mechanics.js":10}],2:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
 const mech = require('./mechanics.js');
+const icons = require('./icons.js');
+
 // const cos = Math.cos;
 // const sin = Math.sin;
 const PI = Math.PI;
@@ -275,10 +277,10 @@ const drawOrbit = (bodies) => {
       }]);
     retGroup.push(
       ['g', tt(divline1.x, divline1.y),
-        ['path', {d: 'M -2,-5 L 0,0 L 2,-5 Z', class: 'symbolLine'}]
+        icons.apsis('-')
       ],
       ['g', tt(divline2.x, divline2.y),
-        ['path', {d: 'M -2, 5 L 0,0 L 2, 5 Z', class: 'symbolLine'}]
+        icons.apsis()
       ]
     );
   }
@@ -369,17 +371,12 @@ const drawBodies = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
-    let tempBod = ['g', tt( (bodies[i].x), (bodies[i].y))];
-    tempBod.push(
-      drawData(bodies[i]),
-      ['circle', { r: bodies[i].objectRadius, class: 'majorObject'}]
+    bodiesDrawn.push(
+      ['g', tt(bodies[i].x, bodies[i].y),
+        drawData(bodies[i]),
+      ],
+      icons.body(bodies[i])
     );
-    if (bodies[i].industry) {
-      tempBod.push(
-        ['circle', { r: bodies[i].soi, class: 'bodyZone'}]
-      );
-    }
-    bodiesDrawn.push(tempBod);
   }
   return bodiesDrawn;
 };
@@ -390,9 +387,7 @@ const drawBelts = (belts) => {
   belts.map(e => {
     e.rocks.map(r => {
       rocksDrawn.push(
-        ['g', tt((r.x), (r.y)),
-          ['circle', { r: r.objectRadius, class: 'minorObject'}]
-        ]
+        icons.body(r)
       );
     });
   });
@@ -407,36 +402,9 @@ const drawTime = (clock) => {
 const drawStars = (stars) =>{
   let drawnStars = ['g', {}];
   stars.map((staro) => {
-    let drawnStar = ['g', tt(staro.x, staro.y)];
-    drawnStar.push(
-      ['circle', {
-        r: staro.objectRadius,
-        class: 'majorObject'
-      }]
-    );
-
-    for (let j = 0; j < 16; j++) {
-      drawnStar.push(['line', {
-        transform: 'rotate(' + ((360 / 16) * j) +')',
-        x1: staro.objectRadius + 5,
-        x2: staro.objectRadius + 15,
-        class: 'minorOrbit'}]);
-    }
-
-    drawnStars.push(drawnStar);
+    drawnStars.push(icons.star(staro));
   });
   return drawnStars;
-};
-
-const drawCraftIcon = (hullClass) => {
-  let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
-  const icono = {
-    Brick:    'M 0,0 L 2,-2 L 2,2 L 1,3 L -1,3 L -2,2 L -2,-2 Z',
-    Boulder:  'M 0,-1 L 2,-3 L 3,-2 L 3,3 L 2,4 L -2,4 L -3,3 L -3,-2 L -2,-3 Z',
-    Mountain: 'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z'
-  };
-  if (icono[hullClass]) {iconString = icono[hullClass];}
-  return ['path', {d: iconString, class: 'craft'}];
 };
 
 const drawCraft = (listOfCraft) => {
@@ -466,18 +434,13 @@ const drawCraft = (listOfCraft) => {
         );
 
         drawnCraft.push(
-          ['g', tt(crafto.intercept.x, crafto.intercept.y),
-            ['path', {d: 'M -5, 3 L -2, 2 L -3, 5 L -5, 5 Z', class: 'gridBold'}],
-            ['path', {d: 'M  5, 3 L  2, 2 L  3, 5 L  5, 5 Z', class: 'gridBold'}],
-            ['path', {d: 'M  5,-3 L  2,-2 L  3,-5 L  5,-5 Z', class: 'gridBold'}],
-            ['path', {d: 'M -5,-3 L -2,-2 L -3,-5 L -5,-5 Z', class: 'gridBold'}]
-          ]
+          icons.intercept(crafto)
         );
       }
       partCraft.push(
         ['g', {},
           ['g', {transform: 'rotate(' + crafto.course + ')'},
-            drawCraftIcon(crafto.class)
+            icons.craft(crafto)
           ]
         ]
       );
@@ -515,9 +478,7 @@ const drawRanges = (bodyArr) => {
               height: 6.5,
               class: 'rangeWindow'
             }],
-            ['text', {
-              x: 1, y: 5, class: 'rangeText'
-            }, (dist).toFixed(2)]
+            ['text', {x: 1, y: 5, class: 'rangeText'}, (dist).toFixed(2)]
           ]);
         }
       }
@@ -558,7 +519,7 @@ exports.drawStatic = (stars, planets) => {
   ]);
 };
 
-},{"./get-svg.js":3,"./majorObjects2.json":8,"./mechanics.js":9,"onml/tt.js":12}],3:[function(require,module,exports){
+},{"./get-svg.js":3,"./icons.js":5,"./majorObjects2.json":9,"./mechanics.js":10,"onml/tt.js":13}],3:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -602,6 +563,103 @@ module.exports = {
 };
 
 },{}],5:[function(require,module,exports){
+const tt = require('onml/tt.js');
+
+module.exports = {
+
+  template: () => (
+    ['g', {},
+
+    ]
+  ),
+
+  body: (bodyo) => {
+    let tempBod = ['g', tt(bodyo.x, bodyo.y)];
+
+    if (bodyo.industry) {
+      tempBod.push(
+        ['circle', { r: bodyo.soi, class: 'bodyZone'}]
+      );
+    }
+
+    tempBod.push(
+      ['g', {},
+        ['circle', { r: bodyo.objectRadius, class: bodyo.industry?'majorObject':'minorObject'}]
+      ]
+    );
+
+    return tempBod;
+  },
+
+  star: (staro) => {
+    let drawnStar = ['g', tt(staro.x, staro.y)];
+    drawnStar.push(
+      ['circle', {
+        r: staro.objectRadius,
+        class: 'majorObject'
+      }]
+    );
+
+    for (let j = 0; j < 16; j++) {
+      drawnStar.push(
+        ['line', {
+          transform: 'rotate(' + ((360 / 16) * j) +')',
+          x1: staro.objectRadius + 5,
+          x2: staro.objectRadius + 25,
+          class: 'grid'}
+        ],
+        ['line', {
+          transform: 'rotate(' + ((360 / 16) * j) +')',
+          x1: staro.objectRadius + 40,
+          x2: staro.objectRadius + 50,
+          class: 'grid'}
+        ],
+        ['line', {
+          transform: 'rotate(' + ((360 / 16) * j) +')',
+          x1: staro.objectRadius + 65,
+          x2: staro.objectRadius + 70,
+          class: 'grid'}
+        ]
+      );
+    }
+
+    return drawnStar;
+  },
+
+  intercept: (crafto) => (
+    ['g', tt(crafto.intercept.x, crafto.intercept.y),
+      ['path', {d: 'M -5, 3 L -2, 2 L -3, 5 L -5, 5 Z', class: 'gridBold'}],
+      ['path', {d: 'M  5, 3 L  2, 2 L  3, 5 L  5, 5 Z', class: 'gridBold'}],
+      ['path', {d: 'M  5,-3 L  2,-2 L  3,-5 L  5,-5 Z', class: 'gridBold'}],
+      ['path', {d: 'M -5,-3 L -2,-2 L -3,-5 L -5,-5 Z', class: 'gridBold'}]
+    ]
+  ),
+
+  apsis: (m = '') => (
+    ['g', {},
+      ['path', {d: 'M -2,'+m+'5 L 0,0 L 2,'+m+'5 Z', class: 'symbolLine'}]
+    ]
+  ),
+
+  craft: (crafto) => {
+    const icono = {
+      Brick:
+'M 0,0 L 2,-2 L 2,2 L 1,3 L -1,3 L -2,2 L -2,-2 Z',
+      Boulder:
+'M 0,-1 L 2,-3 L 3,-2 L 3,3 L 2,4 L -2,4 L -3,3 L -3,-2 L -2,-3 Z',
+      Mountain:
+'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z'
+    };
+
+    let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
+
+    if (icono[crafto.class]) {iconString = icono[crafto.class];}
+    return ['path', {d: iconString, class: 'craft'}];
+  }
+
+};
+
+},{"onml/tt.js":13}],6:[function(require,module,exports){
 'use strict';
 // Industry manager
 const indTemp = require('./industryTemp.js');
@@ -717,7 +775,7 @@ const unLoadCraft = (crafto) => {
 };
 exports.unLoadCraft = unLoadCraft;
 
-},{"./industryTemp.js":6}],6:[function(require,module,exports){
+},{"./industryTemp.js":7}],7:[function(require,module,exports){
 module.exports = {
 
   mining: () => ({
@@ -756,7 +814,7 @@ module.exports = {
 
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
 const drawMap = require('./drawMap.js');
@@ -939,7 +997,7 @@ const main = async () => {
 
 window.onload = main;
 
-},{"./craft.js":1,"./drawMap.js":2,"./hulls.js":4,"./industry.js":5,"./majorObjects2.json":8,"./mechanics.js":9,"onml/renderer.js":10}],8:[function(require,module,exports){
+},{"./craft.js":1,"./drawMap.js":2,"./hulls.js":4,"./industry.js":6,"./majorObjects2.json":9,"./mechanics.js":10,"onml/renderer.js":11}],9:[function(require,module,exports){
 module.exports={
   "prime": {
     "name": "Prime",
@@ -1140,7 +1198,7 @@ module.exports={
   }
 }
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
 // const craft = require('./craft.js');
@@ -1311,7 +1369,7 @@ const calcTravelTime = (dist, speed) => {
 };
 exports.calcTravelTime = calcTravelTime;
 
-},{"./majorObjects2.json":8}],10:[function(require,module,exports){
+},{"./majorObjects2.json":9}],11:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');
@@ -1336,7 +1394,7 @@ module.exports = renderer;
 
 /* eslint-env browser */
 
-},{"./stringify.js":11}],11:[function(require,module,exports){
+},{"./stringify.js":12}],12:[function(require,module,exports){
 'use strict';
 
 const isObject = o => o && Object.prototype.toString.call(o) === '[object Object]';
@@ -1429,7 +1487,7 @@ function stringify (a, indentation) {
 
 module.exports = stringify;
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 module.exports = (x, y, obj) => {
@@ -1442,4 +1500,4 @@ module.exports = (x, y, obj) => {
   return Object.assign(objt, obj);
 };
 
-},{}]},{},[7]);
+},{}]},{},[8]);
