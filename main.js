@@ -86,14 +86,14 @@ async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const craftStart = (listOfcraft, indSites) => {
-  listOfcraft.map(crafto => {
+const craftStart = (craftList, indSites) => {
+  craftList.map(crafto => {
     ['x', 'y', 'z'].map(e => {
       crafto[e] = majObj[crafto.home][e];
     });
   });
 
-  craft.startCraftLife(listOfcraft, indSites);
+  craft.startCraftLife(craftList, indSites);
 };
 
 const main = async () => {
@@ -106,7 +106,7 @@ const main = async () => {
   let indSites = [];
   let belts = [];
 
-  const listOfcraft = [];
+  const craftList = [];
 
   Object.keys(majObj).map(objName => {
     if (majObj[objName].type === 'star') {
@@ -142,13 +142,13 @@ const main = async () => {
   belts.map(e => movBod = movBod.concat(e.rocks));
 
   for (let i = 0; i < 8; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.brick()));
+    craftList.push(craft.makeCraft(hulls.brick()));
   }
   for (let i = 0; i < 4; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.boulder()));
+    craftList.push(craft.makeCraft(hulls.boulder()));
   }
   for (let i = 0; i < 2; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.mountain()));
+    craftList.push(craft.makeCraft(hulls.mountain()));
   }
 
   let clock = Date.now();
@@ -169,11 +169,11 @@ const main = async () => {
       });
     }
 
-    if (!listOfcraft[0].x) {
-      craftStart(listOfcraft, indSites);
+    if (!craftList[0].x) {
+      craftStart(craftList, indSites);
     }
 
-    render2(drawMap.drawMoving(clock2, planets, moons, ast, belts, listOfcraft));
+    render2(drawMap.drawMoving(clock2, planets, moons, ast, belts, craftList));
     await delay(rate);
   }
 };

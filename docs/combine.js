@@ -76,6 +76,9 @@ const craftAI = async (crafto, indSites) => {
       crafto,
       crafto.route[0].location) < crafto.route[0].location.soi
     ) {
+      ['x', 'y', 'z'].map(e => {
+        crafto['v' + e] = 0;
+      });
       ind.unLoadCraft(crafto);
       crafto.lastStop = crafto.route[0].location;
       crafto.route.shift();
@@ -150,9 +153,14 @@ const deviseRoute = (crafto, indSites) => {
 const calcMotion =  (crafto, targeto) => {
   const dist = mech.calcDist(crafto, targeto);
 
+  let dir = 1;
+  if (dist < targeto.turn) {
+    dir = -1;
+  }
+
   ['x', 'y', 'z'].map(e => {
-    crafto['v' + e] = (
-      (crafto.speed * (rate / 1000)) * ((targeto[e] - crafto[e]) / dist)
+    crafto['v' + e] += dir * (
+      ((crafto.accel / 10) * (rate / 1000)) * ((targeto[e] - crafto[e]) / (dist))
     );
     crafto[e] += crafto['v' + e];
   });
@@ -161,19 +169,17 @@ const calcMotion =  (crafto, targeto) => {
 };
 
 const calcIntercept = (crafto, bodyo) => {
-  let intercept = {
-    x: bodyo.x,
-    y: bodyo.y,
-    z: bodyo.z
-  };
+  let intercept = {x: bodyo.x, y: bodyo.y, z: bodyo.z, turn: 0};
   let travelTime = 0;
   let distance = 0;
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 10; i++) {
     distance   = mech.calcDist(crafto, intercept);
-    travelTime = mech.calcTravelTime(distance, crafto.speed);
+    travelTime = mech.calcTravelTime(distance, crafto.accel);
     intercept  = mech.kepCalc(bodyo, bodyo.t + travelTime);
   } // Optimization of intercept, very imperfect, re-work later.
+
+  intercept.turn = distance / 2;
 
   return intercept;
 };
@@ -362,7 +368,7 @@ const drawData = (bodyo) => {
         ]
       ]
     );
-    dataDisp.push(indDisplay(bodyo, 4));
+    dataDisp.push(indDisplay(bodyo));
   }
   return dataDisp;
 };
@@ -372,9 +378,9 @@ const drawBodies = (bodies) => {
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
     bodiesDrawn.push(
-      ['g', tt(bodies[i].x, bodies[i].y),
-        drawData(bodies[i]),
-      ],
+      // ['g', tt(bodies[i].x, bodies[i].y),
+      //   drawData(bodies[i]),
+      // ],
       icons.body(bodies[i])
     );
   }
@@ -541,6 +547,7 @@ module.exports = {
     cargoCap: 10,
     cargo: {},
     speed: 30,
+    accel: 1,
     home: 'beta'
   }),
 
@@ -549,6 +556,7 @@ module.exports = {
     cargoCap: 15,
     cargo: {},
     speed: 25,
+    accel: 0.6,
     home: 'beta'
   }),
 
@@ -557,6 +565,7 @@ module.exports = {
     cargoCap: 20,
     cargo: {},
     speed: 20,
+    accel: 0.3,
     home: 'beta'
   })
 
@@ -903,14 +912,14 @@ async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const craftStart = (listOfcraft, indSites) => {
-  listOfcraft.map(crafto => {
+const craftStart = (craftList, indSites) => {
+  craftList.map(crafto => {
     ['x', 'y', 'z'].map(e => {
       crafto[e] = majObj[crafto.home][e];
     });
   });
 
-  craft.startCraftLife(listOfcraft, indSites);
+  craft.startCraftLife(craftList, indSites);
 };
 
 const main = async () => {
@@ -923,7 +932,7 @@ const main = async () => {
   let indSites = [];
   let belts = [];
 
-  const listOfcraft = [];
+  const craftList = [];
 
   Object.keys(majObj).map(objName => {
     if (majObj[objName].type === 'star') {
@@ -959,13 +968,13 @@ const main = async () => {
   belts.map(e => movBod = movBod.concat(e.rocks));
 
   for (let i = 0; i < 8; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.brick()));
+    craftList.push(craft.makeCraft(hulls.brick()));
   }
   for (let i = 0; i < 4; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.boulder()));
+    craftList.push(craft.makeCraft(hulls.boulder()));
   }
   for (let i = 0; i < 2; i++) {
-    listOfcraft.push(craft.makeCraft(hulls.mountain()));
+    craftList.push(craft.makeCraft(hulls.mountain()));
   }
 
   let clock = Date.now();
@@ -986,11 +995,11 @@ const main = async () => {
       });
     }
 
-    if (!listOfcraft[0].x) {
-      craftStart(listOfcraft, indSites);
+    if (!craftList[0].x) {
+      craftStart(craftList, indSites);
     }
 
-    render2(drawMap.drawMoving(clock2, planets, moons, ast, belts, listOfcraft));
+    render2(drawMap.drawMoving(clock2, planets, moons, ast, belts, craftList));
     await delay(rate);
   }
 };
@@ -1360,14 +1369,15 @@ const calcDist = (body1, body2) => {
 };
 exports.calcDist = calcDist;
 
-// const calcTravelTime = (dist, accel) => {
-//   return ( sqrt( ( ( 2 * dist ) / 2 ) / accel ) * 2 );
-// };
-
-const calcTravelTime = (dist, speed) => {
-  return ( dist / speed ) * 2;
+const calcTravelTime = (dist, accel) => {
+  return ( sqrt( ( ( 2 * dist ) / 2 ) / accel ) * 1.75 );
 };
 exports.calcTravelTime = calcTravelTime;
+
+// const calcTravelTime = (dist, speed) => {
+//   return ( dist / speed ) * 2;
+// };
+// exports.calcTravelTime = calcTravelTime;
 
 },{"./majorObjects2.json":9}],11:[function(require,module,exports){
 'use strict';

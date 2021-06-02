@@ -181,7 +181,7 @@ const drawData = (bodyo) => {
         ]
       ]
     );
-    dataDisp.push(indDisplay(bodyo, 4));
+    dataDisp.push(indDisplay(bodyo));
   }
   return dataDisp;
 };
@@ -191,9 +191,9 @@ const drawBodies = (bodies) => {
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
     bodiesDrawn.push(
-      ['g', tt(bodies[i].x, bodies[i].y),
-        drawData(bodies[i]),
-      ],
+      // ['g', tt(bodies[i].x, bodies[i].y),
+      //   drawData(bodies[i]),
+      // ],
       icons.body(bodies[i])
     );
   }

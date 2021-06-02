@@ -75,6 +75,9 @@ const craftAI = async (crafto, indSites) => {
       crafto,
       crafto.route[0].location) < crafto.route[0].location.soi
     ) {
+      ['x', 'y', 'z'].map(e => {
+        crafto['v' + e] = 0;
+      });
       ind.unLoadCraft(crafto);
       crafto.lastStop = crafto.route[0].location;
       crafto.route.shift();
@@ -149,9 +152,14 @@ const deviseRoute = (crafto, indSites) => {
 const calcMotion =  (crafto, targeto) => {
   const dist = mech.calcDist(crafto, targeto);
 
+  let dir = 1;
+  if (dist < targeto.turn) {
+    dir = -1;
+  }
+
   ['x', 'y', 'z'].map(e => {
-    crafto['v' + e] = (
-      (crafto.speed * (rate / 1000)) * ((targeto[e] - crafto[e]) / dist)
+    crafto['v' + e] += dir * (
+      ((crafto.accel / 10) * (rate / 1000)) * ((targeto[e] - crafto[e]) / (dist))
     );
     crafto[e] += crafto['v' + e];
   });
@@ -160,19 +168,17 @@ const calcMotion =  (crafto, targeto) => {
 };
 
 const calcIntercept = (crafto, bodyo) => {
-  let intercept = {
-    x: bodyo.x,
-    y: bodyo.y,
-    z: bodyo.z
-  };
+  let intercept = {x: bodyo.x, y: bodyo.y, z: bodyo.z, turn: 0};
   let travelTime = 0;
   let distance = 0;
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 10; i++) {
     distance   = mech.calcDist(crafto, intercept);
-    travelTime = mech.calcTravelTime(distance, crafto.speed);
+    travelTime = mech.calcTravelTime(distance, crafto.accel);
     intercept  = mech.kepCalc(bodyo, bodyo.t + travelTime);
   } // Optimization of intercept, very imperfect, re-work later.
+
+  intercept.turn = distance / 2;
 
   return intercept;
 };

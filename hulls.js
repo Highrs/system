@@ -5,6 +5,7 @@ module.exports = {
     cargoCap: 10,
     cargo: {},
     speed: 30,
+    accel: 1,
     home: 'beta'
   }),
 
@@ -13,6 +14,7 @@ module.exports = {
     cargoCap: 15,
     cargo: {},
     speed: 25,
+    accel: 0.6,
     home: 'beta'
   }),
 
@@ -21,6 +23,7 @@ module.exports = {
     cargoCap: 20,
     cargo: {},
     speed: 20,
+    accel: 0.3,
     home: 'beta'
   })
 

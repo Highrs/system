@@ -159,11 +159,12 @@ const calcDist = (body1, body2) => {
 };
 exports.calcDist = calcDist;
 
-// const calcTravelTime = (dist, accel) => {
-//   return ( sqrt( ( ( 2 * dist ) / 2 ) / accel ) * 2 );
-// };
-
-const calcTravelTime = (dist, speed) => {
-  return ( dist / speed ) * 2;
+const calcTravelTime = (dist, accel) => {
+  return ( sqrt( ( ( 2 * dist ) / 2 ) / accel ) * 1.75 );
 };
 exports.calcTravelTime = calcTravelTime;
+
+// const calcTravelTime = (dist, speed) => {
+//   return ( dist / speed ) * 2;
+// };
+// exports.calcTravelTime = calcTravelTime;
