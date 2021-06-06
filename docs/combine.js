@@ -5,7 +5,7 @@ const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
 // const indTemp = require('./industryTemp.js');
 
-const rate = 20;
+const rate = 50;
 const getRate = () => {
   return rate;
 };
@@ -153,16 +153,19 @@ const deviseRoute = (crafto, indSites) => {
 const calcMotion =  (crafto, targeto) => {
   const dist = mech.calcDist(crafto, targeto);
 
-  let dir = 1;
-  if (dist < targeto.turn) {
-    dir = -1;
-  }
+  //Determine the direction of acceleration based on midpoint of travel.
+  let dir = (dist < targeto.turn) ? -1 : 1;
 
   ['x', 'y', 'z'].map(e => {
-    crafto['v' + e] += dir * (
-      ((crafto.accel / 10) * (rate / 1000)) * ((targeto[e] - crafto[e]) / (dist))
+    let displacement = crafto['v' + e] * (rate / 1000);
+    let deltaVelocity = (
+      (crafto.accel) * ((targeto[e] - crafto[e]) / (dist)) *
+      (rate / 1000)
     );
-    crafto[e] += crafto['v' + e];
+    let deltaDisplacement = dir * deltaVelocity * (rate / 1000) / 2;
+
+    crafto[e] += displacement + deltaDisplacement;
+    crafto['v' + e] += deltaVelocity * dir;
   });
 
   crafto.course = (Math.atan2(crafto.vy, crafto.vx) * 180 / Math.PI) - 90;
@@ -173,7 +176,7 @@ const calcIntercept = (crafto, bodyo) => {
   let travelTime = 0;
   let distance = 0;
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 5; i++) {
     distance   = mech.calcDist(crafto, intercept);
     travelTime = mech.calcTravelTime(distance, crafto.accel);
     intercept  = mech.kepCalc(bodyo, bodyo.t + travelTime);
@@ -425,11 +428,11 @@ const drawCraft = (listOfCraft) => {
           ['line', {
             x1: 0,
             y1: 0,
-            x2: crafto.vx * 100,
-            y2: crafto.vy * 100,
+            x2: crafto.vx,
+            y2: crafto.vy,
             class: 'vector'
           }],
-          ['g', tt(crafto.vx * 100, crafto.vy * 100), [
+          ['g', tt(crafto.vx, crafto.vy), [
             'circle',
             {r : 1, class: 'vector'}
           ]]
@@ -546,26 +549,26 @@ module.exports = {
     class: 'Brick',
     cargoCap: 10,
     cargo: {},
-    speed: 30,
-    accel: 1,
+    // speed: 30,
+    accel: 3,
     home: 'beta'
   }),
 
   boulder: () => ({
     class: 'Boulder',
-    cargoCap: 15,
+    cargoCap: 20,
     cargo: {},
-    speed: 25,
-    accel: 0.6,
+    // speed: 25,
+    accel: 2,
     home: 'beta'
   }),
 
   mountain: () => ({
     class: 'Mountain',
-    cargoCap: 20,
+    cargoCap: 30,
     cargo: {},
-    speed: 20,
-    accel: 0.3,
+    // speed: 20,
+    accel: 1,
     home: 'beta'
   })
 
@@ -1370,7 +1373,9 @@ const calcDist = (body1, body2) => {
 exports.calcDist = calcDist;
 
 const calcTravelTime = (dist, accel) => {
-  return ( sqrt( ( ( 2 * dist ) / 2 ) / accel ) * 1.75 );
+  let time = sqrt( dist / accel ) * 2;
+  // console.log(time);
+  return time * 2;
 };
 exports.calcTravelTime = calcTravelTime;
 

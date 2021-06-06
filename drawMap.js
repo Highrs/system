@@ -238,11 +238,11 @@ const drawCraft = (listOfCraft) => {
           ['line', {
             x1: 0,
             y1: 0,
-            x2: crafto.vx * 100,
-            y2: crafto.vy * 100,
+            x2: crafto.vx,
+            y2: crafto.vy,
             class: 'vector'
           }],
-          ['g', tt(crafto.vx * 100, crafto.vy * 100), [
+          ['g', tt(crafto.vx, crafto.vy), [
             'circle',
             {r : 1, class: 'vector'}
           ]]

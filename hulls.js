@@ -4,26 +4,26 @@ module.exports = {
     class: 'Brick',
     cargoCap: 10,
     cargo: {},
-    speed: 30,
-    accel: 1,
+    // speed: 30,
+    accel: 3,
     home: 'beta'
   }),
 
   boulder: () => ({
     class: 'Boulder',
-    cargoCap: 15,
+    cargoCap: 20,
     cargo: {},
-    speed: 25,
-    accel: 0.6,
+    // speed: 25,
+    accel: 2,
     home: 'beta'
   }),
 
   mountain: () => ({
     class: 'Mountain',
-    cargoCap: 20,
+    cargoCap: 30,
     cargo: {},
-    speed: 20,
-    accel: 0.3,
+    // speed: 20,
+    accel: 1,
     home: 'beta'
   })
 
