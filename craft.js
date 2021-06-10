@@ -4,7 +4,7 @@ const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
 // const indTemp = require('./industryTemp.js');
 
-const rate = 50;
+const rate = 20;
 const getRate = () => {
   return rate;
 };

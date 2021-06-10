@@ -73,8 +73,7 @@ const drawOrbit = (bodies) => {
     }
 
     for (let i = 0; i < points; i++) {
-      let currCoord = mech.orbitCoords((i * 2 * PI) / points,
-        body, majObj[body.primary]);
+      let currCoord = mech.kepCalc(body, undefined, 's', ((i * 2 * PI) / points));
       if (i === 0) {
         divline1 = currCoord;
       } else if (Math.abs(points/2 - i) < 1) {
