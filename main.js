@@ -39,10 +39,8 @@ const rockNamer = () => {
 const namer = rockNamer();
 
 function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
-  let max = mean + deviation;
-  if (max > upper) {max = upper;}
-  let min = mean - deviation;
-  if (min < lower) {min = lower;}
+  let max = mean + deviation > upper ? upper : mean + deviation;
+  let min = mean - deviation < lower ? lower : mean - deviation;
 
   return (
     ( Math.round(
@@ -102,54 +100,43 @@ const main = async () => {
   let stars = [];
   let planets = [];
   let moons = [];
-  let ast = [];
+  let asteroids = [];
   let indSites = [];
   let belts = [];
 
   const craftList = [];
 
   Object.keys(majObj).map(objName => {
-    if (majObj[objName].type === 'star') {
-      stars.push(makeStar(majObj[objName]));
-    } else
-    if (majObj[objName].type === 'planet') {
-      planets.push(makeBody(majObj[objName]));
-    } else
-    if (majObj[objName].type === 'moon') {
-      moons.push(makeBody(majObj[objName]));
-    } else
-    if (majObj[objName].type === 'asteroid') {
-      ast.push(makeBody(majObj[objName]));
-    } else
-    if (majObj[objName].type === 'belt') {
-      belts.push(makeBelt(majObj[objName]));
-    } else
-    {
-      console.log('ERROR at make. Skipping.');
+    let theObj = majObj[objName];
+
+    switch(theObj.type){
+      case 'star': stars.push(makeStar(theObj)); break;
+      case 'planet' : planets.push(makeBody(theObj)); break;
+      case 'moon': moons.push(makeBody(theObj)); break;
+      case 'asteroid': asteroids.push(makeBody(theObj)); break;
+      case 'belt':belts.push(makeBelt(theObj)); break;
+      default: console.log('ERROR at make. Skipping.');
     }
 
-    if (majObj[objName].industry) {
-      indSites.push(majObj[objName]);
-    }
+    if (theObj.industry) {indSites.push(theObj);}
   });
-
 
   renderer(document.getElementById('content'))(drawMap.drawStatic(stars, planets));
   const render2 = renderer(document.getElementById('moving'));
 
   let movBod = [];
-  movBod = movBod.concat(planets, moons, ast);
+  movBod = movBod.concat(planets, moons, asteroids);
   belts.map(e => movBod = movBod.concat(e.rocks));
 
-  for (let i = 0; i < 8; i++) {
-    craftList.push(craft.makeCraft(hulls.brick()));
-  }
-  for (let i = 0; i < 4; i++) {
-    craftList.push(craft.makeCraft(hulls.boulder()));
-  }
-  for (let i = 0; i < 2; i++) {
-    craftList.push(craft.makeCraft(hulls.mountain()));
-  }
+  const makeManyCraft = (craftType, number) => {
+    for (let i = 0; i < number; i++) {
+      craftList.push(craft.makeCraft(hulls[craftType]()));
+    }
+  };
+
+  makeManyCraft('brick', 8);
+  makeManyCraft('boulder', 4);
+  makeManyCraft('mountain', 2);
 
   let clock = Date.now();
   // let clock = 1;
@@ -164,16 +151,16 @@ const main = async () => {
     for (let i = 0; i < movBod.length; i++) {
       movBod[i].t = t;
       let newData = mech.kepCalc(movBod[i]);
-      ['x', 'y', 'z'].map(e => {
-        movBod[i][e] = newData[e];
-      });
+      ['x', 'y', 'z'].map(e => {movBod[i][e] = newData[e];});
     }
 
     if (!craftList[0].x) {
       craftStart(craftList, indSites);
     }
 
-    render2(drawMap.drawMoving(clock2, planets, moons, ast, belts, craftList));
+    render2(drawMap.drawMoving(
+      clock2, planets, moons, asteroids, belts, craftList
+    ));
     await delay(rate);
   }
 };

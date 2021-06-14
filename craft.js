@@ -8,7 +8,7 @@ const rate = 20;
 const secToRateFrac = rate / 1000;
 const getRate = () => {return rate;};exports.getRate = getRate;
 
-const genNamer = () => {
+const hullNamer = () => {
   let id = 0;
   return () => {
     id += 1;
@@ -16,7 +16,7 @@ const genNamer = () => {
   };
 };
 
-const namer = genNamer();
+const namer = hullNamer();
 
 async function delay(ms) {
   return await new Promise(resolve => setTimeout(resolve, ms));
@@ -29,12 +29,8 @@ const makeCraft = (crafto) => {
     crafto,
     {
       name: namer(),
-      x: 0,
-      y: 0,
-      z: 0,
-      vx: 0,
-      vy: 0,
-      vz: 0,
+      x: 0, y: 0, z: 0,
+      vx: 0, vy: 0, vz: 0,
       route: [],
       lastStop: [],
       status: 'parked',
@@ -63,9 +59,7 @@ const craftAI = async (crafto, indSites) => {
       crafto.status = 'parked';
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
-      });
-      ['vx', 'vy', 'vz'].map(e => {
-        crafto[e] = 0;
+        crafto['v' + e] = 0;
       });
     }
   } else {
