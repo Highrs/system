@@ -6,10 +6,8 @@ const ind = require('./industry.js');
 // const indTemp = require('./industryTemp.js');
 
 const rate = 20;
-const getRate = () => {
-  return rate;
-};
-exports.getRate = getRate;
+const secToRateFrac = rate / 1000;
+const getRate = () => {return rate;};exports.getRate = getRate;
 
 const genNamer = () => {
   let id = 0;
@@ -157,12 +155,11 @@ const calcMotion =  (crafto, targeto) => {
   let dir = (dist < targeto.turn) ? -1 : 1;
 
   ['x', 'y', 'z'].map(e => {
-    let displacement = crafto['v' + e] * (rate / 1000);
+    let displacement = crafto['v' + e] * secToRateFrac;
     let deltaVelocity = (
-      (crafto.accel) * ((targeto[e] - crafto[e]) / (dist)) *
-      (rate / 1000)
+      (crafto.accel) * (targeto['p' + e]) * secToRateFrac
     );
-    let deltaDisplacement = dir * deltaVelocity * (rate / 1000) / 2;
+    let deltaDisplacement = dir * deltaVelocity * secToRateFrac / 2;
 
     crafto[e] += displacement + deltaDisplacement;
     crafto['v' + e] += deltaVelocity * dir;
@@ -172,24 +169,32 @@ const calcMotion =  (crafto, targeto) => {
 };
 
 const calcIntercept = (crafto, bodyo) => {
-  let intercept = {x: bodyo.x, y: bodyo.y, z: bodyo.z, turn: 0};
+  let intercept = {
+    x: bodyo.x, y: bodyo.y, z: bodyo.z,
+    px: 0, py: 0, pz: 0,
+    turn: 0
+  };
   let travelTime = 0;
   let distance = 0;
 
   for (let i = 0; i < 5; i++) {
     distance   = mech.calcDist(crafto, intercept);
     travelTime = mech.calcTravelTime(distance, crafto.accel);
-    intercept  = mech.kepCalc(bodyo, bodyo.t + travelTime);
+    intercept  = {...mech.kepCalc(bodyo, bodyo.t + travelTime)};
   } // Optimization of intercept, very imperfect, re-work later.
 
   intercept.turn = distance / 2;
+
+  ['x', 'y', 'z'].map(e => {
+    intercept['p' + e] = (intercept[e] - crafto[e]) / (distance);
+  });
 
   return intercept;
 };
 
 },{"./industry.js":6,"./majorObjects2.json":9,"./mechanics.js":10}],2:[function(require,module,exports){
 'use strict';
-const majObj = require('./majorObjects2.json');
+// const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
 const mech = require('./mechanics.js');
@@ -527,7 +532,7 @@ exports.drawStatic = (stars, planets) => {
   ]);
 };
 
-},{"./get-svg.js":3,"./icons.js":5,"./majorObjects2.json":9,"./mechanics.js":10,"onml/tt.js":13}],3:[function(require,module,exports){
+},{"./get-svg.js":3,"./icons.js":5,"./mechanics.js":10,"onml/tt.js":13}],3:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -1333,11 +1338,6 @@ const calcTravelTime = (dist, accel) => {
   return time * 2;
 };
 exports.calcTravelTime = calcTravelTime;
-
-// const calcTravelTime = (dist, speed) => {
-//   return ( dist / speed ) * 2;
-// };
-// exports.calcTravelTime = calcTravelTime;
 
 },{"./majorObjects2.json":9}],11:[function(require,module,exports){
 'use strict';

@@ -1,5 +1,5 @@
 'use strict';
-const majObj = require('./majorObjects2.json');
+// const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
 const mech = require('./mechanics.js');

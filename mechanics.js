@@ -121,8 +121,3 @@ const calcTravelTime = (dist, accel) => {
   return time * 2;
 };
 exports.calcTravelTime = calcTravelTime;
-
-// const calcTravelTime = (dist, speed) => {
-//   return ( dist / speed ) * 2;
-// };
-// exports.calcTravelTime = calcTravelTime;
