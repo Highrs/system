@@ -190,9 +190,9 @@ const drawBodies = (bodies) => {
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
     bodiesDrawn.push(
-      // ['g', tt(bodies[i].x, bodies[i].y),
-      //   drawData(bodies[i]),
-      // ],
+      ['g', tt(bodies[i].x, bodies[i].y),
+        drawData(bodies[i]),
+      ],
       icons.body(bodies[i])
     );
   }
@@ -250,6 +250,18 @@ const drawCraft = (listOfCraft) => {
         partCraft.push(
           ['g', tt(-3, 16), ['text', {class: 'craftDataText'}, crafto.name]]
         );
+
+        let offset = 0;
+        Object.keys(crafto.cargo).map(specCargo => {
+          if (crafto.cargo[specCargo] > 0) {
+            offset++;
+            partCraft.push(
+              ['g', tt(-6, (16 + 8 * offset)),
+                ['text', {class: 'craftDataText'}, specCargo + ':' + crafto.cargo[specCargo]]
+              ]
+            );
+          }
+        });
 
         drawnCraft.push(
           icons.intercept(crafto)

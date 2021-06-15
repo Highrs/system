@@ -31,6 +31,7 @@ const makeCraft = (crafto) => {
       name: namer(),
       x: 0, y: 0, z: 0,
       vx: 0, vy: 0, vz: 0,
+      cargo: {},
       route: [],
       lastStop: [],
       status: 'parked',

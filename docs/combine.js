@@ -32,6 +32,7 @@ const makeCraft = (crafto) => {
       name: namer(),
       x: 0, y: 0, z: 0,
       vx: 0, vy: 0, vz: 0,
+      cargo: {},
       route: [],
       lastStop: [],
       status: 'parked',
@@ -379,9 +380,9 @@ const drawBodies = (bodies) => {
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
     bodiesDrawn.push(
-      // ['g', tt(bodies[i].x, bodies[i].y),
-      //   drawData(bodies[i]),
-      // ],
+      ['g', tt(bodies[i].x, bodies[i].y),
+        drawData(bodies[i]),
+      ],
       icons.body(bodies[i])
     );
   }
@@ -439,6 +440,18 @@ const drawCraft = (listOfCraft) => {
         partCraft.push(
           ['g', tt(-3, 16), ['text', {class: 'craftDataText'}, crafto.name]]
         );
+
+        let offset = 0;
+        Object.keys(crafto.cargo).map(specCargo => {
+          if (crafto.cargo[specCargo] > 0) {
+            offset++;
+            partCraft.push(
+              ['g', tt(-6, (16 + 8 * offset)),
+                ['text', {class: 'craftDataText'}, specCargo + ':' + crafto.cargo[specCargo]]
+              ]
+            );
+          }
+        });
 
         drawnCraft.push(
           icons.intercept(crafto)
@@ -546,7 +559,6 @@ module.exports = {
   brick: () => ({
     class: 'Brick',
     cargoCap: 10,
-    cargo: {},
     // speed: 30,
     accel: 3,
     home: 'beta'
@@ -555,7 +567,6 @@ module.exports = {
   boulder: () => ({
     class: 'Boulder',
     cargoCap: 20,
-    cargo: {},
     // speed: 25,
     accel: 2,
     home: 'beta'
@@ -564,7 +575,6 @@ module.exports = {
   mountain: () => ({
     class: 'Mountain',
     cargoCap: 30,
-    cargo: {},
     // speed: 20,
     accel: 1,
     home: 'beta'
