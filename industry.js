@@ -9,10 +9,6 @@ async function delay(ms) {
 const initInd = (body) => {
   body.store = body.store || {};
 
-
-
-
-
   body.industryList && body.industryList.map(bodyIndName => {
     body.hold = body.hold || {};
     body.industry = body.industry || [];

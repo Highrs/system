@@ -1,7 +1,7 @@
 'use strict';
+const renderer = require('onml/renderer.js');
 const majObj = require('./majorObjects2.json');
 const drawMap = require('./drawMap.js');
-const renderer = require('onml/renderer.js');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
 const hulls = require('./hulls.js');
@@ -20,9 +20,7 @@ const makeBody = (bodyo) => {
     bodyo,
     {
       focalShift: bodyDat.focalShift,
-      x: bodyDat.x,
-      y: bodyDat.y,
-      z: bodyDat.z,
+      x: 0, y: 0, z: 0,
       soi: 10
     }
   );
