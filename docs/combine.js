@@ -901,7 +901,6 @@ const hulls = require('./hulls.js');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
 
-
 const makeStar = (staro) => {
   return staro;
 };
@@ -970,10 +969,6 @@ const makeBelt = (belto) => {
   return belt;
 };
 
-// async function delay(ms) {
-//   return await new Promise(resolve => setTimeout(resolve, ms));
-// }
-
 const craftStart = (craftList, indSites, rendererIntercept) => {
   craftList.map(crafto => {
     ['x', 'y', 'z'].map(e => {
@@ -1029,11 +1024,12 @@ const main = async () => {
   makeManyCraft('boulder', 4);
   makeManyCraft('mountain', 2);
 
-  // let rate = 0.001;
   Window.system = {};
   const options = Window.system;
-  options.rate = 0.001;
+  options.rate = 1;
   options.targetFrames = 60;
+
+  let simpRate = 1 / 1000;
 
   let clockZero = performance.now();
   let currentTime = Date.now();
@@ -1041,10 +1037,8 @@ const main = async () => {
   const loop = () => {
     let time = performance.now();
     let timeDelta = time - clockZero;
-    // console.log(timeDelta);
     clockZero = time;
-    currentTime += timeDelta * options.rate;
-    // let tD = currentTime / Math.pow(10, 2);
+    currentTime += timeDelta * options.rate * simpRate;
 
     for (let i = 0; i < movBod.length; i++) {
       movBod[i].t = currentTime;
@@ -1057,7 +1051,7 @@ const main = async () => {
     }
 
     craftList.forEach(crafto => {
-      craft.craftAI(crafto, indSites, rendererIntercept, craftList, (timeDelta * options.rate));
+      craft.craftAI(crafto, indSites, rendererIntercept, craftList, (timeDelta * options.rate * simpRate));
     });
 
     renderMoving(
@@ -1065,7 +1059,6 @@ const main = async () => {
         craftList));
 
     setTimeout(loop, 1000/options.targetFrames);
-    // requestAnimationFrame(loop);
   };
   loop();
 };
