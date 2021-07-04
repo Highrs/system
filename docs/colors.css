@@ -106,8 +106,6 @@ html, body {
   stroke: #a3a3a3ff;
   stroke-dasharray: 2 1;
 }
-@keyframes stroke {
-  to {
-    stroke-dashoffset: 0;
-  }
+.redStroke {
+  stroke: #ff0000ff !important;
 }

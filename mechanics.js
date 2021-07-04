@@ -116,8 +116,6 @@ const calcDist = (body1, body2) => {
 exports.calcDist = calcDist;
 
 const calcTravelTime = (dist, accel) => {
-  let time = sqrt( dist / accel ) * 2;
-  // console.log(time);
-  return time * 2;
+  return sqrt( dist / accel ) * 2;
 };
 exports.calcTravelTime = calcTravelTime;

@@ -1,13 +1,12 @@
 'use strict';
 const renderer = require('onml/renderer.js');
-const majObj = require('./majorObjects2.json');
 const drawMap = require('./drawMap.js');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
 const hulls = require('./hulls.js');
 const craft = require('./craft.js');
+const majObj = require('./majorObjects2.json');
 
-const rate = craft.getRate();
 
 const makeStar = (staro) => {
   return staro;
@@ -34,7 +33,6 @@ const rockNamer = () => {
     return id;
   };
 };
-const namer = rockNamer();
 
 function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
   let max = mean + deviation > upper ? upper : mean + deviation;
@@ -50,7 +48,7 @@ function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
 
 let rock = (belto) => {
   return {
-    name: namer(),
+    name: rockNamer(),
     type: 'asteroid',
     primary: belto.primary,
     mass: rand(belto.mass, belto.massd),
@@ -78,18 +76,18 @@ const makeBelt = (belto) => {
   return belt;
 };
 
-async function delay(ms) {
-  return await new Promise(resolve => setTimeout(resolve, ms));
-}
+// async function delay(ms) {
+//   return await new Promise(resolve => setTimeout(resolve, ms));
+// }
 
-const craftStart = (craftList, indSites) => {
+const craftStart = (craftList, indSites, rendererIntercept) => {
   craftList.map(crafto => {
     ['x', 'y', 'z'].map(e => {
       crafto[e] = majObj[crafto.home][e];
     });
   });
 
-  craft.startCraftLife(craftList, indSites);
+  craft.startCraftLife(craftList, indSites, rendererIntercept, majObj);
 };
 
 const main = async () => {
@@ -112,7 +110,7 @@ const main = async () => {
       case 'planet' : planets.push(makeBody(theObj)); break;
       case 'moon': moons.push(makeBody(theObj)); break;
       case 'asteroid': asteroids.push(makeBody(theObj)); break;
-      case 'belt':belts.push(makeBelt(theObj)); break;
+      case 'belt': belts.push(makeBelt(theObj)); break;
       default: console.log('ERROR at make. Skipping.');
     }
 
@@ -120,7 +118,8 @@ const main = async () => {
   });
 
   renderer(document.getElementById('content'))(drawMap.drawStatic(stars, planets));
-  const render2 = renderer(document.getElementById('moving'));
+  const renderMoving = renderer(document.getElementById('moving'));
+  const rendererIntercept = renderer(document.getElementById('intercept'));
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, asteroids);
@@ -136,31 +135,45 @@ const main = async () => {
   makeManyCraft('boulder', 4);
   makeManyCraft('mountain', 2);
 
-  let clock = Date.now();
-  // let clock = 1;
+  // let rate = 0.001;
+  Window.system = {};
+  const options = Window.system;
+  options.rate = 0.001;
+  options.targetFrames = 60;
 
-  while (Date.now()) {
+  let clockZero = performance.now();
+  let currentTime = Date.now();
 
-    clock += (rate / 10) * 2;
-    let t = clock / Math.pow(10, 2);
-    let clock2 = Date(clock);
-    // let clock2 = clock;
+  const loop = () => {
+    let time = performance.now();
+    let timeDelta = time - clockZero;
+    // console.log(timeDelta);
+    clockZero = time;
+    currentTime += timeDelta * options.rate;
+    // let tD = currentTime / Math.pow(10, 2);
 
     for (let i = 0; i < movBod.length; i++) {
-      movBod[i].t = t;
+      movBod[i].t = currentTime;
       let newData = mech.kepCalc(movBod[i]);
       ['x', 'y', 'z'].map(e => {movBod[i][e] = newData[e];});
     }
 
     if (!craftList[0].x) {
-      craftStart(craftList, indSites);
+      craftStart(craftList, indSites, rendererIntercept);
     }
 
-    render2(drawMap.drawMoving(
-      clock2, planets, moons, asteroids, belts, craftList
-    ));
-    await delay(rate);
-  }
+    craftList.forEach(crafto => {
+      craft.craftAI(crafto, indSites, rendererIntercept, craftList, (timeDelta * options.rate));
+    });
+
+    renderMoving(
+      drawMap.drawMoving(Date(currentTime), planets, moons, asteroids, belts,
+        craftList));
+
+    setTimeout(loop, 1000/options.targetFrames);
+    // requestAnimationFrame(loop);
+  };
+  loop();
 };
 
 window.onload = main;

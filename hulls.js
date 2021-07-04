@@ -3,7 +3,8 @@ module.exports = {
   brick: () => ({
     class: 'Brick',
     cargoCap: 10,
-    // speed: 30,
+    fuelCapacity: 100,
+    fuelComsumption: 1,
     accel: 3,
     home: 'beta'
   }),
@@ -11,7 +12,8 @@ module.exports = {
   boulder: () => ({
     class: 'Boulder',
     cargoCap: 20,
-    // speed: 25,
+    fuelCapacity: 200,
+    fuelComsumption: 2,
     accel: 2,
     home: 'beta'
   }),
@@ -19,7 +21,8 @@ module.exports = {
   mountain: () => ({
     class: 'Mountain',
     cargoCap: 30,
-    // speed: 20,
+    fuelCapacity: 300,
+    fuelComsumption: 3,
     accel: 1,
     home: 'beta'
   })

@@ -244,7 +244,8 @@ const drawHeader = (clock) => {
     "- Human resources;",
     "- Profit-driven piracy and anti-piracy.",
     "Bugs:",
-    "- Craft cand and will go through the sun.",
+    "- Planets keep producing when program is out of focus.",
+    "- Craft can and will go through the sun;"
   ];
 
   for (let i = 0; i < list.length; i++) {
@@ -376,6 +377,18 @@ exports.drawMoving = (clock, planets, moons, ast, belts, craft) => {
   ];
 };
 
+exports.drawIntercepts = (craft) => {
+  let intercepts = ['g', {}];
+
+  craft.map(e => {
+    if (e.intercept && e.statsus === 'traveling') {
+      intercepts.push(icons.intercept(e));
+    }
+  });
+
+  return intercepts;
+};
+
 exports.drawStatic = (stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', {},
@@ -383,6 +396,7 @@ exports.drawStatic = (stars, planets) => {
       drawGrid(),
       drawStars(stars),
       ['g', {id: 'moving'}],
+      ['g', {id: 'intercept'}]
     ]
   ]);
 };

@@ -1,12 +1,13 @@
 'use strict';
 const mech = require('./mechanics.js');
-const majObj = require('./majorObjects2.json');
+// const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
+const drawMap = require('./drawMap.js');
 // const indTemp = require('./industryTemp.js');
 
-const rate = 20;
-const secToRateFrac = rate / 1000;
-const getRate = () => {return rate;};exports.getRate = getRate;
+// const rate = 20;
+// const secToRateFrac = rate / 1000;
+// const getRate = () => {return rate;};exports.getRate = getRate;
 
 const hullNamer = () => {
   let id = 0;
@@ -18,9 +19,9 @@ const hullNamer = () => {
 
 const namer = hullNamer();
 
-async function delay(ms) {
-  return await new Promise(resolve => setTimeout(resolve, ms));
-}
+// async function delay(ms) {
+//   return await new Promise(resolve => setTimeout(resolve, ms));
+// }
 
 const makeCraft = (crafto) => {
   let newCrafto = {};
@@ -36,7 +37,8 @@ const makeCraft = (crafto) => {
       lastStop: [],
       status: 'parked',
       course: 0,
-      intercept: {}
+      intercept: {},
+      fuel: 0
     }
   );
 
@@ -44,20 +46,20 @@ const makeCraft = (crafto) => {
 };
 exports.makeCraft = makeCraft;
 
-const startCraftLife = (listOfcraft, indSites) => {
+const startCraftLife = (listOfcraft, indSites, rendererIntercept, majObj) => {
   listOfcraft.map(crafto => {
     crafto.lastStop = majObj[crafto.home];
-    craftAI(crafto, indSites);
+    // craftAI(crafto, indSites, rendererIntercept, listOfcraft);
   });
 };
 exports.startCraftLife = startCraftLife;
 
-const craftAI = async (crafto, indSites) => {
-  await delay(rate);
+const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) => {
   if (crafto.route.length === 0) {
     crafto.intercept = {};
     if (!deviseRoute(crafto, indSites)) {
       crafto.status = 'parked';
+      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
         crafto['v' + e] = 0;
@@ -76,13 +78,16 @@ const craftAI = async (crafto, indSites) => {
       crafto.route.shift();
       if (crafto.route.length != 0) {
         crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
+        rendererIntercept(drawMap.drawIntercepts(listOfcraft));
       }
     } else {
-      calcMotion(crafto, crafto.intercept);
+      calcMotion(crafto, crafto.intercept, timeDelta);
     }
   }
-  craftAI(crafto, indSites);
+  // await delay(rate);
+  // craftAI(crafto, indSites, rendererIntercept, listOfcraft);
 };
+exports.craftAI = craftAI;
 
 const buildWaypoint = (bodyo) => {
   let waypoint = {
@@ -142,21 +147,22 @@ const deviseRoute = (crafto, indSites) => {
 };
 //Replace this part later. Make it so each planet has exports and imports list.
 
-const calcMotion =  (crafto, targeto) => {
+const calcMotion = (crafto, targeto, timeDelta) => {
+  // timeDelta passed down in SECONDS not ms
   const dist = mech.calcDist(crafto, targeto);
 
   //Determine the direction of acceleration based on midpoint of travel.
   let dir = (dist < targeto.turn) ? -1 : 1;
 
   ['x', 'y', 'z'].map(e => {
-    let displacement = crafto['v' + e] * secToRateFrac;
+    let displacement = crafto['v' + e] * timeDelta;
     let deltaVelocity = (
-      (crafto.accel) * (targeto['p' + e]) * secToRateFrac
+      dir * (crafto.accel) * (targeto['p' + e]) * timeDelta
     );
-    let deltaDisplacement = dir * deltaVelocity * secToRateFrac / 2;
+    let deltaDisplacement = deltaVelocity * timeDelta / 2;
 
     crafto[e] += displacement + deltaDisplacement;
-    crafto['v' + e] += deltaVelocity * dir;
+    crafto['v' + e] += deltaVelocity;
   });
 
   crafto.course = (Math.atan2(crafto.vy, crafto.vx) * 180 / Math.PI) - 90;
@@ -175,7 +181,7 @@ const calcIntercept = (crafto, bodyo) => {
     distance   = mech.calcDist(crafto, intercept);
     travelTime = mech.calcTravelTime(distance, crafto.accel);
     intercept  = {...mech.kepCalc(bodyo, bodyo.t + travelTime)};
-  } // Optimization of intercept, very imperfect, re-work later.
+  }
 
   intercept.turn = distance / 2;
 
