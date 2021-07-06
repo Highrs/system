@@ -4,6 +4,7 @@ const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
 const mech = require('./mechanics.js');
 const icons = require('./icons.js');
+const lists = require('./lists.js');
 
 // const cos = Math.cos;
 // const sin = Math.sin;
@@ -185,14 +186,17 @@ const drawData = (bodyo) => {
   return dataDisp;
 };
 
-const drawBodies = (bodies) => {
+const drawBodies = (bodies, options) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
+    if (options.planetData) {
+      bodiesDrawn.push(
+        ['g', tt(bodies[i].x, bodies[i].y), drawData(bodies[i]),]
+      );
+    }
+
     bodiesDrawn.push(
-      ['g', tt(bodies[i].x, bodies[i].y),
-        drawData(bodies[i]),
-      ],
       icons.body(bodies[i])
     );
   }
@@ -213,47 +217,19 @@ const drawBelts = (belts) => {
   return rocksDrawn;
 };
 
-const drawHeader = (clock) => {
-  let header = ['g', tt(10, 20)];
+const drawHeader = (clock, options) => {
+  if (options.header) {
+    let header = ['g', tt(10, 20)];
 
-  const list = [
-    clock,
-    " ",
-    "Unnamed System Project",
-    " ",
-    "Things that work:",
-    "- 3D, 2-body Kepler orbits for all bodies (that innermost orbit is valid in 3D, but looks odd in 2D.);",
-    "- Basic production of 3 resources on some bodies (but no one gets paid);",
-    "- Basic logistics chain (ore -> metal -> parts);",
-    "- Randomly generated asteroid belts (it was easier to make them this way);",
-    "- 3 types of spacecraft (Brick, Boulder, Mountain);",
-    "- Craft reserve, pick up, and drop off cargo down the logistics chain;",
-    "- Variable acceleration with halfway breaking for spacecraft;",
-    "- Intecept calculation for craft heading to planets.",
-    "Things to be added in the immediate future:",
-    "- Buttons to hide this list, planet information, hull IDs and cargo, range lines;",
-    "- A pass to optimize (especially with drawing intercepts);",
-    "- Invent capitalism (Buy and sell cost for resources);",
-    "- Supply/demand-based cost drift;",
-    "- Fuel consumption, production and refueling for craft;",
-    "- Invent greed (Craft AI descision-making based on profit);",
-    "- A nice lighting gradient from the sun.",
-    "Things to be added in the non-immediate future:",
-    "- Scrolling and zooming;",
-    "- Nearby solar systems, FTL travel;",
-    "- Human resources;",
-    "- Profit-driven piracy and anti-piracy.",
-    "Bugs:",
-    "- Planets keep producing when program is out of focus.",
-    "- Craft can and will go through the sun;"
-  ];
+    for (let i = 0; i < lists.toDo().length; i++) {
+      let hShift = lists.toDo()[i][0] === '-' ? 10 : 0;
+      header.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.toDo(clock)[i] ]],);
+    }
 
-  for (let i = 0; i < list.length; i++) {
-    let hShift = list[i][0] === '-' ? 10 : 0;
-    header.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, list[i] ]],);
+    return header;
+  } else {
+    return;
   }
-
-  return header;
 };
 
 const drawStars = (stars) =>{
@@ -264,7 +240,7 @@ const drawStars = (stars) =>{
   return drawnStars;
 };
 
-const drawCraft = (listOfCraft) => {
+const drawCraft = (listOfCraft, options) => {
   let drawnCraft = ['g', {}];
 
   listOfCraft.map(crafto => {
@@ -286,21 +262,23 @@ const drawCraft = (listOfCraft) => {
           ]]
         );
 
-        partCraft.push(
-          ['g', tt(-3, 16), ['text', {class: 'craftDataText'}, crafto.name]]
-        );
+        if (options.craftData) {
+          partCraft.push(
+            ['g', tt(-3, 16), ['text', {class: 'craftDataText'}, crafto.name]]
+          );
 
-        let offset = 0;
-        Object.keys(crafto.cargo).map(specCargo => {
-          if (crafto.cargo[specCargo] > 0) {
-            offset++;
-            partCraft.push(
-              ['g', tt(-6, (16 + 8 * offset)),
-                ['text', {class: 'craftDataText'}, specCargo + ':' + crafto.cargo[specCargo]]
-              ]
-            );
-          }
-        });
+          let offset = 0;
+          Object.keys(crafto.cargo).map(specCargo => {
+            if (crafto.cargo[specCargo] > 0) {
+              offset++;
+              partCraft.push(
+                ['g', tt(-6, (16 + 8 * offset)),
+                  ['text', {class: 'craftDataText'}, specCargo + ':' + crafto.cargo[specCargo]]
+                ]
+              );
+            }
+          });
+        }
 
         drawnCraft.push(
           icons.intercept(crafto)
@@ -358,22 +336,18 @@ const drawRanges = (bodyArr) => {
   return rangesDrawn;
 };
 
-exports.drawMoving = (clock, planets, moons, ast, belts, craft) => {
-  let rangeCandidates = [].concat(
-    planets,
-    moons,
-    ast
-  );
+exports.drawMoving = (options, clock, planets, moons, ast, belts, craft) => {
+  let rangeCandidates = [...planets, ...moons, ...ast];
 
   return ['g', {},
-    drawHeader(clock),
+    drawHeader(clock, options),
     drawBelts(belts),
     drawOrbit(moons),
     drawRanges(rangeCandidates),
-    drawBodies(moons),
-    drawBodies(planets),
-    drawBodies(ast),
-    drawCraft(craft)
+    drawBodies(moons, options),
+    drawBodies(planets, options),
+    drawBodies(ast, options),
+    drawCraft(craft, options)
   ];
 };
 
@@ -389,7 +363,7 @@ exports.drawIntercepts = (craft) => {
   return intercepts;
 };
 
-exports.drawStatic = (stars, planets) => {
+exports.drawStatic = (options, stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['g', {},
       drawOrbit(planets),

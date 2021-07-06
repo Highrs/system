@@ -1,13 +1,7 @@
 'use strict';
 const mech = require('./mechanics.js');
-// const majObj = require('./majorObjects2.json');
 const ind = require('./industry.js');
 const drawMap = require('./drawMap.js');
-// const indTemp = require('./industryTemp.js');
-
-// const rate = 20;
-// const secToRateFrac = rate / 1000;
-// const getRate = () => {return rate;};exports.getRate = getRate;
 
 const hullNamer = () => {
   let id = 0;
@@ -18,10 +12,6 @@ const hullNamer = () => {
 };
 
 const namer = hullNamer();
-
-// async function delay(ms) {
-//   return await new Promise(resolve => setTimeout(resolve, ms));
-// }
 
 const makeCraft = (crafto) => {
   let newCrafto = {};
@@ -46,13 +36,9 @@ const makeCraft = (crafto) => {
 };
 exports.makeCraft = makeCraft;
 
-const startCraftLife = (listOfcraft, indSites, rendererIntercept, majObj) => {
-  listOfcraft.map(crafto => {
-    crafto.lastStop = majObj[crafto.home];
-    // craftAI(crafto, indSites, rendererIntercept, listOfcraft);
-  });
+const calcCourse = (crafto, intercepto) => {
+  crafto.course = (Math.atan2(intercepto.py, intercepto.px) * 180 / Math.PI) - 90;
 };
-exports.startCraftLife = startCraftLife;
 
 const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) => {
   if (crafto.route.length === 0) {
@@ -78,6 +64,7 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
       crafto.route.shift();
       if (crafto.route.length != 0) {
         crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
+        // calcCourse(crafto);
         rendererIntercept(drawMap.drawIntercepts(listOfcraft));
       }
     } else {
@@ -134,6 +121,7 @@ const deviseRoute = (crafto, indSites) => {
                   crafto.status = 'traveling';
 
                   crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
+                  // calcCourse(crafto);
 
                   return true;
                 }
@@ -155,17 +143,13 @@ const calcMotion = (crafto, targeto, timeDelta) => {
   let dir = (dist < targeto.turn) ? -1 : 1;
 
   ['x', 'y', 'z'].map(e => {
-    let displacement = crafto['v' + e] * timeDelta;
     let deltaVelocity = (
       dir * (crafto.accel) * (targeto['p' + e]) * timeDelta
     );
-    let deltaDisplacement = deltaVelocity * timeDelta / 2;
 
-    crafto[e] += displacement + deltaDisplacement;
+    crafto[e] += crafto['v' + e] * timeDelta + deltaVelocity * timeDelta / 2;
     crafto['v' + e] += deltaVelocity;
   });
-
-  crafto.course = (Math.atan2(crafto.vy, crafto.vx) * 180 / Math.PI) - 90;
 };
 
 const calcIntercept = (crafto, bodyo) => {
@@ -188,6 +172,8 @@ const calcIntercept = (crafto, bodyo) => {
   ['x', 'y', 'z'].map(e => {
     intercept['p' + e] = (intercept[e] - crafto[e]) / (distance);
   });
+
+  calcCourse(crafto, intercept);
 
   return intercept;
 };

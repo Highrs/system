@@ -75,18 +75,18 @@ const makeBelt = (belto) => {
   return belt;
 };
 
-const craftStart = (craftList, indSites, rendererIntercept) => {
+const craftStart = (craftList) => {
   craftList.map(crafto => {
     ['x', 'y', 'z'].map(e => {
       crafto[e] = majObj[crafto.home][e];
     });
+    crafto.lastStop = majObj[crafto.home];
   });
-
-  craft.startCraftLife(craftList, indSites, rendererIntercept, majObj);
 };
 
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
+  console.log('Use \' Window.options \' to modify settings.');
 
   let stars = [];
   let planets = [];
@@ -112,10 +112,6 @@ const main = async () => {
     if (theObj.industry) {indSites.push(theObj);}
   });
 
-  renderer(document.getElementById('content'))(drawMap.drawStatic(stars, planets));
-  const renderMoving = renderer(document.getElementById('moving'));
-  const rendererIntercept = renderer(document.getElementById('intercept'));
-
   let movBod = [];
   movBod = movBod.concat(planets, moons, asteroids);
   belts.map(e => movBod = movBod.concat(e.rocks));
@@ -130,15 +126,23 @@ const main = async () => {
   makeManyCraft('boulder', 4);
   makeManyCraft('mountain', 2);
 
-  Window.system = {};
-  const options = Window.system;
-  options.rate = 1;
-  options.targetFrames = 60;
+  Window.options = {
+    rate: 1,
+    targetFrames: 60,
+    header: false,
+    planetData: false,
+    craftData: false,
+  };
+  const options = Window.options;
 
   let simpRate = 1 / 1000;
 
   let clockZero = performance.now();
   let currentTime = Date.now();
+
+  renderer(document.getElementById('content'))(drawMap.drawStatic(options, stars, planets));
+  const renderMoving = renderer(document.getElementById('moving'));
+  const rendererIntercept = renderer(document.getElementById('intercept'));
 
   const loop = () => {
     let time = performance.now();
@@ -153,15 +157,16 @@ const main = async () => {
     }
 
     if (!craftList[0].x) {
-      craftStart(craftList, indSites, rendererIntercept);
+      craftStart(craftList);
     }
 
     craftList.forEach(crafto => {
-      craft.craftAI(crafto, indSites, rendererIntercept, craftList, (timeDelta * options.rate * simpRate));
+      craft.craftAI(crafto, indSites, rendererIntercept, craftList,
+        (timeDelta * options.rate * simpRate));
     });
 
     renderMoving(
-      drawMap.drawMoving(Date(currentTime), planets, moons, asteroids, belts,
+      drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
         craftList));
 
     setTimeout(loop, 1000/options.targetFrames);
