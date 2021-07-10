@@ -3,7 +3,8 @@ const renderer = require('onml/renderer.js');
 const drawMap = require('./drawMap.js');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
-const hulls = require('./hulls.js');
+const hullTemps = require('./hullTemp.js');
+const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
 
@@ -11,18 +12,33 @@ const makeStar = (staro) => {
   return staro;
 };
 
-const makeBody = (bodyo) => {
-  ind.initInd(bodyo);
-  const bodyDat = mech.kepCalc(bodyo, 0);
-  const body = Object.assign(
-    bodyo,
+const makeBody = (inBodyo) => {
+  ind.initInd(inBodyo);
+  // const bodyDat = mech.kepCalc(bodyo, 0);
+  const bodyo = Object.assign(
+    inBodyo,
     {
-      focalShift: bodyDat.focalShift,
+      // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
-      soi: 10
+      sphereOfInfluence: 5
     }
   );
-  return body;
+  return bodyo;
+};
+
+const makeStation = (stationo) => {
+  ind.initInd(stationo);
+  // const bodyDat = mech.kepCalc(stationo, 0);
+  const bodyo = Object.assign(
+    stationo,
+    {
+      // focalShift: bodyDat.focalShift,
+      x: 0, y: 0, z: 0,
+      sphereOfInfluence: 5,
+      orient: 90
+    }
+  );
+  return bodyo;
 };
 
 const rockNamer = () => {
@@ -94,11 +110,14 @@ const main = async () => {
   let asteroids = [];
   let indSites = [];
   let belts = [];
+  let stations = [];
 
   const craftList = [];
 
-  Object.keys(majObj).map(objName => {
-    let theObj = majObj[objName];
+  let sysObjects = {...majObj,...constructs};
+
+  Object.keys(sysObjects).map(objName => {
+    let theObj = sysObjects[objName];
 
     switch(theObj.type){
       case 'star': stars.push(makeStar(theObj)); break;
@@ -106,6 +125,7 @@ const main = async () => {
       case 'moon': moons.push(makeBody(theObj)); break;
       case 'asteroid': asteroids.push(makeBody(theObj)); break;
       case 'belt': belts.push(makeBelt(theObj)); break;
+      case 'station': stations.push(makeStation(theObj)); break;
       default: console.log('ERROR at make. Skipping.');
     }
 
@@ -113,13 +133,14 @@ const main = async () => {
   });
 
   let movBod = [];
-  movBod = movBod.concat(planets, moons, asteroids);
-  belts.map(e => movBod = movBod.concat(e.rocks));
+  movBod = movBod.concat(planets, moons, asteroids, stations);
+  belts.map(e => (movBod = movBod.concat(e.rocks)));
 
   const makeManyCraft = (craftType, number) => {
     for (let i = 0; i < number; i++) {
-      craftList.push(craft.makeCraft(hulls[craftType]()));
+      craftList.push(craft.makeCraft(hullTemps[craftType]()));
     }
+    craftStart(craftList);
   };
 
   makeManyCraft('brick', 8);
@@ -132,6 +153,8 @@ const main = async () => {
     header: false,
     planetData: false,
     craftData: false,
+    stop: false,
+    intercepts: false
   };
   const options = Window.options;
 
@@ -154,10 +177,10 @@ const main = async () => {
       movBod[i].t = currentTime;
       let newData = mech.kepCalc(movBod[i]);
       ['x', 'y', 'z'].map(e => {movBod[i][e] = newData[e];});
-    }
-
-    if (!craftList[0].x) {
-      craftStart(craftList);
+      if (movBod[i].orient) {
+        ['x', 'y', 'z'].map(e => {movBod[i]['p' + e] = newData['p' + e];});
+        movBod[i].orient = (Math.atan2(movBod[i].py - movBod[i].y, movBod[i].px - movBod[i].x) * 180 / Math.PI) + 90;
+      }
     }
 
     craftList.forEach(crafto => {
@@ -167,10 +190,12 @@ const main = async () => {
 
     renderMoving(
       drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
-        craftList));
+        craftList, stations));
 
+    if (options.stop) {return;}
     setTimeout(loop, 1000/options.targetFrames);
   };
+  // if (Window.options.stop !== 1) {loop();} else {return;}
   loop();
 };
 

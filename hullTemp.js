@@ -4,7 +4,7 @@ module.exports = {
     class: 'Brick',
     cargoCap: 10,
     fuelCapacity: 100,
-    fuelComsumption: 1,
+    fuelConsumption: 1,
     accel: 3,
     home: 'beta'
   }),
@@ -13,7 +13,7 @@ module.exports = {
     class: 'Boulder',
     cargoCap: 20,
     fuelCapacity: 200,
-    fuelComsumption: 2,
+    fuelConsumption: 2,
     accel: 2,
     home: 'beta'
   }),
@@ -22,7 +22,7 @@ module.exports = {
     class: 'Mountain',
     cargoCap: 30,
     fuelCapacity: 300,
-    fuelComsumption: 3,
+    fuelConsumption: 3,
     accel: 1,
     home: 'beta'
   })

@@ -1,4 +1,24 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+module.exports={
+  "stationB": {
+    "name": "Beta Orbital",
+    "type": "station",
+    "size": "small",
+    "primary": "beta",
+    "mass": 60,
+    "a":    15,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0,
+    "industryList": ["gasStation"]
+  }
+}
+
+},{}],2:[function(require,module,exports){
 'use strict';
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
@@ -29,7 +49,7 @@ const makeCraft = (crafto) => {
       status: 'parked',
       course: 0,
       intercept: {},
-      fuel: 0
+      fuel: crafto.fuelCapacity
     }
   );
 
@@ -46,34 +66,41 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
     crafto.intercept = {};
     if (!deviseRoute(crafto, indSites)) {
       crafto.status = 'parked';
-      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+      // rendererIntercept(drawMap.drawIntercepts(listOfcraft));
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
         crafto['v' + e] = 0;
       });
+    } else {
+      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
     }
   } else {
-    if (mech.calcDist(
-      crafto,
-      crafto.route[0].location) < crafto.route[0].location.soi
+    if (
+      mech.calcDist(
+        crafto,
+        crafto.route[0].location
+      ) < crafto.route[0].location.sphereOfInfluence
     ) {
+      
       ['x', 'y', 'z'].map(e => {
         crafto['v' + e] = 0;
       });
+
       ind.unLoadCraft(crafto);
+
       crafto.lastStop = crafto.route[0].location;
       crafto.route.shift();
+      crafto.fuel = crafto.fuelCapacity;
+
+      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+
       if (crafto.route.length != 0) {
         crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
-        // calcCourse(crafto);
-        rendererIntercept(drawMap.drawIntercepts(listOfcraft));
       }
     } else {
       calcMotion(crafto, crafto.intercept, timeDelta);
     }
   }
-  // await delay(rate);
-  // craftAI(crafto, indSites, rendererIntercept, listOfcraft);
 };
 exports.craftAI = craftAI;
 
@@ -151,6 +178,8 @@ const calcMotion = (crafto, targeto, timeDelta) => {
     crafto[e] += crafto['v' + e] * timeDelta + deltaVelocity * timeDelta / 2;
     crafto['v' + e] += deltaVelocity;
   });
+
+  crafto.fuel = (crafto.fuel - crafto.fuelConsumption * timeDelta).toFixed(2);
 };
 
 const calcIntercept = (crafto, bodyo) => {
@@ -179,7 +208,7 @@ const calcIntercept = (crafto, bodyo) => {
   return intercept;
 };
 
-},{"./drawMap.js":2,"./industry.js":6,"./mechanics.js":11}],2:[function(require,module,exports){
+},{"./drawMap.js":3,"./industry.js":7,"./mechanics.js":12}],3:[function(require,module,exports){
 'use strict';
 // const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
@@ -289,6 +318,23 @@ const drawOrbit = (bodies) => {
   return retGroup;
 };
 
+const drawSimpleOrbit = (stations) => {
+  if (stations.length < 1) {return ['g', {}];}
+
+  let retGroup = ['g', {}];
+
+  for (let i = 0; i < stations.length; i++) {
+    retGroup.push(
+      ['g', tt(stations[i].px, stations[i].py), [
+        'circle',
+        {r : stations[i].a, class: 'minorOrbit'}
+      ]]
+    );
+  }
+
+  return retGroup;
+};
+
 const indDisplay = (body) => {
   let display = ['g', tt(0, 32),
     ['rect', {
@@ -385,6 +431,23 @@ const drawBodies = (bodies, options) => {
   return bodiesDrawn;
 };
 
+const drawStations = (stations, options) => {
+  if (stations.length < 1) {return ['g', {}];}
+  const stationsDrawn = ['g', {}];
+  for (let i = 0; i < stations.length; i++) {
+    if (options.planetData) {
+      stationsDrawn.push(
+        ['g', tt(stations[i].x, stations[i].y), drawData(stations[i]),]
+      );
+    }
+
+    stationsDrawn.push(
+      icons.station(stations[i])
+    );
+  }
+  return stationsDrawn;
+};
+
 const drawBelts = (belts) => {
   let rocksDrawn = ['g', {}];
 
@@ -460,11 +523,18 @@ const drawCraft = (listOfCraft, options) => {
               );
             }
           });
+          offset++;
+          partCraft.push(
+            ['g', tt(-6, (16 + 8 * offset)),
+              ['text', {class: 'craftDataText'},
+                'GAS:' + ((crafto.fuel / crafto.fuelCapacity) * 100).toFixed(0) + '%(' + crafto.fuel + ')']
+            ]
+          );
         }
 
-        drawnCraft.push(
-          icons.intercept(crafto)
-        );
+        // drawnCraft.push(
+        //   icons.intercept(crafto)
+        // );
       }
       partCraft.push(
         ['g', {},
@@ -518,26 +588,28 @@ const drawRanges = (bodyArr) => {
   return rangesDrawn;
 };
 
-exports.drawMoving = (options, clock, planets, moons, ast, belts, craft) => {
+exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
 
   return ['g', {},
     drawHeader(clock, options),
     drawBelts(belts),
     drawOrbit(moons),
+    drawSimpleOrbit(stations),
     drawRanges(rangeCandidates),
     drawBodies(moons, options),
     drawBodies(planets, options),
     drawBodies(ast, options),
+    drawStations(stations, options),
     drawCraft(craft, options)
   ];
 };
 
-exports.drawIntercepts = (craft) => {
+exports.drawIntercepts = (listOfcraft) => {
   let intercepts = ['g', {}];
 
-  craft.map(e => {
-    if (e.intercept && e.statsus === 'traveling') {
+  listOfcraft.map(e => {
+    if (e.intercept && (e.status === 'traveling')) {
       intercepts.push(icons.intercept(e));
     }
   });
@@ -557,7 +629,7 @@ exports.drawStatic = (options, stars, planets) => {
   ]);
 };
 
-},{"./get-svg.js":3,"./icons.js":5,"./lists.js":8,"./mechanics.js":11,"onml/tt.js":14}],3:[function(require,module,exports){
+},{"./get-svg.js":4,"./icons.js":6,"./lists.js":9,"./mechanics.js":12,"onml/tt.js":15}],4:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
@@ -571,14 +643,14 @@ module.exports = cfg => {
   }];
 }
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 module.exports = {
 
   brick: () => ({
     class: 'Brick',
     cargoCap: 10,
     fuelCapacity: 100,
-    fuelComsumption: 1,
+    fuelConsumption: 1,
     accel: 3,
     home: 'beta'
   }),
@@ -587,7 +659,7 @@ module.exports = {
     class: 'Boulder',
     cargoCap: 20,
     fuelCapacity: 200,
-    fuelComsumption: 2,
+    fuelConsumption: 2,
     accel: 2,
     home: 'beta'
   }),
@@ -596,30 +668,24 @@ module.exports = {
     class: 'Mountain',
     cargoCap: 30,
     fuelCapacity: 300,
-    fuelComsumption: 3,
+    fuelConsumption: 3,
     accel: 1,
     home: 'beta'
   })
 
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 const tt = require('onml/tt.js');
 
 module.exports = {
-
-  template: () => (
-    ['g', {},
-
-    ]
-  ),
 
   body: (bodyo) => {
     let tempBod = ['g', tt(bodyo.x, bodyo.y)];
 
     if (bodyo.industry) {
       tempBod.push(
-        ['circle', { r: bodyo.soi, class: 'bodyZone'}]
+        ['circle', { r: bodyo.sphereOfInfluence, class: 'bodyZone'}]
       );
     }
 
@@ -692,15 +758,45 @@ module.exports = {
 'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z'
     };
 
-    let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
+    let iconString =
+      icono[crafto.class] ?
+      icono[crafto.class] :
+      'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
 
-    if (icono[crafto.class]) {iconString = icono[crafto.class];}
     return ['path', {d: iconString, class: 'craft'}];
+  },
+
+  station: (stationo) => {
+    let retStat = ['g', tt(stationo.x, stationo.y)];
+
+    const icono = {
+      small:
+'M 2,2 L 6,0 L 2,-2 L 0,-8 L -2,-2 L -6,0 L -2,2 Z'
+    };
+
+    let iconString =
+      icono[stationo.size] ?
+      icono[stationo.size] :
+      'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
+
+    if (stationo.industry) {
+      retStat.push(
+        ['circle', { r: stationo.sphereOfInfluence, class: 'bodyZone'}]
+      );
+    }
+
+    retStat.push(
+      ['path', {transform: 'rotate(' + stationo.orient + ')', d: iconString, class: 'craft'}]
+    );
+
+
+
+    return retStat;
   }
 
 };
 
-},{"onml/tt.js":14}],6:[function(require,module,exports){
+},{"onml/tt.js":15}],7:[function(require,module,exports){
 'use strict';
 // Industry manager
 const indTemp = require('./industryTemp.js');
@@ -812,7 +908,7 @@ const unLoadCraft = (crafto) => {
 };
 exports.unLoadCraft = unLoadCraft;
 
-},{"./industryTemp.js":7}],7:[function(require,module,exports){
+},{"./industryTemp.js":8}],8:[function(require,module,exports){
 module.exports = {
 
   mining: () => ({
@@ -847,11 +943,21 @@ module.exports = {
     output: {
       parts: 1
     }
+  }),
+
+  gasStation: () => ({
+    name: 'Gas Station',
+    abr: 'GAS',
+    cycle: 1000,
+    input: {},
+    output: {
+      fuel: 100
+    }
   })
 
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 module.exports = {
 
   toDo: (clock = 0) => {return [
@@ -882,19 +988,38 @@ module.exports = {
     "- Human resources;",
     "- Profit-driven piracy and anti-piracy.",
     "Bugs:",
-    "- Planets keep producing when program is out of focus.",
-    "- Craft can and will go through the sun;"
+    "- Planets keep producing when program is out of focus;",
+    "- Craft can and will go through the sun;",
+    "- Strange long tasks at random."
+  ];},
+
+  veryLiterateAndNescscessaryRefuelignCheckCheckList: () => {return [
+    "Nozzle not inserted up-side down",
+    "Refueling station has best price for fuel within travel distance",
+    "Refueling station contains enough fuel",
+    "GasolineFight variable = negative",
+    "Refueling station actually carries correct type of fuel",
+    "Fill nozzle is on correct side of ship when docked",
+    "Captain has appropriate points card for this refueling station",
+    "Cupon for this station in ship armor",
+    "Gasoline station has self-service",
+    "Gasoline station lacks self-defense",
+    "Gasoline station is outside of fast-response range of navy assets",
+    "Gasoline station has no navy craft refueling at it",
+    "Gasoline station does not belong to warlord sponsor",
+    "Station carries day-old hotdogs and scratch-off tickets"
   ];}
 
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 const renderer = require('onml/renderer.js');
 const drawMap = require('./drawMap.js');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
-const hulls = require('./hulls.js');
+const hullTemps = require('./hullTemp.js');
+const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
 
@@ -902,18 +1027,33 @@ const makeStar = (staro) => {
   return staro;
 };
 
-const makeBody = (bodyo) => {
-  ind.initInd(bodyo);
-  const bodyDat = mech.kepCalc(bodyo, 0);
-  const body = Object.assign(
-    bodyo,
+const makeBody = (inBodyo) => {
+  ind.initInd(inBodyo);
+  // const bodyDat = mech.kepCalc(bodyo, 0);
+  const bodyo = Object.assign(
+    inBodyo,
     {
-      focalShift: bodyDat.focalShift,
+      // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
-      soi: 10
+      sphereOfInfluence: 5
     }
   );
-  return body;
+  return bodyo;
+};
+
+const makeStation = (stationo) => {
+  ind.initInd(stationo);
+  // const bodyDat = mech.kepCalc(stationo, 0);
+  const bodyo = Object.assign(
+    stationo,
+    {
+      // focalShift: bodyDat.focalShift,
+      x: 0, y: 0, z: 0,
+      sphereOfInfluence: 5,
+      orient: 90
+    }
+  );
+  return bodyo;
 };
 
 const rockNamer = () => {
@@ -985,11 +1125,14 @@ const main = async () => {
   let asteroids = [];
   let indSites = [];
   let belts = [];
+  let stations = [];
 
   const craftList = [];
 
-  Object.keys(majObj).map(objName => {
-    let theObj = majObj[objName];
+  let sysObjects = {...majObj,...constructs};
+
+  Object.keys(sysObjects).map(objName => {
+    let theObj = sysObjects[objName];
 
     switch(theObj.type){
       case 'star': stars.push(makeStar(theObj)); break;
@@ -997,6 +1140,7 @@ const main = async () => {
       case 'moon': moons.push(makeBody(theObj)); break;
       case 'asteroid': asteroids.push(makeBody(theObj)); break;
       case 'belt': belts.push(makeBelt(theObj)); break;
+      case 'station': stations.push(makeStation(theObj)); break;
       default: console.log('ERROR at make. Skipping.');
     }
 
@@ -1004,13 +1148,14 @@ const main = async () => {
   });
 
   let movBod = [];
-  movBod = movBod.concat(planets, moons, asteroids);
-  belts.map(e => movBod = movBod.concat(e.rocks));
+  movBod = movBod.concat(planets, moons, asteroids, stations);
+  belts.map(e => (movBod = movBod.concat(e.rocks)));
 
   const makeManyCraft = (craftType, number) => {
     for (let i = 0; i < number; i++) {
-      craftList.push(craft.makeCraft(hulls[craftType]()));
+      craftList.push(craft.makeCraft(hullTemps[craftType]()));
     }
+    craftStart(craftList);
   };
 
   makeManyCraft('brick', 8);
@@ -1023,6 +1168,8 @@ const main = async () => {
     header: false,
     planetData: false,
     craftData: false,
+    stop: false,
+    intercepts: false
   };
   const options = Window.options;
 
@@ -1045,10 +1192,10 @@ const main = async () => {
       movBod[i].t = currentTime;
       let newData = mech.kepCalc(movBod[i]);
       ['x', 'y', 'z'].map(e => {movBod[i][e] = newData[e];});
-    }
-
-    if (!craftList[0].x) {
-      craftStart(craftList);
+      if (movBod[i].orient) {
+        ['x', 'y', 'z'].map(e => {movBod[i]['p' + e] = newData['p' + e];});
+        movBod[i].orient = (Math.atan2(movBod[i].py - movBod[i].y, movBod[i].px - movBod[i].x) * 180 / Math.PI) + 90;
+      }
     }
 
     craftList.forEach(crafto => {
@@ -1058,16 +1205,18 @@ const main = async () => {
 
     renderMoving(
       drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
-        craftList));
+        craftList, stations));
 
+    if (options.stop) {return;}
     setTimeout(loop, 1000/options.targetFrames);
   };
+  // if (Window.options.stop !== 1) {loop();} else {return;}
   loop();
 };
 
 window.onload = main;
 
-},{"./craft.js":1,"./drawMap.js":2,"./hulls.js":4,"./industry.js":6,"./majorObjects2.json":10,"./mechanics.js":11,"onml/renderer.js":12}],10:[function(require,module,exports){
+},{"./constructs.json":1,"./craft.js":2,"./drawMap.js":3,"./hullTemp.js":5,"./industry.js":7,"./majorObjects2.json":11,"./mechanics.js":12,"onml/renderer.js":13}],11:[function(require,module,exports){
 module.exports={
   "prime": {
     "name": "Prime",
@@ -1147,21 +1296,6 @@ module.exports={
     "mass": 10000,
     "a":    20,
     "e":    .5,
-    "t":    0,
-    "t0":   0,
-    "w":    2,
-    "lang": 0,
-    "inc":  0,
-    "maz":  0,
-    "objectRadius": 2
-  },
-  "bMinA": {
-    "name": "Beta A",
-    "type": "moon",
-    "primary": "beta",
-    "mass": 10000,
-    "a":    20,
-    "e":    0,
     "t":    0,
     "t0":   0,
     "w":    2,
@@ -1268,7 +1402,7 @@ module.exports={
   }
 }
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 const majObj = require('./majorObjects2.json');
 // const craft = require('./craft.js');
@@ -1290,7 +1424,7 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   let lang = bodyo.lang; // longitude of ascention node (lang)
   let inc  = bodyo.inc;  // inclanation (inc)
   let maz  = bodyo.maz;
-  let focalShift = 0;
+  // let focalShift = 0;
   // let maz  = bodyo.maz;  // mean anomaly at zero (maz)
   // time (days) (t)
 
@@ -1300,11 +1434,11 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
     const mass = primaryo.mass * Math.pow(10, 20); // Central object mass, approximately sol
     const u = g * mass; // Standard gravitational parameter u
 
-    const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
-    const b = (calcMinorAxis(a, e)); // minorAxis b[m]
+    // const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
+    // const b = (calcMinorAxis(a, e)); // minorAxis b[m]
 
     // distance of focus from center
-    focalShift = ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );
+    // focalShift = ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );
 
     // const epoch = t0; //epoch (given) (days)
 
@@ -1373,7 +1507,10 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
     x: bodyCoords.x + primaryCoords.x,
     y: bodyCoords.y + primaryCoords.y,
     z: bodyCoords.z + primaryCoords.z,
-    focalShift: focalShift
+    px: primaryo.x,
+    py: primaryo.y,
+    pz: primaryo.z
+    // focalShift: focalShift
   };
 };
 exports.kepCalc = kepCalc;
@@ -1391,7 +1528,7 @@ const calcTravelTime = (dist, accel) => {
 };
 exports.calcTravelTime = calcTravelTime;
 
-},{"./majorObjects2.json":10}],12:[function(require,module,exports){
+},{"./majorObjects2.json":11}],13:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');
@@ -1416,7 +1553,7 @@ module.exports = renderer;
 
 /* eslint-env browser */
 
-},{"./stringify.js":13}],13:[function(require,module,exports){
+},{"./stringify.js":14}],14:[function(require,module,exports){
 'use strict';
 
 const isObject = o => o && Object.prototype.toString.call(o) === '[object Object]';
@@ -1509,7 +1646,7 @@ function stringify (a, indentation) {
 
 module.exports = stringify;
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 module.exports = (x, y, obj) => {
@@ -1522,4 +1659,4 @@ module.exports = (x, y, obj) => {
   return Object.assign(objt, obj);
 };
 
-},{}]},{},[9]);
+},{}]},{},[10]);

@@ -28,8 +28,26 @@ module.exports = {
     "- Human resources;",
     "- Profit-driven piracy and anti-piracy.",
     "Bugs:",
-    "- Planets keep producing when program is out of focus.",
-    "- Craft can and will go through the sun;"
+    "- Planets keep producing when program is out of focus;",
+    "- Craft can and will go through the sun;",
+    "- Strange long tasks at random."
+  ];},
+
+  veryLiterateAndNescscessaryRefuelignCheckCheckList: () => {return [
+    "Nozzle not inserted up-side down",
+    "Refueling station has best price for fuel within travel distance",
+    "Refueling station contains enough fuel",
+    "GasolineFight variable = negative",
+    "Refueling station actually carries correct type of fuel",
+    "Fill nozzle is on correct side of ship when docked",
+    "Captain has appropriate points card for this refueling station",
+    "Cupon for this station in ship armor",
+    "Gasoline station has self-service",
+    "Gasoline station lacks self-defense",
+    "Gasoline station is outside of fast-response range of navy assets",
+    "Gasoline station has no navy craft refueling at it",
+    "Gasoline station does not belong to warlord sponsor",
+    "Station carries day-old hotdogs and scratch-off tickets"
   ];}
 
 };

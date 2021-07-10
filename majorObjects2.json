@@ -85,21 +85,6 @@
     "maz":  0,
     "objectRadius": 2
   },
-  "bMinA": {
-    "name": "Beta A",
-    "type": "moon",
-    "primary": "beta",
-    "mass": 10000,
-    "a":    20,
-    "e":    0,
-    "t":    0,
-    "t0":   0,
-    "w":    2,
-    "lang": 0,
-    "inc":  0,
-    "maz":  0,
-    "objectRadius": 2
-  },
   "astroDeltaA": {
     "name": "Ast. Delta A",
     "type": "asteroid",

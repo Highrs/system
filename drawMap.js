@@ -107,6 +107,23 @@ const drawOrbit = (bodies) => {
   return retGroup;
 };
 
+const drawSimpleOrbit = (stations) => {
+  if (stations.length < 1) {return ['g', {}];}
+
+  let retGroup = ['g', {}];
+
+  for (let i = 0; i < stations.length; i++) {
+    retGroup.push(
+      ['g', tt(stations[i].px, stations[i].py), [
+        'circle',
+        {r : stations[i].a, class: 'minorOrbit'}
+      ]]
+    );
+  }
+
+  return retGroup;
+};
+
 const indDisplay = (body) => {
   let display = ['g', tt(0, 32),
     ['rect', {
@@ -203,6 +220,23 @@ const drawBodies = (bodies, options) => {
   return bodiesDrawn;
 };
 
+const drawStations = (stations, options) => {
+  if (stations.length < 1) {return ['g', {}];}
+  const stationsDrawn = ['g', {}];
+  for (let i = 0; i < stations.length; i++) {
+    if (options.planetData) {
+      stationsDrawn.push(
+        ['g', tt(stations[i].x, stations[i].y), drawData(stations[i]),]
+      );
+    }
+
+    stationsDrawn.push(
+      icons.station(stations[i])
+    );
+  }
+  return stationsDrawn;
+};
+
 const drawBelts = (belts) => {
   let rocksDrawn = ['g', {}];
 
@@ -278,11 +312,18 @@ const drawCraft = (listOfCraft, options) => {
               );
             }
           });
+          offset++;
+          partCraft.push(
+            ['g', tt(-6, (16 + 8 * offset)),
+              ['text', {class: 'craftDataText'},
+                'GAS:' + ((crafto.fuel / crafto.fuelCapacity) * 100).toFixed(0) + '%(' + crafto.fuel + ')']
+            ]
+          );
         }
 
-        drawnCraft.push(
-          icons.intercept(crafto)
-        );
+        // drawnCraft.push(
+        //   icons.intercept(crafto)
+        // );
       }
       partCraft.push(
         ['g', {},
@@ -336,26 +377,28 @@ const drawRanges = (bodyArr) => {
   return rangesDrawn;
 };
 
-exports.drawMoving = (options, clock, planets, moons, ast, belts, craft) => {
+exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
 
   return ['g', {},
     drawHeader(clock, options),
     drawBelts(belts),
     drawOrbit(moons),
+    drawSimpleOrbit(stations),
     drawRanges(rangeCandidates),
     drawBodies(moons, options),
     drawBodies(planets, options),
     drawBodies(ast, options),
+    drawStations(stations, options),
     drawCraft(craft, options)
   ];
 };
 
-exports.drawIntercepts = (craft) => {
+exports.drawIntercepts = (listOfcraft) => {
   let intercepts = ['g', {}];
 
-  craft.map(e => {
-    if (e.intercept && e.statsus === 'traveling') {
+  listOfcraft.map(e => {
+    if (e.intercept && (e.status === 'traveling')) {
       intercepts.push(icons.intercept(e));
     }
   });

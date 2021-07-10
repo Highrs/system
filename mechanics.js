@@ -19,7 +19,7 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   let lang = bodyo.lang; // longitude of ascention node (lang)
   let inc  = bodyo.inc;  // inclanation (inc)
   let maz  = bodyo.maz;
-  let focalShift = 0;
+  // let focalShift = 0;
   // let maz  = bodyo.maz;  // mean anomaly at zero (maz)
   // time (days) (t)
 
@@ -29,11 +29,11 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
     const mass = primaryo.mass * Math.pow(10, 20); // Central object mass, approximately sol
     const u = g * mass; // Standard gravitational parameter u
 
-    const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
-    const b = (calcMinorAxis(a, e)); // minorAxis b[m]
+    // const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
+    // const b = (calcMinorAxis(a, e)); // minorAxis b[m]
 
     // distance of focus from center
-    focalShift = ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );
+    // focalShift = ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );
 
     // const epoch = t0; //epoch (given) (days)
 
@@ -102,7 +102,10 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
     x: bodyCoords.x + primaryCoords.x,
     y: bodyCoords.y + primaryCoords.y,
     z: bodyCoords.z + primaryCoords.z,
-    focalShift: focalShift
+    px: primaryo.x,
+    py: primaryo.y,
+    pz: primaryo.z
+    // focalShift: focalShift
   };
 };
 exports.kepCalc = kepCalc;

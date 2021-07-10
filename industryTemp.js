@@ -32,6 +32,16 @@ module.exports = {
     output: {
       parts: 1
     }
+  }),
+
+  gasStation: () => ({
+    name: 'Gas Station',
+    abr: 'GAS',
+    cycle: 1000,
+    input: {},
+    output: {
+      fuel: 100
+    }
   })
 
 };

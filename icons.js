@@ -2,18 +2,12 @@ const tt = require('onml/tt.js');
 
 module.exports = {
 
-  template: () => (
-    ['g', {},
-
-    ]
-  ),
-
   body: (bodyo) => {
     let tempBod = ['g', tt(bodyo.x, bodyo.y)];
 
     if (bodyo.industry) {
       tempBod.push(
-        ['circle', { r: bodyo.soi, class: 'bodyZone'}]
+        ['circle', { r: bodyo.sphereOfInfluence, class: 'bodyZone'}]
       );
     }
 
@@ -86,10 +80,40 @@ module.exports = {
 'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z'
     };
 
-    let iconString = 'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
+    let iconString =
+      icono[crafto.class] ?
+      icono[crafto.class] :
+      'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
 
-    if (icono[crafto.class]) {iconString = icono[crafto.class];}
     return ['path', {d: iconString, class: 'craft'}];
+  },
+
+  station: (stationo) => {
+    let retStat = ['g', tt(stationo.x, stationo.y)];
+
+    const icono = {
+      small:
+'M 2,2 L 6,0 L 2,-2 L 0,-8 L -2,-2 L -6,0 L -2,2 Z'
+    };
+
+    let iconString =
+      icono[stationo.size] ?
+      icono[stationo.size] :
+      'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
+
+    if (stationo.industry) {
+      retStat.push(
+        ['circle', { r: stationo.sphereOfInfluence, class: 'bodyZone'}]
+      );
+    }
+
+    retStat.push(
+      ['path', {transform: 'rotate(' + stationo.orient + ')', d: iconString, class: 'craft'}]
+    );
+
+
+
+    return retStat;
   }
 
 };

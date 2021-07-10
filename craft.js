@@ -28,7 +28,7 @@ const makeCraft = (crafto) => {
       status: 'parked',
       course: 0,
       intercept: {},
-      fuel: 0
+      fuel: crafto.fuelCapacity
     }
   );
 
@@ -45,34 +45,41 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
     crafto.intercept = {};
     if (!deviseRoute(crafto, indSites)) {
       crafto.status = 'parked';
-      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+      // rendererIntercept(drawMap.drawIntercepts(listOfcraft));
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
         crafto['v' + e] = 0;
       });
+    } else {
+      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
     }
   } else {
-    if (mech.calcDist(
-      crafto,
-      crafto.route[0].location) < crafto.route[0].location.soi
+    if (
+      mech.calcDist(
+        crafto,
+        crafto.route[0].location
+      ) < crafto.route[0].location.sphereOfInfluence
     ) {
+      
       ['x', 'y', 'z'].map(e => {
         crafto['v' + e] = 0;
       });
+
       ind.unLoadCraft(crafto);
+
       crafto.lastStop = crafto.route[0].location;
       crafto.route.shift();
+      crafto.fuel = crafto.fuelCapacity;
+
+      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+
       if (crafto.route.length != 0) {
         crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
-        // calcCourse(crafto);
-        rendererIntercept(drawMap.drawIntercepts(listOfcraft));
       }
     } else {
       calcMotion(crafto, crafto.intercept, timeDelta);
     }
   }
-  // await delay(rate);
-  // craftAI(crafto, indSites, rendererIntercept, listOfcraft);
 };
 exports.craftAI = craftAI;
 
@@ -150,6 +157,8 @@ const calcMotion = (crafto, targeto, timeDelta) => {
     crafto[e] += crafto['v' + e] * timeDelta + deltaVelocity * timeDelta / 2;
     crafto['v' + e] += deltaVelocity;
   });
+
+  crafto.fuel = (crafto.fuel - crafto.fuelConsumption * timeDelta).toFixed(2);
 };
 
 const calcIntercept = (crafto, bodyo) => {
