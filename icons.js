@@ -22,35 +22,46 @@ module.exports = {
 
   star: (staro) => {
     let drawnStar = ['g', tt(staro.x, staro.y)];
+
     drawnStar.push(
       ['circle', {
+        r: staro.objectRadius * 50,
+        fill: "url(#RadialGradient1)"
+      }],
+      ['circle', {
+        r: staro.objectRadius + 10,
+        fill: "url(#RadialGradient2)"
+      }],
+      ['circle', {
         r: staro.objectRadius,
-        class: 'majorObject'
+        class: 'star'
       }]
+
     );
 
-    for (let j = 0; j < 16; j++) {
-      drawnStar.push(
-        ['line', {
-          transform: 'rotate(' + ((360 / 16) * j) +')',
-          x1: staro.objectRadius + 5,
-          x2: staro.objectRadius + 25,
-          class: 'grid'}
-        ],
-        ['line', {
-          transform: 'rotate(' + ((360 / 16) * j) +')',
-          x1: staro.objectRadius + 40,
-          x2: staro.objectRadius + 50,
-          class: 'grid'}
-        ],
-        ['line', {
-          transform: 'rotate(' + ((360 / 16) * j) +')',
-          x1: staro.objectRadius + 65,
-          x2: staro.objectRadius + 70,
-          class: 'grid'}
-        ]
-      );
-    }
+
+    // for (let j = 0; j < 16; j++) {
+    //   drawnStar.push(
+    //     ['line', {
+    //       transform: 'rotate(' + ((360 / 16) * j) +')',
+    //       x1: staro.objectRadius + 5,
+    //       x2: staro.objectRadius + 25,
+    //       class: 'grid'}
+    //     ],
+    //     ['line', {
+    //       transform: 'rotate(' + ((360 / 16) * j) +')',
+    //       x1: staro.objectRadius + 40,
+    //       x2: staro.objectRadius + 50,
+    //       class: 'grid'}
+    //     ],
+    //     ['line', {
+    //       transform: 'rotate(' + ((360 / 16) * j) +')',
+    //       x1: staro.objectRadius + 65,
+    //       x2: staro.objectRadius + 70,
+    //       class: 'grid'}
+    //     ]
+    //   );
+    // }
 
     return drawnStar;
   },
@@ -92,8 +103,10 @@ module.exports = {
     let retStat = ['g', tt(stationo.x, stationo.y)];
 
     const icono = {
+      extractor:
+'M 2,2 L 6,0 L 2,-2 L 0,-8 L -2,-2 L -6,0 L -2,2 Z M -8,0 L -6,0 M 8,0 L 6,0',
       small:
-'M 2,2 L 6,0 L 2,-2 L 0,-8 L -2,-2 L -6,0 L -2,2 Z'
+'M 1,4 L 3, 0 L 1,-4 L -1,-4 L -3,0 L -1,4 Z M 0,7 L 0, 4 M 0,-7 L 0,-4'
     };
 
     let iconString =
@@ -108,7 +121,7 @@ module.exports = {
     }
 
     retStat.push(
-      ['path', {transform: 'rotate(' + stationo.orient + ')', d: iconString, class: 'craft'}]
+      ['path', {transform: 'rotate(' + stationo.orient + ')', d: iconString, class: 'station'}]
     );
 
 

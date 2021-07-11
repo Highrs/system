@@ -166,6 +166,7 @@ const main = async () => {
   renderer(document.getElementById('content'))(drawMap.drawStatic(options, stars, planets));
   const renderMoving = renderer(document.getElementById('moving'));
   const rendererIntercept = renderer(document.getElementById('intercept'));
+  const rendererMovingOrbits = renderer(document.getElementById('movingOrbits'));
 
   const loop = () => {
     let time = performance.now();
@@ -190,7 +191,7 @@ const main = async () => {
 
     renderMoving(
       drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
-        craftList, stations));
+        craftList, stations, rendererMovingOrbits));
 
     if (options.stop) {return;}
     setTimeout(loop, 1000/options.targetFrames);

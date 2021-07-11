@@ -1,12 +1,12 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports={
   "stationB": {
-    "name": "Beta Orbital",
+    "name": "Beta Extract",
     "type": "station",
-    "size": "small",
+    "size": "extractor",
     "primary": "beta",
     "mass": 60,
-    "a":    15,
+    "a":    14,
     "e":    0,
     "t":    0,
     "t0":   0,
@@ -15,6 +15,21 @@ module.exports={
     "inc":  0,
     "maz":  0,
     "industryList": ["gasStation"]
+  },
+  "stationBB": {
+    "name": "Beta Orbital",
+    "type": "station",
+    "size": "small",
+    "primary": "beta",
+    "mass": 100,
+    "a":    25,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0
   }
 }
 
@@ -66,7 +81,6 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
     crafto.intercept = {};
     if (!deviseRoute(crafto, indSites)) {
       crafto.status = 'parked';
-      // rendererIntercept(drawMap.drawIntercepts(listOfcraft));
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
         crafto['v' + e] = 0;
@@ -81,7 +95,7 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
         crafto.route[0].location
       ) < crafto.route[0].location.sphereOfInfluence
     ) {
-      
+
       ['x', 'y', 'z'].map(e => {
         crafto['v' + e] = 0;
       });
@@ -92,11 +106,11 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
       crafto.route.shift();
       crafto.fuel = crafto.fuelCapacity;
 
-      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
-
       if (crafto.route.length != 0) {
         crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
       }
+
+      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
     } else {
       calcMotion(crafto, crafto.intercept, timeDelta);
     }
@@ -588,13 +602,15 @@ const drawRanges = (bodyArr) => {
   return rangesDrawn;
 };
 
-exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations) => {
+exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
+
+  rendererMovingOrbits(drawMovingOrbits(moons));
 
   return ['g', {},
     drawHeader(clock, options),
     drawBelts(belts),
-    drawOrbit(moons),
+    // drawOrbit(moons),
     drawSimpleOrbit(stations),
     drawRanges(rangeCandidates),
     drawBodies(moons, options),
@@ -617,10 +633,25 @@ exports.drawIntercepts = (listOfcraft) => {
   return intercepts;
 };
 
+const drawMovingOrbits = (moons) => {
+  return ['g', {}, drawOrbit(moons)];
+};
+
 exports.drawStatic = (options, stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
+    ['defs',
+      ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
+        ['stop', {offset: "0%", 'stop-color': "#ffc400", 'stop-opacity': 0.5 }],
+        ['stop', {offset: "100%", 'stop-color': 'none', 'stop-opacity': 0 }]
+      ],
+      ['radialGradient', {id: "RadialGradient2", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
+        ['stop', {offset: "0%", 'stop-color': "#000000", 'stop-opacity': 0.5 }],
+        ['stop', {offset: "100%", 'stop-color': 'none', 'stop-opacity': 0 }]
+      ]
+    ],
     ['g', {},
       drawOrbit(planets),
+      ['g', {id: 'movingOrbits'}],
       drawGrid(),
       drawStars(stars),
       ['g', {id: 'moving'}],
@@ -700,35 +731,46 @@ module.exports = {
 
   star: (staro) => {
     let drawnStar = ['g', tt(staro.x, staro.y)];
+
     drawnStar.push(
       ['circle', {
+        r: staro.objectRadius * 50,
+        fill: "url(#RadialGradient1)"
+      }],
+      ['circle', {
+        r: staro.objectRadius + 10,
+        fill: "url(#RadialGradient2)"
+      }],
+      ['circle', {
         r: staro.objectRadius,
-        class: 'majorObject'
+        class: 'star'
       }]
+
     );
 
-    for (let j = 0; j < 16; j++) {
-      drawnStar.push(
-        ['line', {
-          transform: 'rotate(' + ((360 / 16) * j) +')',
-          x1: staro.objectRadius + 5,
-          x2: staro.objectRadius + 25,
-          class: 'grid'}
-        ],
-        ['line', {
-          transform: 'rotate(' + ((360 / 16) * j) +')',
-          x1: staro.objectRadius + 40,
-          x2: staro.objectRadius + 50,
-          class: 'grid'}
-        ],
-        ['line', {
-          transform: 'rotate(' + ((360 / 16) * j) +')',
-          x1: staro.objectRadius + 65,
-          x2: staro.objectRadius + 70,
-          class: 'grid'}
-        ]
-      );
-    }
+
+    // for (let j = 0; j < 16; j++) {
+    //   drawnStar.push(
+    //     ['line', {
+    //       transform: 'rotate(' + ((360 / 16) * j) +')',
+    //       x1: staro.objectRadius + 5,
+    //       x2: staro.objectRadius + 25,
+    //       class: 'grid'}
+    //     ],
+    //     ['line', {
+    //       transform: 'rotate(' + ((360 / 16) * j) +')',
+    //       x1: staro.objectRadius + 40,
+    //       x2: staro.objectRadius + 50,
+    //       class: 'grid'}
+    //     ],
+    //     ['line', {
+    //       transform: 'rotate(' + ((360 / 16) * j) +')',
+    //       x1: staro.objectRadius + 65,
+    //       x2: staro.objectRadius + 70,
+    //       class: 'grid'}
+    //     ]
+    //   );
+    // }
 
     return drawnStar;
   },
@@ -770,8 +812,10 @@ module.exports = {
     let retStat = ['g', tt(stationo.x, stationo.y)];
 
     const icono = {
+      extractor:
+'M 2,2 L 6,0 L 2,-2 L 0,-8 L -2,-2 L -6,0 L -2,2 Z M -8,0 L -6,0 M 8,0 L 6,0',
       small:
-'M 2,2 L 6,0 L 2,-2 L 0,-8 L -2,-2 L -6,0 L -2,2 Z'
+'M 1,4 L 3, 0 L 1,-4 L -1,-4 L -3,0 L -1,4 Z M 0,7 L 0, 4 M 0,-7 L 0,-4'
     };
 
     let iconString =
@@ -786,7 +830,7 @@ module.exports = {
     }
 
     retStat.push(
-      ['path', {transform: 'rotate(' + stationo.orient + ')', d: iconString, class: 'craft'}]
+      ['path', {transform: 'rotate(' + stationo.orient + ')', d: iconString, class: 'station'}]
     );
 
 
@@ -1181,6 +1225,7 @@ const main = async () => {
   renderer(document.getElementById('content'))(drawMap.drawStatic(options, stars, planets));
   const renderMoving = renderer(document.getElementById('moving'));
   const rendererIntercept = renderer(document.getElementById('intercept'));
+  const rendererMovingOrbits = renderer(document.getElementById('movingOrbits'));
 
   const loop = () => {
     let time = performance.now();
@@ -1205,7 +1250,7 @@ const main = async () => {
 
     renderMoving(
       drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
-        craftList, stations));
+        craftList, stations, rendererMovingOrbits));
 
     if (options.stop) {return;}
     setTimeout(loop, 1000/options.targetFrames);
@@ -1225,7 +1270,7 @@ module.exports={
     "x": 600,
     "y": 600,
     "z": 0,
-    "objectRadius": 20
+    "objectRadius": 15
   },
   "gamma": {
     "name": "Gamma",

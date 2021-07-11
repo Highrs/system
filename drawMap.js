@@ -377,13 +377,15 @@ const drawRanges = (bodyArr) => {
   return rangesDrawn;
 };
 
-exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations) => {
+exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
+
+  rendererMovingOrbits(drawMovingOrbits(moons));
 
   return ['g', {},
     drawHeader(clock, options),
     drawBelts(belts),
-    drawOrbit(moons),
+    // drawOrbit(moons),
     drawSimpleOrbit(stations),
     drawRanges(rangeCandidates),
     drawBodies(moons, options),
@@ -406,10 +408,25 @@ exports.drawIntercepts = (listOfcraft) => {
   return intercepts;
 };
 
+const drawMovingOrbits = (moons) => {
+  return ['g', {}, drawOrbit(moons)];
+};
+
 exports.drawStatic = (options, stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
+    ['defs',
+      ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
+        ['stop', {offset: "0%", 'stop-color': "#ffc400", 'stop-opacity': 0.5 }],
+        ['stop', {offset: "100%", 'stop-color': 'none', 'stop-opacity': 0 }]
+      ],
+      ['radialGradient', {id: "RadialGradient2", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
+        ['stop', {offset: "0%", 'stop-color': "#000000", 'stop-opacity': 0.5 }],
+        ['stop', {offset: "100%", 'stop-color': 'none', 'stop-opacity': 0 }]
+      ]
+    ],
     ['g', {},
       drawOrbit(planets),
+      ['g', {id: 'movingOrbits'}],
       drawGrid(),
       drawStars(stars),
       ['g', {id: 'moving'}],

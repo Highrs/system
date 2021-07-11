@@ -45,7 +45,6 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
     crafto.intercept = {};
     if (!deviseRoute(crafto, indSites)) {
       crafto.status = 'parked';
-      // rendererIntercept(drawMap.drawIntercepts(listOfcraft));
       ['x', 'y', 'z'].map(e => {
         crafto[e] = crafto.lastStop[e];
         crafto['v' + e] = 0;
@@ -60,7 +59,7 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
         crafto.route[0].location
       ) < crafto.route[0].location.sphereOfInfluence
     ) {
-      
+
       ['x', 'y', 'z'].map(e => {
         crafto['v' + e] = 0;
       });
@@ -71,11 +70,11 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
       crafto.route.shift();
       crafto.fuel = crafto.fuelCapacity;
 
-      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
-
       if (crafto.route.length != 0) {
         crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
       }
+
+      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
     } else {
       calcMotion(crafto, crafto.intercept, timeDelta);
     }

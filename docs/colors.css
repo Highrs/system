@@ -109,3 +109,20 @@ html, body {
 .redStroke {
   stroke: #ff0000ff !important;
 }
+.station {
+  fill: #363636;
+  stroke-width: 1px;
+  stroke: #00ff66ff;
+}
+/* .starGrad {
+  stroke: none;
+  fill: "url(#RadialGradient1)";
+}
+.corona {
+  fill: "url(#RadialGradient2)";
+} */
+.star {
+  fill: #363636;
+  stroke-width: 1px;
+  stroke: #ffc100;
+}

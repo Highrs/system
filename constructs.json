@@ -1,11 +1,11 @@
 {
   "stationB": {
-    "name": "Beta Orbital",
+    "name": "Beta Extract",
     "type": "station",
-    "size": "small",
+    "size": "extractor",
     "primary": "beta",
     "mass": 60,
-    "a":    15,
+    "a":    14,
     "e":    0,
     "t":    0,
     "t0":   0,
@@ -14,5 +14,20 @@
     "inc":  0,
     "maz":  0,
     "industryList": ["gasStation"]
+  },
+  "stationBB": {
+    "name": "Beta Orbital",
+    "type": "station",
+    "size": "small",
+    "primary": "beta",
+    "mass": 100,
+    "a":    25,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0
   }
 }
