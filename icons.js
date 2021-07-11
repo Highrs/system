@@ -12,6 +12,10 @@ module.exports = {
     }
 
     tempBod.push(
+      ['circle', {
+        r: bodyo.objectRadius * 2,
+        fill: "url(#RadialGradient2)"
+      }],
       ['g', {},
         ['circle', { r: bodyo.objectRadius, class: bodyo.industry?'majorObject':'minorObject'}]
       ]
@@ -29,7 +33,7 @@ module.exports = {
         fill: "url(#RadialGradient1)"
       }],
       ['circle', {
-        r: staro.objectRadius + 10,
+        r: staro.objectRadius * 2,
         fill: "url(#RadialGradient2)"
       }],
       ['circle', {
@@ -38,30 +42,6 @@ module.exports = {
       }]
 
     );
-
-
-    // for (let j = 0; j < 16; j++) {
-    //   drawnStar.push(
-    //     ['line', {
-    //       transform: 'rotate(' + ((360 / 16) * j) +')',
-    //       x1: staro.objectRadius + 5,
-    //       x2: staro.objectRadius + 25,
-    //       class: 'grid'}
-    //     ],
-    //     ['line', {
-    //       transform: 'rotate(' + ((360 / 16) * j) +')',
-    //       x1: staro.objectRadius + 40,
-    //       x2: staro.objectRadius + 50,
-    //       class: 'grid'}
-    //     ],
-    //     ['line', {
-    //       transform: 'rotate(' + ((360 / 16) * j) +')',
-    //       x1: staro.objectRadius + 65,
-    //       x2: staro.objectRadius + 70,
-    //       class: 'grid'}
-    //     ]
-    //   );
-    // }
 
     return drawnStar;
   },
@@ -123,8 +103,6 @@ module.exports = {
     retStat.push(
       ['path', {transform: 'rotate(' + stationo.orient + ')', d: iconString, class: 'station'}]
     );
-
-
 
     return retStat;
   }

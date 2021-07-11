@@ -20,7 +20,7 @@ const makeBody = (inBodyo) => {
     {
       // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
-      sphereOfInfluence: 5
+      sphereOfInfluence: 10
     }
   );
   return bodyo;
@@ -34,7 +34,7 @@ const makeStation = (stationo) => {
     {
       // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
-      sphereOfInfluence: 5,
+      sphereOfInfluence: 10,
       orient: 90
     }
   );

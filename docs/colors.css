@@ -34,6 +34,12 @@ html, body {
 }
 .minorOrbit {
   fill: none;
+  stroke-width: 0.5px;
+  stroke: #c3c3c3ff;
+  stroke-dasharray: 1 5;
+}
+.orbitDivLine {
+  fill: none;
   stroke-width: 0.3px;
   stroke: #c3c3c3ff;
   stroke-dasharray: 20 5;

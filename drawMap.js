@@ -92,7 +92,7 @@ const drawOrbit = (bodies) => {
         y1: divline1.y,
         x2: divline2.x,
         y2: divline2.y,
-        class: 'minorOrbit'
+        class: 'orbitDivLine'
       }]);
     retGroup.push(
       ['g', tt(divline1.x, divline1.y),
@@ -417,18 +417,18 @@ exports.drawStatic = (options, stars, planets) => {
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
         ['stop', {offset: "0%", 'stop-color': "#ffc400", 'stop-opacity': 0.5 }],
-        ['stop', {offset: "100%", 'stop-color': 'none', 'stop-opacity': 0 }]
+        ['stop', {offset: "100%", 'stop-color': "#000000", 'stop-opacity': 0 }]
       ],
       ['radialGradient', {id: "RadialGradient2", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
-        ['stop', {offset: "0%", 'stop-color': "#000000", 'stop-opacity': 0.5 }],
-        ['stop', {offset: "100%", 'stop-color': 'none', 'stop-opacity': 0 }]
+        ['stop', {offset: "50%", 'stop-color': "#000000", 'stop-opacity': 0.25 }],
+        ['stop', {offset: "100%", 'stop-color': "#000000", 'stop-opacity': 0 }]
       ]
     ],
     ['g', {},
       drawOrbit(planets),
       ['g', {id: 'movingOrbits'}],
-      drawGrid(),
       drawStars(stars),
+      drawGrid(),
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ]

@@ -317,7 +317,7 @@ const drawOrbit = (bodies) => {
         y1: divline1.y,
         x2: divline2.x,
         y2: divline2.y,
-        class: 'minorOrbit'
+        class: 'orbitDivLine'
       }]);
     retGroup.push(
       ['g', tt(divline1.x, divline1.y),
@@ -642,18 +642,18 @@ exports.drawStatic = (options, stars, planets) => {
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
         ['stop', {offset: "0%", 'stop-color': "#ffc400", 'stop-opacity': 0.5 }],
-        ['stop', {offset: "100%", 'stop-color': 'none', 'stop-opacity': 0 }]
+        ['stop', {offset: "100%", 'stop-color': "#000000", 'stop-opacity': 0 }]
       ],
       ['radialGradient', {id: "RadialGradient2", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
-        ['stop', {offset: "0%", 'stop-color': "#000000", 'stop-opacity': 0.5 }],
-        ['stop', {offset: "100%", 'stop-color': 'none', 'stop-opacity': 0 }]
+        ['stop', {offset: "50%", 'stop-color': "#000000", 'stop-opacity': 0.25 }],
+        ['stop', {offset: "100%", 'stop-color': "#000000", 'stop-opacity': 0 }]
       ]
     ],
     ['g', {},
       drawOrbit(planets),
       ['g', {id: 'movingOrbits'}],
-      drawGrid(),
       drawStars(stars),
+      drawGrid(),
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ]
@@ -721,6 +721,10 @@ module.exports = {
     }
 
     tempBod.push(
+      ['circle', {
+        r: bodyo.objectRadius * 2,
+        fill: "url(#RadialGradient2)"
+      }],
       ['g', {},
         ['circle', { r: bodyo.objectRadius, class: bodyo.industry?'majorObject':'minorObject'}]
       ]
@@ -738,7 +742,7 @@ module.exports = {
         fill: "url(#RadialGradient1)"
       }],
       ['circle', {
-        r: staro.objectRadius + 10,
+        r: staro.objectRadius * 2,
         fill: "url(#RadialGradient2)"
       }],
       ['circle', {
@@ -747,30 +751,6 @@ module.exports = {
       }]
 
     );
-
-
-    // for (let j = 0; j < 16; j++) {
-    //   drawnStar.push(
-    //     ['line', {
-    //       transform: 'rotate(' + ((360 / 16) * j) +')',
-    //       x1: staro.objectRadius + 5,
-    //       x2: staro.objectRadius + 25,
-    //       class: 'grid'}
-    //     ],
-    //     ['line', {
-    //       transform: 'rotate(' + ((360 / 16) * j) +')',
-    //       x1: staro.objectRadius + 40,
-    //       x2: staro.objectRadius + 50,
-    //       class: 'grid'}
-    //     ],
-    //     ['line', {
-    //       transform: 'rotate(' + ((360 / 16) * j) +')',
-    //       x1: staro.objectRadius + 65,
-    //       x2: staro.objectRadius + 70,
-    //       class: 'grid'}
-    //     ]
-    //   );
-    // }
 
     return drawnStar;
   },
@@ -832,8 +812,6 @@ module.exports = {
     retStat.push(
       ['path', {transform: 'rotate(' + stationo.orient + ')', d: iconString, class: 'station'}]
     );
-
-
 
     return retStat;
   }
@@ -1079,7 +1057,7 @@ const makeBody = (inBodyo) => {
     {
       // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
-      sphereOfInfluence: 5
+      sphereOfInfluence: 10
     }
   );
   return bodyo;
@@ -1093,7 +1071,7 @@ const makeStation = (stationo) => {
     {
       // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
-      sphereOfInfluence: 5,
+      sphereOfInfluence: 10,
       orient: 90
     }
   );
