@@ -10,9 +10,7 @@ html, body {
 .panel {
   display: block;
   margin: auto;
-  top: 50%;
   position: relative;
-  transform: translateY(-50%);
   background: #363636;
 }
 .majorObject {
