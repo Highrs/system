@@ -103,12 +103,15 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
 
       ind.unLoadCraft(crafto);
 
+
       crafto.lastStop = crafto.route[0].location;
       crafto.route.shift();
       crafto.fuel = crafto.fuelCapacity;
 
       if (crafto.route.length != 0) {
         crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
+      } else {
+        crafto.status = 'parked';
       }
 
       rendererIntercept(drawMap.drawIntercepts(listOfcraft));
@@ -1006,10 +1009,10 @@ module.exports = {
   gasStation: () => ({
     name: 'Gas Station',
     abr: 'GAS',
-    cycle: 1000,
+    cycle: 1,
     input: {},
     output: {
-      fuel: 100
+      fuel: 1
     }
   })
 

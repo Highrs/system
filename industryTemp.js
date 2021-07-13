@@ -37,10 +37,10 @@ module.exports = {
   gasStation: () => ({
     name: 'Gas Station',
     abr: 'GAS',
-    cycle: 1000,
+    cycle: 1,
     input: {},
     output: {
-      fuel: 100
+      fuel: 1
     }
   })
 
