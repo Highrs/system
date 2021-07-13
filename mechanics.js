@@ -1,11 +1,10 @@
 'use strict';
 const majObj = require('./majorObjects2.json');
-// const craft = require('./craft.js');
 
-const cos = Math.cos;
-const sin = Math.sin;
-const PI = Math.PI;
-const sqrt = Math.sqrt;
+const cos   = Math.cos;
+const sin   = Math.sin;
+const PI    = Math.PI;
+const sqrt  = Math.sqrt;
 
 const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   if(!bodyo){throw 'kepCalc() err: no bodyo given.';}

@@ -22,12 +22,13 @@ const makeCraft = (crafto) => {
       name: namer(),
       x: 0, y: 0, z: 0,
       vx: 0, vy: 0, vz: 0,
-      cargo: {},
-      route: [],
-      lastStop: [],
-      status: 'parked',
+      speed: 0,
       course: 0,
       intercept: {},
+      status: 'parked',
+      route: [],
+      lastStop: [],
+      cargo: {},
       fuel: crafto.fuelCapacity
     }
   );
@@ -146,10 +147,13 @@ const calcMotion = (crafto, targeto, timeDelta) => {
   const dist = mech.calcDist(crafto, targeto);
 
   //Determine the direction of acceleration based on midpoint of travel.
-  let dir = (dist < targeto.turn) ? -1 : 1;
+  const dir = (dist < targeto.turn) ? -1 : 1;
+
+  // Bezier Curve:
+  // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
 
   ['x', 'y', 'z'].forEach(e => {
-    let deltaVelocity = (
+    const deltaVelocity = (
       dir * (crafto.accel) * (targeto['p' + e]) * timeDelta
     );
 
@@ -160,8 +164,43 @@ const calcMotion = (crafto, targeto, timeDelta) => {
   crafto.fuel = (crafto.fuel - crafto.fuelConsumption * timeDelta).toFixed(2);
 };
 
+const calcSolarDanger = (crafto, cepto, staro = {x: 600, y: 600, z: 0}) => {
+// C-----S
+//  \   /
+//   \^/
+//    T
+//     \
+//      I
+  let coordC = {x: 0, y: 0, z: 0};
+  let coordS = {x: staro.x - crafto.x, y: staro.y - crafto.y, z: staro.z - crafto.z};
+  let coordI = {x: cepto.x - crafto.x, y: cepto.y - crafto.y, z: cepto.z - crafto.z};
+
+  let distCS = mech.calcDist(coordC, coordS);
+  let distCI = mech.calcDist(coordC, coordI);
+
+  let dot = ( v1, v2 ) => {
+		return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+	};
+  let lengthSq = ( v ) => {
+    return v.x * v.x + v.y * v.y + v.z * v.z;
+  };
+
+  const denominator = Math.sqrt( lengthSq(coordS) * lengthSq(coordI) );
+  if ( denominator === 0 ) {return Math.PI / 2;}
+  const theta = dot( coordS, coordI ) / denominator;
+  let angleICS = (Math.acos( Math.max( theta, Math.min( - 1, 1 ) ) ));
+
+  let distCT = Math.cos(angleICS) * distCS;
+  let distST = Math.sin(angleICS) * distCS;
+
+  // console.log(distST);
+
+  if (distCT > distCI) {return Infinity;} else {return distST;}
+
+};
+
 const calcIntercept = (crafto, bodyo) => {
-  let intercept = {
+  let intercepto = {
     x: bodyo.x, y: bodyo.y, z: bodyo.z,
     px: 0, py: 0, pz: 0,
     turn: 0
@@ -169,19 +208,31 @@ const calcIntercept = (crafto, bodyo) => {
   let travelTime = 0;
   let distance = 0;
 
+// C ---P
+//   \  |
+//    \ |
+//      I
+
   for (let i = 0; i < 5; i++) {
-    distance   = mech.calcDist(crafto, intercept);
+    distance   = mech.calcDist(crafto, intercepto);
     travelTime = mech.calcTravelTime(distance, crafto.accel);
-    intercept  = {...mech.kepCalc(bodyo, bodyo.t + travelTime)};
+    intercepto  = {...mech.kepCalc(bodyo, bodyo.t + travelTime)};
   }
 
-  intercept.turn = distance / 2;
+  intercepto.turn = distance / 2;
+
+//   \|/
+//   -O-
+//   /|\
+  if (calcSolarDanger(crafto, intercepto) < 20) {
+    console.log(crafto.name + ' PASSING DANGEROUSLY CLOSE TO STAR!');
+  }
 
   ['x', 'y', 'z'].forEach(e => {
-    intercept['p' + e] = (intercept[e] - crafto[e]) / (distance);
+    intercepto['p' + e] = (intercepto[e] - crafto[e]) / (distance);
   });
 
-  calcCourse(crafto, intercept);
+  calcCourse(crafto, intercepto);
 
-  return intercept;
+  return intercepto;
 };

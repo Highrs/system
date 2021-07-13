@@ -168,7 +168,6 @@ const main = async () => {
     clockZero = time;
     if ( !isPaused ) {
       let workTime = (timeDelta * options.rate * simpRate);
-      // console.log(workTime);
       currentTime += workTime;
 
       for (let i = 0; i < movBod.length; i++) {
@@ -180,7 +179,6 @@ const main = async () => {
           movBod[i].orient = (Math.atan2(movBod[i].py - movBod[i].y, movBod[i].px - movBod[i].x) * 180 / Math.PI) + 90;
         }
       }
-
 
       craftList.forEach(crafto => {
         craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime);
