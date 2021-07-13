@@ -6,7 +6,8 @@
     "x": 600,
     "y": 600,
     "z": 0,
-    "objectRadius": 15
+    "objectRadius": 15,
+    "color": "#ff7a00"
   },
   "gamma": {
     "name": "Gamma",

@@ -34,9 +34,9 @@ html, body {
 }
 .minorOrbit {
   fill: none;
-  stroke-width: 0.5px;
+  stroke-width: 0.2px;
   stroke: #c3c3c3ff;
-  stroke-dasharray: 1 5;
+  stroke-dasharray: 5 3;
 }
 .orbitDivLine {
   fill: none;
@@ -65,8 +65,14 @@ html, body {
   stroke: #c3c3c3ff;
   fill: #363636;
 }
+.dataLine {
+  stroke-width: 0.5px;
+  stroke: #c3c3c3ff;
+  fill: none;
+}
 .dataText {
-  font: 10px B612 Mono;
+  font: 5px B612 Mono;
+  stroke: none;
   fill: #ffffffff;
 }
 .rangeWindow {
@@ -98,7 +104,8 @@ html, body {
   stroke: #00ff66ff;
 }
 .craftDataText {
-  font: 10px B612 Mono;
+  font: 5px B612 Mono;
+  stroke: none;
   fill: #ffffffff;
 }
 .intercept {
@@ -120,15 +127,7 @@ html, body {
   stroke-width: 1px;
   stroke: #00ff66ff;
 }
-/* .starGrad {
-  stroke: none;
-  fill: "url(#RadialGradient1)";
-}
-.corona {
-  fill: "url(#RadialGradient2)";
-} */
 .star {
   fill: #363636;
   stroke-width: 1px;
-  stroke: #ffc100;
 }

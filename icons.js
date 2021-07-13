@@ -38,7 +38,9 @@ module.exports = {
       }],
       ['circle', {
         r: staro.objectRadius,
-        class: 'star'
+        stroke: staro.color,
+        fill: '#363636'
+        // class: 'star'
       }]
 
     );
@@ -46,12 +48,22 @@ module.exports = {
     return drawnStar;
   },
 
-  intercept: (crafto) => (
-    ['g', tt(crafto.intercept.x, crafto.intercept.y),
-      ['path', {d: 'M -5, 3 L -2, 2 L -3, 5 L -5, 5 Z', class: 'gridBold'}],
+  intercept: (x, y) => (
+    ['g', tt(x, y),
       ['path', {d: 'M  5, 3 L  2, 2 L  3, 5 L  5, 5 Z', class: 'gridBold'}],
       ['path', {d: 'M  5,-3 L  2,-2 L  3,-5 L  5,-5 Z', class: 'gridBold'}],
+      ['path', {d: 'M -5, 3 L -2, 2 L -3, 5 L -5, 5 Z', class: 'gridBold'}],
       ['path', {d: 'M -5,-3 L -2,-2 L -3,-5 L -5,-5 Z', class: 'gridBold'}]
+    ]
+  ),
+
+  marker: (x, y) => (
+    ['g', tt(x, y),
+      ['path', {d: 'M  3, 3 L  1, 1', class: 'gridBold'}],
+      ['path', {d: 'M  3,-3 L  1,-1', class: 'gridBold'}],
+      ['path', {d: 'M -3, 3 L -1, 1', class: 'gridBold'}],
+      ['path', {d: 'M -3,-3 L -1,-1', class: 'gridBold'}],
+      ['circle',{r: 1, class: 'gridBold'}]
     ]
   ),
 

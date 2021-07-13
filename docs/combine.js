@@ -81,7 +81,7 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
     crafto.intercept = {};
     if (!deviseRoute(crafto, indSites)) {
       crafto.status = 'parked';
-      ['x', 'y', 'z'].map(e => {
+      ['x', 'y', 'z'].forEach(e => {
         crafto[e] = crafto.lastStop[e];
         crafto['v' + e] = 0;
       });
@@ -96,7 +96,7 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
       ) < crafto.route[0].location.sphereOfInfluence
     ) {
 
-      ['x', 'y', 'z'].map(e => {
+      ['x', 'y', 'z'].forEach(e => {
         crafto['v' + e] = 0;
       });
 
@@ -184,7 +184,7 @@ const calcMotion = (crafto, targeto, timeDelta) => {
   //Determine the direction of acceleration based on midpoint of travel.
   let dir = (dist < targeto.turn) ? -1 : 1;
 
-  ['x', 'y', 'z'].map(e => {
+  ['x', 'y', 'z'].forEach(e => {
     let deltaVelocity = (
       dir * (crafto.accel) * (targeto['p' + e]) * timeDelta
     );
@@ -213,7 +213,7 @@ const calcIntercept = (crafto, bodyo) => {
 
   intercept.turn = distance / 2;
 
-  ['x', 'y', 'z'].map(e => {
+  ['x', 'y', 'z'].forEach(e => {
     intercept['p' + e] = (intercept[e] - crafto[e]) / (distance);
   });
 
@@ -349,38 +349,28 @@ const drawSimpleOrbit = (stations) => {
   return retGroup;
 };
 
-const indDisplay = (body) => {
-  let display = ['g', tt(0, 32),
-    ['rect', {
-      width: 90,
-      height:
-        body.industry.length * 10
-          + Object.keys(body.store).length * 10 + 25,
-      class: 'dataWindow'
-    }]
-  ];
+const drawIndustryData = (body) => {
+  let display = ['g', tt(10, -10)];
+
   display.push(
-    ['g', tt(0, 10),
-    ['text', {x: 3, y: 0,
-      class: 'dataText'}, 'INDUSTRY:'],
-      ['text', {x: 3, y: (body.industry.length + 1)*10,
-        class: 'dataText'}, 'STORE:']
-    ]
+    ['text', {x: 0, y: 6, class: 'dataText'}, 'IND:'],
+    ['text', {x: 0, y: (body.industry.length + 2) * 6, class: 'dataText'}, 'STORE:']
   );
-  body.industry.map((e, idx) => {
+
+  body.industry.forEach((e, idx) => {
     display.push(
-      ['g', tt(0, 10),
-        ['text', {x: 9, y: (idx + 1) * 10, class: 'dataText'},
+      ['g', tt(0, 6),
+        ['text', {x: 2, y: (idx + 1) * 6, class: 'dataText'},
           e.abr +":" + e.status
         ]
       ]
     );
   });
-  Object.keys(body.store).map((e, idx) => {
+  Object.keys(body.store).forEach((e, idx) => {
     display.push(
-      ['g', tt(0, 10),
-        ['text', {x: 9,
-          y: (body.industry.length + idx + 2) * 10,
+      ['g', tt(0, 6),
+        ['text', {x: 2,
+          y: (body.industry.length + idx + 2) * 6,
           class: 'dataText'}, e.toUpperCase() + ':' + body.store[e]
         ]
       ]
@@ -390,41 +380,21 @@ const indDisplay = (body) => {
   return display;
 };
 
-const drawData = (bodyo) => {
+const drawBodyData = (bodyo) => {
   let dataDisp = ['g', {}];
-  if (
-    // bodyo.type === 'planet' ||
-    bodyo.industry
-  ) {
-    dataDisp.push(
-      ['rect', {
-        // width: ((bodyo.name.length * 6.5) + 12),
-        width: 90,
-        height: 14,
-        class: 'dataWindow'
-      }],
-      ['text', {x: 8, y: 10, class: 'dataText'}, bodyo.name]
-    );
-  }
 
-  if (bodyo.industry) {
-    dataDisp.push(
-      ['g', tt(0, 16),
-        ['rect', {
-          width: 90,
-          height: 14,
-          class: 'dataWindow'
-        }],
-        ['text', {x: 3, y: 10, class: 'dataText'},
-          // 'XYZ:' +
-          (bodyo.x).toFixed(0) + ',' +
-          (bodyo.y).toFixed(0) + ',' +
-          (bodyo.z).toFixed(0)
-        ]
-      ]
-    );
-    dataDisp.push(indDisplay(bodyo));
-  }
+  dataDisp.push(
+    ['path', {d: 'M 0,0 L 10, -10 L 25, -10', class: 'dataLine'}],
+    ['text', {x: 10, y: -11, class: 'dataText'}, bodyo.name]
+    // ['text', {x: 10, y: 2, class: 'dataText'},
+    //   (bodyo.x).toFixed(0) + ',' +
+    //   (bodyo.y).toFixed(0) + ',' +
+    //   (bodyo.z).toFixed(0)
+    // ]
+  );
+
+  if (bodyo.industry) { dataDisp.push(drawIndustryData(bodyo)); }
+
   return dataDisp;
 };
 
@@ -432,9 +402,11 @@ const drawBodies = (bodies, options) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   for (let i = 0; i < bodies.length; i++) {
-    if (options.planetData) {
+    if (
+      options.planetData
+    ) {
       bodiesDrawn.push(
-        ['g', tt(bodies[i].x, bodies[i].y), drawData(bodies[i]),]
+        ['g', tt(bodies[i].x, bodies[i].y), drawBodyData(bodies[i]),]
       );
     }
 
@@ -449,9 +421,11 @@ const drawStations = (stations, options) => {
   if (stations.length < 1) {return ['g', {}];}
   const stationsDrawn = ['g', {}];
   for (let i = 0; i < stations.length; i++) {
-    if (options.planetData) {
+    if (
+      options.planetData
+    ) {
       stationsDrawn.push(
-        ['g', tt(stations[i].x, stations[i].y), drawData(stations[i]),]
+        ['g', tt(stations[i].x, stations[i].y), drawBodyData(stations[i]),]
       );
     }
 
@@ -465,8 +439,8 @@ const drawStations = (stations, options) => {
 const drawBelts = (belts) => {
   let rocksDrawn = ['g', {}];
 
-  belts.map(e => {
-    e.rocks.map(r => {
+  belts.forEach(e => {
+    e.rocks.forEach(r => {
       rocksDrawn.push(
         icons.body(r)
       );
@@ -493,63 +467,60 @@ const drawHeader = (clock, options) => {
 
 const drawStars = (stars) =>{
   let drawnStars = ['g', {}];
-  stars.map((staro) => {
+  stars.forEach((staro) => {
     drawnStars.push(icons.star(staro));
   });
   return drawnStars;
 };
 
+const drawCraftData = (crafto) =>{
+  let drawnData = ['g', {}];
+
+  drawnData.push(
+    ['path', {d: 'M 0,0 L 10, -10 L 25, -10', class: 'dataLine'}],
+    ['text', {x: 10, y: -11, class: 'dataText'}, crafto.name + ' ' + crafto.abr],
+    ['text', {x: 10, y: -4, class: 'dataText'}, 'F:' + ((crafto.fuel / crafto.fuelCapacity) * 100).toFixed(0) + '%']
+  );
+
+  let offset = 0;
+  Object.keys(crafto.cargo).forEach(specCargo => {
+    if (crafto.cargo[specCargo] > 0) {
+      drawnData.push(
+        ['text', {x: 10, y: 8 * offset, class: 'dataText'}, specCargo + ':' + crafto.cargo[specCargo]]
+      );
+      offset++;
+    }
+  });
+
+  return drawnData;
+};
+
 const drawCraft = (listOfCraft, options) => {
   let drawnCraft = ['g', {}];
 
-  listOfCraft.map(crafto => {
-    if (crafto.status !== 'parked') {
+  listOfCraft.forEach(crafto => {
+    if (crafto.status === 'traveling') {
       let partCraft = ['g', tt(crafto.x, crafto.y)];
-      if (crafto.status === 'traveling') {
 
-        partCraft.push(
-          ['line', {
-            x1: 0,
-            y1: 0,
-            x2: crafto.vx,
-            y2: crafto.vy,
-            class: 'vector'
-          }],
-          ['g', tt(crafto.vx, crafto.vy), [
-            'circle',
-            {r : 1, class: 'vector'}
-          ]]
-        );
+      // Vector Line
+      partCraft.push(
+        ['line', {
+          x1: 0,
+          y1: 0,
+          x2: crafto.vx,
+          y2: crafto.vy,
+          class: 'vector'
+        }],
+        ['g', tt(crafto.vx, crafto.vy), [
+          'circle',
+          {r : 1, class: 'vector'}
+        ]]
+      );
 
-        if (options.craftData) {
-          partCraft.push(
-            ['g', tt(-3, 16), ['text', {class: 'craftDataText'}, crafto.name]]
-          );
+      // Data Display
+      if (options.craftData) { partCraft.push(drawCraftData(crafto)); }
 
-          let offset = 0;
-          Object.keys(crafto.cargo).map(specCargo => {
-            if (crafto.cargo[specCargo] > 0) {
-              offset++;
-              partCraft.push(
-                ['g', tt(-6, (16 + 8 * offset)),
-                  ['text', {class: 'craftDataText'}, specCargo + ':' + crafto.cargo[specCargo]]
-                ]
-              );
-            }
-          });
-          offset++;
-          partCraft.push(
-            ['g', tt(-6, (16 + 8 * offset)),
-              ['text', {class: 'craftDataText'},
-                'GAS:' + ((crafto.fuel / crafto.fuelCapacity) * 100).toFixed(0) + '%(' + crafto.fuel + ')']
-            ]
-          );
-        }
-
-        // drawnCraft.push(
-        //   icons.intercept(crafto)
-        // );
-      }
+      // Craft Icon Itself
       partCraft.push(
         ['g', {},
           ['g', {transform: 'rotate(' + crafto.course + ')'},
@@ -557,6 +528,7 @@ const drawCraft = (listOfCraft, options) => {
           ]
         ]
       );
+
       drawnCraft.push(partCraft);
     }
   });
@@ -610,7 +582,6 @@ exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, station
   return ['g', {},
     drawHeader(clock, options),
     drawBelts(belts),
-    // drawOrbit(moons),
     drawSimpleOrbit(stations),
     drawRanges(rangeCandidates),
     drawBodies(moons, options),
@@ -624,9 +595,9 @@ exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, station
 exports.drawIntercepts = (listOfcraft) => {
   let intercepts = ['g', {}];
 
-  listOfcraft.map(e => {
+  listOfcraft.forEach(e => {
     if (e.intercept && (e.status === 'traveling')) {
-      intercepts.push(icons.intercept(e));
+      intercepts.push(icons.marker(e.intercept.x, e.intercept.y));
     }
   });
 
@@ -641,7 +612,7 @@ exports.drawStatic = (options, stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
-        ['stop', {offset: "0%", 'stop-color': "#ffc400", 'stop-opacity': 0.5 }],
+        ['stop', {offset: "0%", 'stop-color': stars[0].color, 'stop-opacity': 0.5 }],
         ['stop', {offset: "100%", 'stop-color': "#000000", 'stop-opacity': 0 }]
       ],
       ['radialGradient', {id: "RadialGradient2", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
@@ -679,6 +650,7 @@ module.exports = {
 
   brick: () => ({
     class: 'Brick',
+    abr: 'BRK',
     cargoCap: 10,
     fuelCapacity: 100,
     fuelConsumption: 1,
@@ -688,6 +660,7 @@ module.exports = {
 
   boulder: () => ({
     class: 'Boulder',
+    abr: 'BLD',
     cargoCap: 20,
     fuelCapacity: 200,
     fuelConsumption: 2,
@@ -697,6 +670,7 @@ module.exports = {
 
   mountain: () => ({
     class: 'Mountain',
+    abr: 'MNT',
     cargoCap: 30,
     fuelCapacity: 300,
     fuelConsumption: 3,
@@ -747,7 +721,9 @@ module.exports = {
       }],
       ['circle', {
         r: staro.objectRadius,
-        class: 'star'
+        stroke: staro.color,
+        fill: '#363636'
+        // class: 'star'
       }]
 
     );
@@ -755,12 +731,22 @@ module.exports = {
     return drawnStar;
   },
 
-  intercept: (crafto) => (
-    ['g', tt(crafto.intercept.x, crafto.intercept.y),
-      ['path', {d: 'M -5, 3 L -2, 2 L -3, 5 L -5, 5 Z', class: 'gridBold'}],
+  intercept: (x, y) => (
+    ['g', tt(x, y),
       ['path', {d: 'M  5, 3 L  2, 2 L  3, 5 L  5, 5 Z', class: 'gridBold'}],
       ['path', {d: 'M  5,-3 L  2,-2 L  3,-5 L  5,-5 Z', class: 'gridBold'}],
+      ['path', {d: 'M -5, 3 L -2, 2 L -3, 5 L -5, 5 Z', class: 'gridBold'}],
       ['path', {d: 'M -5,-3 L -2,-2 L -3,-5 L -5,-5 Z', class: 'gridBold'}]
+    ]
+  ),
+
+  marker: (x, y) => (
+    ['g', tt(x, y),
+      ['path', {d: 'M  3, 3 L  1, 1', class: 'gridBold'}],
+      ['path', {d: 'M  3,-3 L  1,-1', class: 'gridBold'}],
+      ['path', {d: 'M -3, 3 L -1, 1', class: 'gridBold'}],
+      ['path', {d: 'M -3,-3 L -1,-1', class: 'gridBold'}],
+      ['circle',{r: 1, class: 'gridBold'}]
     ]
   ),
 
@@ -823,14 +809,10 @@ module.exports = {
 // Industry manager
 const indTemp = require('./industryTemp.js');
 
-async function delay(ms) {
-  return await new Promise(resolve => setTimeout(resolve, ms));
-}
-
 const initInd = (body) => {
   body.store = body.store || {};
 
-  body.industryList && body.industryList.map(bodyIndName => {
+  body.industryList && body.industryList.forEach(bodyIndName => {
     body.hold = body.hold || {};
     body.industry = body.industry || [];
 
@@ -840,48 +822,51 @@ const initInd = (body) => {
       indTemp[bodyIndName](),
       {
         status: 'NEW',
-        cycles: 0
+        cycles: 0,
+        workProg: 0,
       }
     );
 
     body.industry.push(newInd);
 
-    Object.keys(newInd.output).map(resName => {body.store[resName] |= 0;});
+    Object.keys(newInd.output).forEach(resName => {body.store[resName] |= 0;});
+    Object.keys(newInd.input ).forEach(resName => {body.store[resName] |= 0;});
 
-    Object.keys(newInd.input ).map(resName => {body.store[resName] |= 0;});
-
-    indWork(body, newInd);
+    // indWork(body, newInd);
   });
 };
 exports.initInd = initInd;
 
-const indWork = async (body, ind) => {
-  let workGo = true;
+const indWork = (body, ind, workTime) => {
 
-  Object.keys(ind.input).map(inRes => {
-    if (
-      (body.store[inRes] === undefined) ||
-      (ind.input[inRes] > body.store[inRes])
-    ) {
-      workGo = false;
+  if (ind.status === 'WORK') {
+    ind.workProg += workTime;
+    if (ind.workProg >= ind.cycle) {
+      Object.keys(ind.output).forEach(outRes => {
+        body.store[outRes] += ind.output[outRes];
+      });
+      ind.workProg = 0;
       ind.status = 'IDLE';
     }
-  });
-
-  if (workGo === true) {
-    ind.status = 'WORK';
-    Object.keys(ind.input).map(inRes => {
-      body.store[inRes] -= ind.input[inRes];
-    });
-    await delay(ind.cycle);
-    Object.keys(ind.output).map(outRes => {
-      body.store[outRes] += ind.output[outRes];
-    });
   } else {
-    await delay(1000);
+    let workGo = true;
+    Object.keys(ind.input).forEach(inRes => {
+      if (
+        (body.store[inRes] === undefined) ||
+        (body.store[inRes] < ind.input[inRes])
+      ) {
+        workGo = false;
+      }
+    });
+    if (workGo) {
+      Object.keys(ind.input).forEach(inRes => {
+        body.store[inRes] -= ind.input[inRes];
+      });
+      ind.status = 'WORK';
+    }
   }
 
-  indWork(body, ind);
+  // indWork(body, ind);
 };
 exports.indWork = indWork;
 
@@ -899,7 +884,7 @@ exports.moveTohold = moveTohold;
 const unLoadCraft = (crafto) => {
   let bodyo = crafto.route[0].location;
 
-  Object.keys(crafto.route[0].dropoff).map(res => {
+  Object.keys(crafto.route[0].dropoff).forEach(res => {
     const quant = crafto.route[0].dropoff[res];
     bodyo.store[res] |= 0;
     crafto.cargo[res] |= 0;
@@ -912,7 +897,7 @@ const unLoadCraft = (crafto) => {
     }
   });
 
-  Object.keys(crafto.route[0].pickup).map(res => {
+  Object.keys(crafto.route[0].pickup).forEach(res => {
     const quant = crafto.route[0].pickup[res];
     bodyo.store[res] |= 0;
     crafto.cargo[res] |= 0;
@@ -936,7 +921,7 @@ module.exports = {
   mining: () => ({
     name: 'Mining',
     abr: 'MNG',
-    cycle: 1000,
+    cycle: 1,
     input: {},
     output: {
       ore: 1
@@ -946,7 +931,7 @@ module.exports = {
   refining: () => ({
     name: 'Refining',
     abr: 'REF',
-    cycle: 5000,
+    cycle: 5,
     input: {
       ore: 10
     },
@@ -958,7 +943,7 @@ module.exports = {
   factory: () => ({
     name: 'Factory',
     abr: 'FRY',
-    cycle: 10000,
+    cycle: 10,
     input: {
       metal: 5
     },
@@ -1057,20 +1042,6 @@ const makeBody = (inBodyo) => {
     {
       // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
-      sphereOfInfluence: 10
-    }
-  );
-  return bodyo;
-};
-
-const makeStation = (stationo) => {
-  ind.initInd(stationo);
-  // const bodyDat = mech.kepCalc(stationo, 0);
-  const bodyo = Object.assign(
-    stationo,
-    {
-      // focalShift: bodyDat.focalShift,
-      x: 0, y: 0, z: 0,
       sphereOfInfluence: 10,
       orient: 90
     }
@@ -1129,8 +1100,8 @@ const makeBelt = (belto) => {
 };
 
 const craftStart = (craftList) => {
-  craftList.map(crafto => {
-    ['x', 'y', 'z'].map(e => {
+  craftList.forEach(crafto => {
+    ['x', 'y', 'z'].forEach(e => {
       crafto[e] = majObj[crafto.home][e];
     });
     crafto.lastStop = majObj[crafto.home];
@@ -1153,7 +1124,7 @@ const main = async () => {
 
   let sysObjects = {...majObj,...constructs};
 
-  Object.keys(sysObjects).map(objName => {
+  Object.keys(sysObjects).forEach(objName => {
     let theObj = sysObjects[objName];
 
     switch(theObj.type){
@@ -1162,7 +1133,7 @@ const main = async () => {
       case 'moon': moons.push(makeBody(theObj)); break;
       case 'asteroid': asteroids.push(makeBody(theObj)); break;
       case 'belt': belts.push(makeBelt(theObj)); break;
-      case 'station': stations.push(makeStation(theObj)); break;
+      case 'station': stations.push(makeBody(theObj)); break;
       default: console.log('ERROR at make. Skipping.');
     }
 
@@ -1171,7 +1142,7 @@ const main = async () => {
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, asteroids, stations);
-  belts.map(e => (movBod = movBod.concat(e.rocks)));
+  belts.forEach(e => (movBod = movBod.concat(e.rocks)));
 
   const makeManyCraft = (craftType, number) => {
     for (let i = 0; i < number; i++) {
@@ -1188,12 +1159,20 @@ const main = async () => {
     rate: 1,
     targetFrames: 60,
     header: false,
-    planetData: false,
-    craftData: false,
+    planetData: true,
+    craftData: true,
     stop: false,
-    intercepts: false
+    intercepts: true
   };
   const options = Window.options;
+
+  let isPaused = false;
+
+  function pause() { isPaused = true; console.log('|| Paused');}
+  function play() { isPaused = false; console.log('>> Unpaused');}
+
+  window.addEventListener('blur', pause);
+  window.addEventListener('focus', play);
 
   let simpRate = 1 / 1000;
 
@@ -1209,31 +1188,42 @@ const main = async () => {
     let time = performance.now();
     let timeDelta = time - clockZero;
     clockZero = time;
-    currentTime += timeDelta * options.rate * simpRate;
+    if ( !isPaused ) {
+      let workTime = (timeDelta * options.rate * simpRate);
+      // console.log(workTime);
+      currentTime += workTime;
 
-    for (let i = 0; i < movBod.length; i++) {
-      movBod[i].t = currentTime;
-      let newData = mech.kepCalc(movBod[i]);
-      ['x', 'y', 'z'].map(e => {movBod[i][e] = newData[e];});
-      if (movBod[i].orient) {
-        ['x', 'y', 'z'].map(e => {movBod[i]['p' + e] = newData['p' + e];});
-        movBod[i].orient = (Math.atan2(movBod[i].py - movBod[i].y, movBod[i].px - movBod[i].x) * 180 / Math.PI) + 90;
+      for (let i = 0; i < movBod.length; i++) {
+        movBod[i].t = currentTime;
+        let newData = mech.kepCalc(movBod[i]);
+        ['x', 'y', 'z'].forEach(e => {movBod[i][e] = newData[e];});
+        if (movBod[i].orient) {
+          ['x', 'y', 'z'].forEach(e => {movBod[i]['p' + e] = newData['p' + e];});
+          movBod[i].orient = (Math.atan2(movBod[i].py - movBod[i].y, movBod[i].px - movBod[i].x) * 180 / Math.PI) + 90;
+        }
       }
+
+
+      craftList.forEach(crafto => {
+        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime);
+      });
+
+      indSites.forEach(bodyo => {
+        bodyo.industry.forEach(industyo => {
+          ind.indWork(bodyo, industyo, workTime);
+        });
+      });
+
+      renderMoving(
+        drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
+        craftList, stations, rendererMovingOrbits)
+      );
     }
 
-    craftList.forEach(crafto => {
-      craft.craftAI(crafto, indSites, rendererIntercept, craftList,
-        (timeDelta * options.rate * simpRate));
-    });
-
-    renderMoving(
-      drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
-        craftList, stations, rendererMovingOrbits));
-
     if (options.stop) {return;}
+
     setTimeout(loop, 1000/options.targetFrames);
   };
-  // if (Window.options.stop !== 1) {loop();} else {return;}
   loop();
 };
 
@@ -1248,7 +1238,8 @@ module.exports={
     "x": 600,
     "y": 600,
     "z": 0,
-    "objectRadius": 15
+    "objectRadius": 15,
+    "color": "#ff7a00"
   },
   "gamma": {
     "name": "Gamma",
@@ -1509,7 +1500,7 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   };
 
   if (mode === 'n') {
-    ['x', 'y', 'z'].map(e => {
+    ['x', 'y', 'z'].forEach(e => {
       bodyCoords[e] = bodyCoords[e] / Math.pow(10, 9);
     });
   }

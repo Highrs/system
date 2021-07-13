@@ -20,20 +20,6 @@ const makeBody = (inBodyo) => {
     {
       // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
-      sphereOfInfluence: 10
-    }
-  );
-  return bodyo;
-};
-
-const makeStation = (stationo) => {
-  ind.initInd(stationo);
-  // const bodyDat = mech.kepCalc(stationo, 0);
-  const bodyo = Object.assign(
-    stationo,
-    {
-      // focalShift: bodyDat.focalShift,
-      x: 0, y: 0, z: 0,
       sphereOfInfluence: 10,
       orient: 90
     }
@@ -92,8 +78,8 @@ const makeBelt = (belto) => {
 };
 
 const craftStart = (craftList) => {
-  craftList.map(crafto => {
-    ['x', 'y', 'z'].map(e => {
+  craftList.forEach(crafto => {
+    ['x', 'y', 'z'].forEach(e => {
       crafto[e] = majObj[crafto.home][e];
     });
     crafto.lastStop = majObj[crafto.home];
@@ -116,7 +102,7 @@ const main = async () => {
 
   let sysObjects = {...majObj,...constructs};
 
-  Object.keys(sysObjects).map(objName => {
+  Object.keys(sysObjects).forEach(objName => {
     let theObj = sysObjects[objName];
 
     switch(theObj.type){
@@ -125,7 +111,7 @@ const main = async () => {
       case 'moon': moons.push(makeBody(theObj)); break;
       case 'asteroid': asteroids.push(makeBody(theObj)); break;
       case 'belt': belts.push(makeBelt(theObj)); break;
-      case 'station': stations.push(makeStation(theObj)); break;
+      case 'station': stations.push(makeBody(theObj)); break;
       default: console.log('ERROR at make. Skipping.');
     }
 
@@ -134,7 +120,7 @@ const main = async () => {
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, asteroids, stations);
-  belts.map(e => (movBod = movBod.concat(e.rocks)));
+  belts.forEach(e => (movBod = movBod.concat(e.rocks)));
 
   const makeManyCraft = (craftType, number) => {
     for (let i = 0; i < number; i++) {
@@ -151,12 +137,20 @@ const main = async () => {
     rate: 1,
     targetFrames: 60,
     header: false,
-    planetData: false,
-    craftData: false,
+    planetData: true,
+    craftData: true,
     stop: false,
-    intercepts: false
+    intercepts: true
   };
   const options = Window.options;
+
+  let isPaused = false;
+
+  function pause() { isPaused = true; console.log('|| Paused');}
+  function play() { isPaused = false; console.log('>> Unpaused');}
+
+  window.addEventListener('blur', pause);
+  window.addEventListener('focus', play);
 
   let simpRate = 1 / 1000;
 
@@ -172,31 +166,42 @@ const main = async () => {
     let time = performance.now();
     let timeDelta = time - clockZero;
     clockZero = time;
-    currentTime += timeDelta * options.rate * simpRate;
+    if ( !isPaused ) {
+      let workTime = (timeDelta * options.rate * simpRate);
+      // console.log(workTime);
+      currentTime += workTime;
 
-    for (let i = 0; i < movBod.length; i++) {
-      movBod[i].t = currentTime;
-      let newData = mech.kepCalc(movBod[i]);
-      ['x', 'y', 'z'].map(e => {movBod[i][e] = newData[e];});
-      if (movBod[i].orient) {
-        ['x', 'y', 'z'].map(e => {movBod[i]['p' + e] = newData['p' + e];});
-        movBod[i].orient = (Math.atan2(movBod[i].py - movBod[i].y, movBod[i].px - movBod[i].x) * 180 / Math.PI) + 90;
+      for (let i = 0; i < movBod.length; i++) {
+        movBod[i].t = currentTime;
+        let newData = mech.kepCalc(movBod[i]);
+        ['x', 'y', 'z'].forEach(e => {movBod[i][e] = newData[e];});
+        if (movBod[i].orient) {
+          ['x', 'y', 'z'].forEach(e => {movBod[i]['p' + e] = newData['p' + e];});
+          movBod[i].orient = (Math.atan2(movBod[i].py - movBod[i].y, movBod[i].px - movBod[i].x) * 180 / Math.PI) + 90;
+        }
       }
+
+
+      craftList.forEach(crafto => {
+        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime);
+      });
+
+      indSites.forEach(bodyo => {
+        bodyo.industry.forEach(industyo => {
+          ind.indWork(bodyo, industyo, workTime);
+        });
+      });
+
+      renderMoving(
+        drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
+        craftList, stations, rendererMovingOrbits)
+      );
     }
 
-    craftList.forEach(crafto => {
-      craft.craftAI(crafto, indSites, rendererIntercept, craftList,
-        (timeDelta * options.rate * simpRate));
-    });
-
-    renderMoving(
-      drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
-        craftList, stations, rendererMovingOrbits));
-
     if (options.stop) {return;}
+
     setTimeout(loop, 1000/options.targetFrames);
   };
-  // if (Window.options.stop !== 1) {loop();} else {return;}
   loop();
 };
 

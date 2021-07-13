@@ -45,7 +45,7 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
     crafto.intercept = {};
     if (!deviseRoute(crafto, indSites)) {
       crafto.status = 'parked';
-      ['x', 'y', 'z'].map(e => {
+      ['x', 'y', 'z'].forEach(e => {
         crafto[e] = crafto.lastStop[e];
         crafto['v' + e] = 0;
       });
@@ -60,7 +60,7 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
       ) < crafto.route[0].location.sphereOfInfluence
     ) {
 
-      ['x', 'y', 'z'].map(e => {
+      ['x', 'y', 'z'].forEach(e => {
         crafto['v' + e] = 0;
       });
 
@@ -148,7 +148,7 @@ const calcMotion = (crafto, targeto, timeDelta) => {
   //Determine the direction of acceleration based on midpoint of travel.
   let dir = (dist < targeto.turn) ? -1 : 1;
 
-  ['x', 'y', 'z'].map(e => {
+  ['x', 'y', 'z'].forEach(e => {
     let deltaVelocity = (
       dir * (crafto.accel) * (targeto['p' + e]) * timeDelta
     );
@@ -177,7 +177,7 @@ const calcIntercept = (crafto, bodyo) => {
 
   intercept.turn = distance / 2;
 
-  ['x', 'y', 'z'].map(e => {
+  ['x', 'y', 'z'].forEach(e => {
     intercept['p' + e] = (intercept[e] - crafto[e]) / (distance);
   });
 

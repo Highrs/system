@@ -81,7 +81,7 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   };
 
   if (mode === 'n') {
-    ['x', 'y', 'z'].map(e => {
+    ['x', 'y', 'z'].forEach(e => {
       bodyCoords[e] = bodyCoords[e] / Math.pow(10, 9);
     });
   }
