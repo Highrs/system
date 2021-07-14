@@ -41,10 +41,10 @@ const calcCourse = (crafto, intercepto) => {
   crafto.course = (Math.atan2(intercepto.py, intercepto.px) * 180 / Math.PI) - 90;
 };
 
-const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) => {
+const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, staro) => {
   if (crafto.route.length === 0) {
     crafto.intercept = {};
-    if (!deviseRoute(crafto, indSites)) {
+    if (!deviseRoute(crafto, indSites, staro)) {
       crafto.status = 'parked';
       ['x', 'y', 'z'].forEach(e => {
         crafto[e] = crafto.lastStop[e];
@@ -55,10 +55,9 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
     }
   } else {
     if (
-      mech.calcDist(
-        crafto,
-        crafto.route[0].location
-      ) < crafto.route[0].location.sphereOfInfluence
+      mech.calcDistSq(crafto, crafto.route[0].location) <
+      (crafto.route[0].location.sphereOfInfluence *
+        crafto.route[0].location.sphereOfInfluence)
     ) {
 
       ['x', 'y', 'z'].forEach(e => {
@@ -73,7 +72,7 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
       crafto.fuel = crafto.fuelCapacity;
 
       if (crafto.route.length != 0) {
-        crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
+        crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
       } else {
         crafto.status = 'parked';
       }
@@ -96,7 +95,7 @@ const buildWaypoint = (bodyo) => {
   return waypoint;
 };
 
-const deviseRoute = (crafto, indSites) => {
+const deviseRoute = (crafto, indSites, staro) => {
   if (crafto.route.length > 0) {
     console.log('ERROR at craft.deviseRoute: Route not empty!');
     crafto.route = [];
@@ -105,7 +104,11 @@ const deviseRoute = (crafto, indSites) => {
     console.log('ERROR at craft.deviseRoute: Too few industry sites.');
     return false;
   }
-  //Forgive me for I have sinned
+//   \|/
+//  --I--
+//   /|\
+//  /-A-\
+// /-----\
   return indSites.find(prodSite =>
     prodSite.industry.find(prodInd =>
       Object.keys(prodInd.output).find(prodRes =>
@@ -130,8 +133,7 @@ const deviseRoute = (crafto, indSites) => {
 
                   crafto.status = 'traveling';
 
-                  crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
-                  // calcCourse(crafto);
+                  crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
 
                   return true;
                 }
@@ -147,10 +149,10 @@ const deviseRoute = (crafto, indSites) => {
 
 const calcMotion = (crafto, targeto, timeDelta) => {
   // timeDelta passed down in SECONDS not ms
-  const dist = mech.calcDist(crafto, targeto);
 
   //Determine the direction of acceleration based on midpoint of travel.
-  const dir = (dist < targeto.turn) ? -1 : 1;
+  const distToTarget = mech.calcDistSq(crafto, targeto);
+  const dir = (distToTarget < (targeto.turn * targeto.turn)) ? -1 : 1;
 
   // Bezier Curve:
   // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
@@ -167,7 +169,7 @@ const calcMotion = (crafto, targeto, timeDelta) => {
   crafto.fuel = (crafto.fuel - crafto.fuelConsumption * timeDelta).toFixed(2);
 };
 
-const calcSolarDanger = (crafto, cepto, staro = {x: 600, y: 600, z: 0}) => {
+const calcSolarDanger = (crafto, icpto, staro = {x: 600, y: 600, z: 0}) => {
 // C-----S
 //  \   /
 //   \^/
@@ -176,7 +178,7 @@ const calcSolarDanger = (crafto, cepto, staro = {x: 600, y: 600, z: 0}) => {
 //      I
   let coordC = {x: 0, y: 0, z: 0};
   let coordS = {x: staro.x - crafto.x, y: staro.y - crafto.y, z: staro.z - crafto.z};
-  let coordI = {x: cepto.x - crafto.x, y: cepto.y - crafto.y, z: cepto.z - crafto.z};
+  let coordI = {x: icpto.x - crafto.x, y: icpto.y - crafto.y, z: icpto.z - crafto.z};
 
   let distCS = mech.calcDist(coordC, coordS);
   let distCI = mech.calcDist(coordC, coordI);
@@ -202,7 +204,7 @@ const calcSolarDanger = (crafto, cepto, staro = {x: 600, y: 600, z: 0}) => {
 
 };
 
-const calcIntercept = (crafto, bodyo) => {
+const calcIntercept = (crafto, bodyo, staro) => {
   let intercepto = {
     x: bodyo.x, y: bodyo.y, z: bodyo.z,
     px: 0, py: 0, pz: 0,
@@ -227,8 +229,8 @@ const calcIntercept = (crafto, bodyo) => {
 //   \|/
 //   -O-
 //   /|\
-  if (calcSolarDanger(crafto, intercepto) < 20) {
-    console.log(crafto.name + ' PASSING DANGEROUSLY CLOSE TO STAR!');
+  if (calcSolarDanger(crafto, intercepto, staro) < staro.nopeZone) {
+    console.log(crafto.name + ' WILL BE PASSING DANGEROUSLY CLOSE TO STAR!');
   }
 
   ['x', 'y', 'z'].forEach(e => {

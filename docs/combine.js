@@ -1,6 +1,6 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports={
-  "stationB": {
+  "stationBA": {
     "name": "Beta Extract",
     "type": "station",
     "size": "extractor",
@@ -23,6 +23,51 @@ module.exports={
     "primary": "beta",
     "mass": 100,
     "a":    25,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0
+  },
+  "stationP": {
+    "name": "Prime Orbital",
+    "type": "station",
+    "size": "small",
+    "primary": "prime",
+    "mass": 100,
+    "a":    110,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0
+  },
+  "stationO": {
+    "name": "Outer Orbital",
+    "type": "station",
+    "size": "small",
+    "primary": "prime",
+    "mass": 90,
+    "a":    540,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0
+  },
+  "stationP": {
+    "name": "Portal Orbital",
+    "type": "station",
+    "size": "small",
+    "primary": "prime",
+    "mass": 90,
+    "a":    310,
     "e":    0,
     "t":    0,
     "t0":   0,
@@ -77,10 +122,10 @@ const calcCourse = (crafto, intercepto) => {
   crafto.course = (Math.atan2(intercepto.py, intercepto.px) * 180 / Math.PI) - 90;
 };
 
-const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) => {
+const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, staro) => {
   if (crafto.route.length === 0) {
     crafto.intercept = {};
-    if (!deviseRoute(crafto, indSites)) {
+    if (!deviseRoute(crafto, indSites, staro)) {
       crafto.status = 'parked';
       ['x', 'y', 'z'].forEach(e => {
         crafto[e] = crafto.lastStop[e];
@@ -91,10 +136,9 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
     }
   } else {
     if (
-      mech.calcDist(
-        crafto,
-        crafto.route[0].location
-      ) < crafto.route[0].location.sphereOfInfluence
+      mech.calcDistSq(crafto, crafto.route[0].location) <
+      (crafto.route[0].location.sphereOfInfluence *
+        crafto.route[0].location.sphereOfInfluence)
     ) {
 
       ['x', 'y', 'z'].forEach(e => {
@@ -109,7 +153,7 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta) =>
       crafto.fuel = crafto.fuelCapacity;
 
       if (crafto.route.length != 0) {
-        crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
+        crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
       } else {
         crafto.status = 'parked';
       }
@@ -132,7 +176,7 @@ const buildWaypoint = (bodyo) => {
   return waypoint;
 };
 
-const deviseRoute = (crafto, indSites) => {
+const deviseRoute = (crafto, indSites, staro) => {
   if (crafto.route.length > 0) {
     console.log('ERROR at craft.deviseRoute: Route not empty!');
     crafto.route = [];
@@ -141,7 +185,11 @@ const deviseRoute = (crafto, indSites) => {
     console.log('ERROR at craft.deviseRoute: Too few industry sites.');
     return false;
   }
-  //Forgive me for I have sinned
+//   \|/
+//  --I--
+//   /|\
+//  /-A-\
+// /-----\
   return indSites.find(prodSite =>
     prodSite.industry.find(prodInd =>
       Object.keys(prodInd.output).find(prodRes =>
@@ -166,8 +214,7 @@ const deviseRoute = (crafto, indSites) => {
 
                   crafto.status = 'traveling';
 
-                  crafto.intercept = calcIntercept(crafto, crafto.route[0].location);
-                  // calcCourse(crafto);
+                  crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
 
                   return true;
                 }
@@ -183,10 +230,10 @@ const deviseRoute = (crafto, indSites) => {
 
 const calcMotion = (crafto, targeto, timeDelta) => {
   // timeDelta passed down in SECONDS not ms
-  const dist = mech.calcDist(crafto, targeto);
 
   //Determine the direction of acceleration based on midpoint of travel.
-  const dir = (dist < targeto.turn) ? -1 : 1;
+  const distToTarget = mech.calcDistSq(crafto, targeto);
+  const dir = (distToTarget < (targeto.turn * targeto.turn)) ? -1 : 1;
 
   // Bezier Curve:
   // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
@@ -203,7 +250,7 @@ const calcMotion = (crafto, targeto, timeDelta) => {
   crafto.fuel = (crafto.fuel - crafto.fuelConsumption * timeDelta).toFixed(2);
 };
 
-const calcSolarDanger = (crafto, cepto, staro = {x: 600, y: 600, z: 0}) => {
+const calcSolarDanger = (crafto, icpto, staro = {x: 600, y: 600, z: 0}) => {
 // C-----S
 //  \   /
 //   \^/
@@ -212,7 +259,7 @@ const calcSolarDanger = (crafto, cepto, staro = {x: 600, y: 600, z: 0}) => {
 //      I
   let coordC = {x: 0, y: 0, z: 0};
   let coordS = {x: staro.x - crafto.x, y: staro.y - crafto.y, z: staro.z - crafto.z};
-  let coordI = {x: cepto.x - crafto.x, y: cepto.y - crafto.y, z: cepto.z - crafto.z};
+  let coordI = {x: icpto.x - crafto.x, y: icpto.y - crafto.y, z: icpto.z - crafto.z};
 
   let distCS = mech.calcDist(coordC, coordS);
   let distCI = mech.calcDist(coordC, coordI);
@@ -238,7 +285,7 @@ const calcSolarDanger = (crafto, cepto, staro = {x: 600, y: 600, z: 0}) => {
 
 };
 
-const calcIntercept = (crafto, bodyo) => {
+const calcIntercept = (crafto, bodyo, staro) => {
   let intercepto = {
     x: bodyo.x, y: bodyo.y, z: bodyo.z,
     px: 0, py: 0, pz: 0,
@@ -263,8 +310,8 @@ const calcIntercept = (crafto, bodyo) => {
 //   \|/
 //   -O-
 //   /|\
-  if (calcSolarDanger(crafto, intercepto) < 20) {
-    console.log(crafto.name + ' PASSING DANGEROUSLY CLOSE TO STAR!');
+  if (calcSolarDanger(crafto, intercepto, staro) < staro.nopeZone) {
+    console.log(crafto.name + ' WILL BE PASSING DANGEROUSLY CLOSE TO STAR!');
   }
 
   ['x', 'y', 'z'].forEach(e => {
@@ -730,6 +777,16 @@ module.exports = {
     fuelConsumption: 3,
     accel: 1,
     home: 'beta'
+  }),
+
+  barlog: () => ({
+    class: 'Barlog',
+    abr: 'BRL',
+    cargoCap: 40,
+    fuelCapacity: 400,
+    fuelConsumption: 4,
+    accel: 1,
+    home: 'beta'
   })
 
 };
@@ -772,6 +829,10 @@ module.exports = {
       ['circle', {
         r: staro.objectRadius * 2,
         fill: "url(#RadialGradient2)"
+      }],
+      ['circle', {
+        r: 20,
+        class: 'minorOrbit'
       }],
       ['circle', {
         r: staro.objectRadius,
@@ -817,7 +878,8 @@ module.exports = {
       Boulder:
 'M 0,-1 L 2,-3 L 3,-2 L 3,3 L 2,4 L -2,4 L -3,3 L -3,-2 L -2,-3 Z',
       Mountain:
-'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z'
+'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z',
+      Barlog: 'M 0,-3 L 2,-5 L 3,-5 L 4,-4 L 4,-3 L 3,-2 L 4,-1 L 4, 1 L 3,2 L 4,3 L 4,4 L 3,5 L -3,5 L -4,4 L -4,3 L -3,2 L -4,1 L -4,-1 L -3,-2 L -4,-3 L -4,-4 L -3,-5 L -2,-5 Z'
     };
 
     let iconString =
@@ -1208,6 +1270,7 @@ const main = async () => {
   makeManyCraft('brick', 8);
   makeManyCraft('boulder', 4);
   makeManyCraft('mountain', 2);
+  makeManyCraft('barlog', 1);
 
   Window.options = {
     rate: 1,
@@ -1257,7 +1320,7 @@ const main = async () => {
       }
 
       craftList.forEach(crafto => {
-        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime);
+        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime, stars[0]);
       });
 
       indSites.forEach(bodyo => {
@@ -1291,7 +1354,8 @@ module.exports={
     "y": 600,
     "z": 0,
     "objectRadius": 15,
-    "color": "#ff7a00"
+    "color": "#ff7a00",
+    "nopeZone": 30
   },
   "gamma": {
     "name": "Gamma",
@@ -1582,11 +1646,19 @@ exports.kepCalc = kepCalc;
 
 const calcDist = (body1, body2) => {
   return sqrt(
-    Math.pow( (body1.x - body2.x), 2 )
-  + Math.pow( (body1.y - body2.y), 2 )
-  + Math.pow( (body1.z - body2.z), 2 ) );
+            Math.pow( (body1.x - body2.x), 2 )
+          + Math.pow( (body1.y - body2.y), 2 )
+          + Math.pow( (body1.z - body2.z), 2 ) );
 };
 exports.calcDist = calcDist;
+
+const calcDistSq = (body1, body2) => {
+  return (  Math.pow( (body1.x - body2.x), 2 )
+          + Math.pow( (body1.y - body2.y), 2 )
+          + Math.pow( (body1.z - body2.z), 2 )
+         );
+};
+exports.calcDistSq = calcDistSq;
 
 const calcTravelTime = (dist, accel) => {
   return sqrt( dist / accel ) * 2;

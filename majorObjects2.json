@@ -7,7 +7,8 @@
     "y": 600,
     "z": 0,
     "objectRadius": 15,
-    "color": "#ff7a00"
+    "color": "#ff7a00",
+    "nopeZone": 30
   },
   "gamma": {
     "name": "Gamma",

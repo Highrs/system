@@ -132,6 +132,7 @@ const main = async () => {
   makeManyCraft('brick', 8);
   makeManyCraft('boulder', 4);
   makeManyCraft('mountain', 2);
+  makeManyCraft('barlog', 1);
 
   Window.options = {
     rate: 1,
@@ -181,7 +182,7 @@ const main = async () => {
       }
 
       craftList.forEach(crafto => {
-        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime);
+        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime, stars[0]);
       });
 
       indSites.forEach(bodyo => {

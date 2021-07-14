@@ -28,6 +28,16 @@ module.exports = {
     fuelConsumption: 3,
     accel: 1,
     home: 'beta'
+  }),
+
+  barlog: () => ({
+    class: 'Barlog',
+    abr: 'BRL',
+    cargoCap: 40,
+    fuelCapacity: 400,
+    fuelConsumption: 4,
+    accel: 1,
+    home: 'beta'
   })
 
 };

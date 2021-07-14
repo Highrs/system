@@ -1,5 +1,5 @@
 {
-  "stationB": {
+  "stationBA": {
     "name": "Beta Extract",
     "type": "station",
     "size": "extractor",
@@ -22,6 +22,51 @@
     "primary": "beta",
     "mass": 100,
     "a":    25,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0
+  },
+  "stationP": {
+    "name": "Prime Orbital",
+    "type": "station",
+    "size": "small",
+    "primary": "prime",
+    "mass": 100,
+    "a":    110,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0
+  },
+  "stationO": {
+    "name": "Outer Orbital",
+    "type": "station",
+    "size": "small",
+    "primary": "prime",
+    "mass": 90,
+    "a":    540,
+    "e":    0,
+    "t":    0,
+    "t0":   0,
+    "w":    0,
+    "lang": 0,
+    "inc":  0,
+    "maz":  0
+  },
+  "stationP": {
+    "name": "Portal Orbital",
+    "type": "station",
+    "size": "small",
+    "primary": "prime",
+    "mass": 90,
+    "a":    310,
     "e":    0,
     "t":    0,
     "t0":   0,
