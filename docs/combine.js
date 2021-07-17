@@ -1293,7 +1293,7 @@ const main = async () => {
 
   Window.options = {
     rate: 1,
-    targetFrames: 5,
+    targetFrames: 60,
     header: false,
     planetData: true,
     craftData: true,
