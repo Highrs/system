@@ -3,6 +3,7 @@
 const indTemp = require('./industryTemp.js');
 
 const initInd = (body) => {
+
   body.store = body.store || {};
 
   body.industryList && body.industryList.forEach(bodyIndName => {
@@ -24,8 +25,6 @@ const initInd = (body) => {
 
     Object.keys(newInd.output).forEach(resName => {body.store[resName] |= 0;});
     Object.keys(newInd.input ).forEach(resName => {body.store[resName] |= 0;});
-
-    // indWork(body, newInd);
   });
 };
 exports.initInd = initInd;
@@ -33,6 +32,7 @@ exports.initInd = initInd;
 const indWork = (body, ind, workTime) => {
 
   if (ind.status === 'WORK') {
+
     ind.workProg += workTime;
     if (ind.workProg >= ind.cycle) {
       Object.keys(ind.output).forEach(outRes => {
@@ -41,7 +41,9 @@ const indWork = (body, ind, workTime) => {
       ind.workProg = 0;
       ind.status = 'IDLE';
     }
+
   } else {
+
     let workGo = true;
     Object.keys(ind.input).forEach(inRes => {
       if (
@@ -57,9 +59,8 @@ const indWork = (body, ind, workTime) => {
       });
       ind.status = 'WORK';
     }
-  }
 
-  // indWork(body, ind);
+  }
 };
 exports.indWork = indWork;
 

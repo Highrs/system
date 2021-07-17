@@ -40,7 +40,7 @@ module.exports = {
     cycle: 1,
     input: {},
     output: {
-      fuel: 1
+      fuel: 10
     }
   })
 

@@ -4,8 +4,8 @@ module.exports = {
     class: 'Brick',
     abr: 'BRK',
     cargoCap: 10,
-    fuelCapacity: 100,
-    fuelConsumption: 1,
+    fuelCapacity: 10,
+    fuelConsumption: 0.1,
     accel: 3,
     home: 'beta'
   }),
@@ -14,8 +14,8 @@ module.exports = {
     class: 'Boulder',
     abr: 'BLD',
     cargoCap: 20,
-    fuelCapacity: 200,
-    fuelConsumption: 2,
+    fuelCapacity: 20,
+    fuelConsumption: 0.2,
     accel: 2,
     home: 'beta'
   }),
@@ -24,8 +24,8 @@ module.exports = {
     class: 'Mountain',
     abr: 'MNT',
     cargoCap: 30,
-    fuelCapacity: 300,
-    fuelConsumption: 3,
+    fuelCapacity: 30,
+    fuelConsumption: 0.3,
     accel: 1,
     home: 'beta'
   }),
@@ -34,8 +34,8 @@ module.exports = {
     class: 'Barlog',
     abr: 'BRL',
     cargoCap: 40,
-    fuelCapacity: 400,
-    fuelConsumption: 4,
+    fuelCapacity: 40,
+    fuelConsumption: 0.4,
     accel: 1,
     home: 'beta'
   })

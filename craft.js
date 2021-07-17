@@ -41,6 +41,7 @@ const calcCourse = (crafto, intercepto) => {
   crafto.course = (Math.atan2(intercepto.py, intercepto.px) * 180 / Math.PI) - 90;
 };
 
+
 const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, staro) => {
   if (crafto.route.length === 0) {
     crafto.intercept = {};
@@ -95,6 +96,17 @@ const buildWaypoint = (bodyo) => {
   return waypoint;
 };
 
+// const enoughFuelCheck = (crafto) => {
+//   if (crafto.fuel < crafto.fuelConsumption * 30) {
+//     return false;
+//   }
+//   return true;
+// };
+//
+// const findNearestGasStation = (crafto, indSites) => {
+//
+// };
+
 const deviseRoute = (crafto, indSites, staro) => {
   if (crafto.route.length > 0) {
     console.log('ERROR at craft.deviseRoute: Route not empty!');
@@ -104,6 +116,12 @@ const deviseRoute = (crafto, indSites, staro) => {
     console.log('ERROR at craft.deviseRoute: Too few industry sites.');
     return false;
   }
+  // if (!enoughFuelCheck(crafto)) {
+  //   findNearestGasStation(crafto, indSites);
+  //
+  //
+  //   return true;
+  // }
 //   \|/
 //  --I--
 //   /|\
@@ -169,7 +187,7 @@ const calcMotion = (crafto, targeto, timeDelta) => {
   crafto.fuel = (crafto.fuel - crafto.fuelConsumption * timeDelta).toFixed(2);
 };
 
-const calcSolarDanger = (crafto, icpto, staro = {x: 600, y: 600, z: 0}) => {
+const calcSolarDanger = (crafto, icpto, staro) => {
 // C-----S
 //  \   /
 //   \^/

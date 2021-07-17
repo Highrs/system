@@ -13,7 +13,7 @@
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "industryList": ["gasStation"]
+    "industryList": ["gasStation", "gasStation"]
   },
   "stationBB": {
     "name": "Beta Orbital",

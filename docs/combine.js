@@ -14,7 +14,7 @@ module.exports={
     "lang": 0,
     "inc":  0,
     "maz":  0,
-    "industryList": ["gasStation"]
+    "industryList": ["gasStation", "gasStation"]
   },
   "stationBB": {
     "name": "Beta Orbital",
@@ -122,6 +122,7 @@ const calcCourse = (crafto, intercepto) => {
   crafto.course = (Math.atan2(intercepto.py, intercepto.px) * 180 / Math.PI) - 90;
 };
 
+
 const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, staro) => {
   if (crafto.route.length === 0) {
     crafto.intercept = {};
@@ -176,6 +177,17 @@ const buildWaypoint = (bodyo) => {
   return waypoint;
 };
 
+// const enoughFuelCheck = (crafto) => {
+//   if (crafto.fuel < crafto.fuelConsumption * 30) {
+//     return false;
+//   }
+//   return true;
+// };
+//
+// const findNearestGasStation = (crafto, indSites) => {
+//
+// };
+
 const deviseRoute = (crafto, indSites, staro) => {
   if (crafto.route.length > 0) {
     console.log('ERROR at craft.deviseRoute: Route not empty!');
@@ -185,6 +197,12 @@ const deviseRoute = (crafto, indSites, staro) => {
     console.log('ERROR at craft.deviseRoute: Too few industry sites.');
     return false;
   }
+  // if (!enoughFuelCheck(crafto)) {
+  //   findNearestGasStation(crafto, indSites);
+  //
+  //
+  //   return true;
+  // }
 //   \|/
 //  --I--
 //   /|\
@@ -250,7 +268,7 @@ const calcMotion = (crafto, targeto, timeDelta) => {
   crafto.fuel = (crafto.fuel - crafto.fuelConsumption * timeDelta).toFixed(2);
 };
 
-const calcSolarDanger = (crafto, icpto, staro = {x: 600, y: 600, z: 0}) => {
+const calcSolarDanger = (crafto, icpto, staro) => {
 // C-----S
 //  \   /
 //   \^/
@@ -753,8 +771,8 @@ module.exports = {
     class: 'Brick',
     abr: 'BRK',
     cargoCap: 10,
-    fuelCapacity: 100,
-    fuelConsumption: 1,
+    fuelCapacity: 10,
+    fuelConsumption: 0.1,
     accel: 3,
     home: 'beta'
   }),
@@ -763,8 +781,8 @@ module.exports = {
     class: 'Boulder',
     abr: 'BLD',
     cargoCap: 20,
-    fuelCapacity: 200,
-    fuelConsumption: 2,
+    fuelCapacity: 20,
+    fuelConsumption: 0.2,
     accel: 2,
     home: 'beta'
   }),
@@ -773,8 +791,8 @@ module.exports = {
     class: 'Mountain',
     abr: 'MNT',
     cargoCap: 30,
-    fuelCapacity: 300,
-    fuelConsumption: 3,
+    fuelCapacity: 30,
+    fuelConsumption: 0.3,
     accel: 1,
     home: 'beta'
   }),
@@ -783,8 +801,8 @@ module.exports = {
     class: 'Barlog',
     abr: 'BRL',
     cargoCap: 40,
-    fuelCapacity: 400,
-    fuelConsumption: 4,
+    fuelCapacity: 40,
+    fuelConsumption: 0.4,
     accel: 1,
     home: 'beta'
   })
@@ -926,6 +944,7 @@ module.exports = {
 const indTemp = require('./industryTemp.js');
 
 const initInd = (body) => {
+
   body.store = body.store || {};
 
   body.industryList && body.industryList.forEach(bodyIndName => {
@@ -947,8 +966,6 @@ const initInd = (body) => {
 
     Object.keys(newInd.output).forEach(resName => {body.store[resName] |= 0;});
     Object.keys(newInd.input ).forEach(resName => {body.store[resName] |= 0;});
-
-    // indWork(body, newInd);
   });
 };
 exports.initInd = initInd;
@@ -956,6 +973,7 @@ exports.initInd = initInd;
 const indWork = (body, ind, workTime) => {
 
   if (ind.status === 'WORK') {
+
     ind.workProg += workTime;
     if (ind.workProg >= ind.cycle) {
       Object.keys(ind.output).forEach(outRes => {
@@ -964,7 +982,9 @@ const indWork = (body, ind, workTime) => {
       ind.workProg = 0;
       ind.status = 'IDLE';
     }
+
   } else {
+
     let workGo = true;
     Object.keys(ind.input).forEach(inRes => {
       if (
@@ -980,9 +1000,8 @@ const indWork = (body, ind, workTime) => {
       });
       ind.status = 'WORK';
     }
-  }
 
-  // indWork(body, ind);
+  }
 };
 exports.indWork = indWork;
 
@@ -1074,7 +1093,7 @@ module.exports = {
     cycle: 1,
     input: {},
     output: {
-      fuel: 1
+      fuel: 10
     }
   })
 
@@ -1274,7 +1293,7 @@ const main = async () => {
 
   Window.options = {
     rate: 1,
-    targetFrames: 60,
+    targetFrames: 5,
     header: false,
     planetData: true,
     craftData: true,
