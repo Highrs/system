@@ -75,7 +75,7 @@ const moveTohold = (bodyo, res, crafto) => {
 };
 exports.moveTohold = moveTohold;
 
-const unLoadCraft = (crafto) => {
+const loadCraft = (crafto) => {
   let bodyo = crafto.route[0].location;
 
   Object.keys(crafto.route[0].dropoff).forEach(res => {
@@ -93,10 +93,14 @@ const unLoadCraft = (crafto) => {
 
   Object.keys(crafto.route[0].pickup).forEach(res => {
     const quant = crafto.route[0].pickup[res];
-    bodyo.store[res] |= 0;
+    // bodyo.store[res] |= 0;
     crafto.cargo[res] |= 0;
 
-    if (
+    if (res === 'fuel') {
+      crafto.fuel += quant;
+      bodyo.hold[crafto.name][res] -= quant;
+      console.log(crafto.name + ' refueled.');
+    } else if (
       (crafto.cargoCap >= quant) &&
       ( (crafto.cargo[res] + quant) <= crafto.cargoCap)
     ) {
@@ -107,4 +111,4 @@ const unLoadCraft = (crafto) => {
     }
   });
 };
-exports.unLoadCraft = unLoadCraft;
+exports.loadCraft = loadCraft;

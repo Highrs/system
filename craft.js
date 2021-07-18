@@ -25,7 +25,7 @@ const makeCraft = (crafto) => {
       speed: 0,
       course: 0,
       intercept: {},
-      status: 'parked',
+      status: 'new',
       route: [],
       lastStop: [],
       cargo: {},
@@ -65,14 +65,13 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, st
         crafto['v' + e] = 0;
       });
 
-      ind.unLoadCraft(crafto);
-
+      ind.loadCraft(crafto);
 
       crafto.lastStop = crafto.route[0].location;
       crafto.route.shift();
-      crafto.fuel = crafto.fuelCapacity;
+      // crafto.fuel = crafto.fuelCapacity;
 
-      if (crafto.route.length != 0) {
+      if (crafto.route.length !== 0) {
         crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
       } else {
         crafto.status = 'parked';
@@ -80,7 +79,11 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, st
 
       rendererIntercept(drawMap.drawIntercepts(listOfcraft));
     } else {
-      calcMotion(crafto, crafto.intercept, timeDelta);
+      if (crafto.fuel > 0) {
+        calcMotion(crafto, crafto.intercept, timeDelta);
+      } else {
+        calcDriftMotion(crafto, timeDelta);
+      }
     }
   }
 };
@@ -96,37 +99,53 @@ const buildWaypoint = (bodyo) => {
   return waypoint;
 };
 
-// const enoughFuelCheck = (crafto) => {
-//   if (crafto.fuel < crafto.fuelConsumption * 30) {
-//     return false;
-//   }
-//   return true;
-// };
-//
-// const findNearestGasStation = (crafto, indSites) => {
-//
-// };
-
-const deviseRoute = (crafto, indSites, staro) => {
-  if (crafto.route.length > 0) {
-    console.log('ERROR at craft.deviseRoute: Route not empty!');
-    crafto.route = [];
-  }
-  if (indSites.length < 2) {
-    console.log('ERROR at craft.deviseRoute: Too few industry sites.');
+const enoughFuelCheck = (crafto) => {
+  if (
+    crafto.fuel < crafto.fuelConsumption * 30
+    // crafto.fuel < 11
+  ) {
+    console.log(crafto.name + ' low on gas.');
     return false;
   }
-  // if (!enoughFuelCheck(crafto)) {
-  //   findNearestGasStation(crafto, indSites);
-  //
-  //
-  //   return true;
-  // }
-//   \|/
-//  --I--
-//   /|\
-//  /-A-\
-// /-----\
+  return true;
+};
+
+
+const findNearestGasStation = (crafto, indSites, staro) => {
+  // console.log('Here1');
+  let fuelNeeded = crafto.fuelCapacity - crafto.fuel;
+  return indSites.find(site => {
+    // console.log('Here2');
+    return site.industry.find(siteInd => {
+      // console.log('Here3');
+      if (
+        siteInd.output.fuel > 0 &
+        site.store.fuel >= fuelNeeded
+      ) {
+        // console.log('Here4');
+        crafto.route.push(buildWaypoint(site));
+
+        crafto.route[0].pickup = {
+          fuel: fuelNeeded
+        };
+        ind.moveTohold(site, 'fuel', crafto);
+
+        crafto.status = 'traveling';
+
+        crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
+
+        return true;
+      }
+    });
+  });
+};
+
+const findSimpleRoute = (crafto, indSites, staro) => {
+  //   \|/
+  //  --I--
+  //   /|\
+  //  /-A-\
+  // /-----\
   return indSites.find(prodSite =>
     prodSite.industry.find(prodInd =>
       Object.keys(prodInd.output).find(prodRes =>
@@ -163,6 +182,21 @@ const deviseRoute = (crafto, indSites, staro) => {
     )
   );
 };
+
+const deviseRoute = (crafto, indSites, staro) => {
+  if (crafto.route.length > 0) {
+    console.log('ERROR at craft.deviseRoute: Route not empty!');
+    crafto.route = [];
+  }
+  if (indSites.length < 2) {
+    console.log('ERROR at craft.deviseRoute: Too few industry sites.');
+    // return false;
+  }
+  if (!enoughFuelCheck(crafto)) {
+    return findNearestGasStation(crafto, indSites, staro);
+  }
+  return findSimpleRoute(crafto, indSites, staro);
+};
 //Replace this part later. Make it so each planet has exports and imports list.
 
 const calcMotion = (crafto, targeto, timeDelta) => {
@@ -184,7 +218,14 @@ const calcMotion = (crafto, targeto, timeDelta) => {
     crafto['v' + e] += deltaVelocity;
   });
 
-  crafto.fuel = (crafto.fuel - crafto.fuelConsumption * timeDelta).toFixed(2);
+  crafto.fuel = crafto.fuel - crafto.fuelConsumption * timeDelta;
+};
+
+const calcDriftMotion = (crafto, timeDelta) => {
+  // timeDelta passed down in SECONDS not ms
+  ['x', 'y', 'z'].forEach(e => {
+    crafto[e] += crafto['v' + e] * timeDelta;
+  });
 };
 
 const calcSolarDanger = (crafto, icpto, staro) => {

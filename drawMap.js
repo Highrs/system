@@ -388,11 +388,18 @@ exports.drawStatic = (options, stars, planets) => {
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
         ['stop', {offset: "0%", 'stop-color': stars[0].color, 'stop-opacity': 0.5 }],
-        ['stop', {offset: "100%", 'stop-color': "#000000", 'stop-opacity': 0 }]
+        ['stop', {offset: "100%", 'stop-color': "#000000", 'stop-opacity':    0 }]
       ],
       ['radialGradient', {id: "RadialGradient2", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
-        ['stop', {offset: "50%", 'stop-color': "#000000", 'stop-opacity': 0.25 }],
-        ['stop', {offset: "100%", 'stop-color': "#000000", 'stop-opacity': 0 }]
+        ['stop', {offset: "25%", 'stop-color': "#000000", 'stop-opacity':   0.25 }],
+        ['stop', {offset: "50%", 'stop-color': "#000000", 'stop-opacity':   0.1 }],
+        ['stop', {offset: "100%", 'stop-color': "#363636", 'stop-opacity':  0 }]
+      ],
+      ['radialGradient', {id: "RadialGradient3", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
+        ['stop', {offset: "25%", 'stop-color': stars[0].color, 'stop-opacity':  1 }],
+        ['stop', {offset: "35%", 'stop-color': stars[0].color, 'stop-opacity':  0.3 }],
+        ['stop', {offset: "50%", 'stop-color': stars[0].color, 'stop-opacity':  0.1 }],
+        ['stop', {offset: "100%", 'stop-color': stars[0].color, 'stop-opacity': 0 }]
       ]
     ],
     ['g', {},

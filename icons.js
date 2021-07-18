@@ -13,7 +13,7 @@ module.exports = {
 
     tempBod.push(
       ['circle', {
-        r: bodyo.objectRadius * 2,
+        r: bodyo.objectRadius * 4,
         fill: "url(#RadialGradient2)"
       }],
       ['g', {},
@@ -33,8 +33,8 @@ module.exports = {
         fill: "url(#RadialGradient1)"
       }],
       ['circle', {
-        r: staro.objectRadius * 2,
-        fill: "url(#RadialGradient2)"
+        r: staro.objectRadius * 4,
+        fill: "url(#RadialGradient3)"
       }],
       ['circle', {
         r: 20,

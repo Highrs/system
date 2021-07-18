@@ -122,9 +122,11 @@ const main = async () => {
   movBod = movBod.concat(planets, moons, asteroids, stations);
   belts.forEach(e => (movBod = movBod.concat(e.rocks)));
 
-  const makeManyCraft = (craftType, number) => {
-    for (let i = 0; i < number; i++) {
-      craftList.push(craft.makeCraft(hullTemps[craftType]()));
+  const makeManyCraft = (craftType, numberToMake) => {
+    for (let i = 0; i < numberToMake; i++) {
+      const baseTemplate = hullTemps[craftType]();
+      // console.log(sysObjects[baseTemplate.home]);
+      craftList.push(craft.makeCraft(baseTemplate));
     }
     craftStart(craftList);
   };
@@ -163,6 +165,13 @@ const main = async () => {
   const rendererIntercept = renderer(document.getElementById('intercept'));
   const rendererMovingOrbits = renderer(document.getElementById('movingOrbits'));
 
+  const orientOnSun = (bodyo, newData) => {
+    if (bodyo.orient) {
+      ['x', 'y', 'z'].forEach(e => {bodyo['p' + e] = newData['p' + e];});
+      bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
+    }
+  };
+
   const loop = () => {
     let time = performance.now();
     let timeDelta = time - clockZero;
@@ -175,13 +184,16 @@ const main = async () => {
         movBod[i].t = currentTime;
         let newData = mech.kepCalc(movBod[i]);
         ['x', 'y', 'z'].forEach(e => {movBod[i][e] = newData[e];});
-        if (movBod[i].orient) {
-          ['x', 'y', 'z'].forEach(e => {movBod[i]['p' + e] = newData['p' + e];});
-          movBod[i].orient = (Math.atan2(movBod[i].py - movBod[i].y, movBod[i].px - movBod[i].x) * 180 / Math.PI) + 90;
-        }
+        orientOnSun(movBod[i], newData);
       }
 
       craftList.forEach(crafto => {
+        if (crafto.status === 'new') {
+          ['x', 'y', 'z'].forEach(e => {
+            crafto[e] = sysObjects[crafto.home][e];
+          });
+          crafto.status = 'parked';
+        }
         craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime, stars[0]);
       });
 
