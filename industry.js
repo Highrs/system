@@ -2,18 +2,18 @@
 // Industry manager
 const indTemp = require('./industryTemp.js');
 
-const initInd = (body) => {
+const initInd = (bodyo) => {
 
-  body.store = body.store || {};
+  bodyo.store = bodyo.store || {};
 
-  body.industryList && body.industryList.forEach(bodyIndName => {
-    body.hold = body.hold || {};
-    body.industry = body.industry || [];
+  bodyo.industryList && bodyo.industryList.forEach(bodyoIndName => {
+    bodyo.hold = bodyo.hold || {};
+    bodyo.industry = bodyo.industry || [];
 
     let newInd = {};
     Object.assign(
       newInd,
-      indTemp[bodyIndName](),
+      indTemp[bodyoIndName](),
       {
         status: 'NEW',
         cycles: 0,
@@ -21,22 +21,32 @@ const initInd = (body) => {
       }
     );
 
-    body.industry.push(newInd);
+    bodyo.industry.push(newInd);
 
-    Object.keys(newInd.output).forEach(resName => {body.store[resName] |= 0;});
-    Object.keys(newInd.input ).forEach(resName => {body.store[resName] |= 0;});
+    Object.keys(newInd.output).forEach(resName => {
+      bodyo.store[resName] |= 0;
+      if (!bodyo.outputsList.find(e => e === resName)) {
+        bodyo.outputsList.push(resName);
+      }
+    });
+    Object.keys(newInd.input).forEach(resName => {
+      bodyo.store[resName] |= 0;
+      if (!bodyo.inputsList.find(e => e === resName)) {
+        bodyo.inputsList.push(resName);
+      }
+    });
   });
 };
 exports.initInd = initInd;
 
-const indWork = (body, ind, workTime) => {
+const indWork = (bodyo, ind, workTime) => {
 
   if (ind.status === 'WORK') {
 
     ind.workProg += workTime;
     if (ind.workProg >= ind.cycle) {
       Object.keys(ind.output).forEach(outRes => {
-        body.store[outRes] += ind.output[outRes];
+        bodyo.store[outRes] += ind.output[outRes];
       });
       ind.workProg = 0;
       ind.status = 'IDLE';
@@ -47,15 +57,15 @@ const indWork = (body, ind, workTime) => {
     let workGo = true;
     Object.keys(ind.input).forEach(inRes => {
       if (
-        (body.store[inRes] === undefined) ||
-        (body.store[inRes] < ind.input[inRes])
+        (bodyo.store[inRes] === undefined) ||
+        (bodyo.store[inRes] < ind.input[inRes])
       ) {
         workGo = false;
       }
     });
     if (workGo) {
       Object.keys(ind.input).forEach(inRes => {
-        body.store[inRes] -= ind.input[inRes];
+        bodyo.store[inRes] -= ind.input[inRes];
       });
       ind.status = 'WORK';
     }
@@ -75,7 +85,7 @@ const moveTohold = (bodyo, res, crafto) => {
 };
 exports.moveTohold = moveTohold;
 
-const loadCraft = (crafto) => {
+const transfCraftCargo = (crafto) => {
   let bodyo = crafto.route[0].location;
 
   Object.keys(crafto.route[0].dropoff).forEach(res => {
@@ -111,4 +121,4 @@ const loadCraft = (crafto) => {
     }
   });
 };
-exports.loadCraft = loadCraft;
+exports.transfCraftCargo = transfCraftCargo;

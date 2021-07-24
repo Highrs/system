@@ -13,7 +13,6 @@ const makeStar = (staro) => {
 };
 
 const makeBody = (inBodyo) => {
-  ind.initInd(inBodyo);
   // const bodyDat = mech.kepCalc(bodyo, 0);
   const bodyo = Object.assign(
     inBodyo,
@@ -21,9 +20,13 @@ const makeBody = (inBodyo) => {
       // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
       sphereOfInfluence: 10,
-      orient: 90
+      orient: 90,
+      inputsList: [],
+      outputsList: [],
+      owner: 'EMPIRE'
     }
   );
+  ind.initInd(bodyo);
   return bodyo;
 };
 
@@ -86,6 +89,31 @@ const craftStart = (craftList) => {
   });
 };
 
+const orientOnSun = (bodyo, newData) => {
+  if (bodyo.orient) {
+    ['x', 'y', 'z'].forEach(e => {bodyo['p' + e] = newData['p' + e];});
+    bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
+  }
+};
+
+const makeManyCraft = (craftType, numberToMake, craftList) => {
+  for (let i = 0; i < numberToMake; i++) {
+    const baseTemplate = hullTemps[craftType]();
+    craftList.push(craft.makeCraft(baseTemplate));
+  }
+};
+
+Window.options = {
+  rate: 1,
+  targetFrames: 60,
+  header: false,
+  planetData: true,
+  craftData: true,
+  stop: false,
+  intercepts: true
+};
+const options = Window.options;
+
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
   console.log('Use \' Window.options \' to modify settings.');
@@ -115,40 +143,21 @@ const main = async () => {
       default: console.log('ERROR at make. Skipping.');
     }
 
-    if (theObj.industry) {indSites.push(theObj);}
+    if (theObj.industry) { indSites.push(theObj); }
   });
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, asteroids, stations);
   belts.forEach(e => (movBod = movBod.concat(e.rocks)));
 
-  const makeManyCraft = (craftType, numberToMake) => {
-    for (let i = 0; i < numberToMake; i++) {
-      const baseTemplate = hullTemps[craftType]();
-      // console.log(sysObjects[baseTemplate.home]);
-      craftList.push(craft.makeCraft(baseTemplate));
-    }
-    craftStart(craftList);
-  };
+  makeManyCraft('brick', 8, craftList);
+  makeManyCraft('boulder', 4, craftList);
+  makeManyCraft('mountain', 2, craftList);
+  makeManyCraft('barlog', 1, craftList);
 
-  makeManyCraft('brick', 8);
-  makeManyCraft('boulder', 4);
-  makeManyCraft('mountain', 2);
-  makeManyCraft('barlog', 1);
-
-  Window.options = {
-    rate: 1,
-    targetFrames: 60,
-    header: false,
-    planetData: true,
-    craftData: true,
-    stop: false,
-    intercepts: true
-  };
-  const options = Window.options;
+  craftStart(craftList);
 
   let isPaused = false;
-
   function pause() { isPaused = true; console.log('|| Paused');}
   function play() { isPaused = false; console.log('>> Unpaused');}
 
@@ -164,13 +173,6 @@ const main = async () => {
   const renderMoving = renderer(document.getElementById('moving'));
   const rendererIntercept = renderer(document.getElementById('intercept'));
   const rendererMovingOrbits = renderer(document.getElementById('movingOrbits'));
-
-  const orientOnSun = (bodyo, newData) => {
-    if (bodyo.orient) {
-      ['x', 'y', 'z'].forEach(e => {bodyo['p' + e] = newData['p' + e];});
-      bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
-    }
-  };
 
   const loop = () => {
     let time = performance.now();
@@ -188,13 +190,7 @@ const main = async () => {
       }
 
       craftList.forEach(crafto => {
-        if (crafto.status === 'new') {
-          ['x', 'y', 'z'].forEach(e => {
-            crafto[e] = sysObjects[crafto.home][e];
-          });
-          crafto.status = 'parked';
-        }
-        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime, stars[0]);
+        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime, stars[0], sysObjects);
       });
 
       indSites.forEach(bodyo => {

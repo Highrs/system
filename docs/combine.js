@@ -84,6 +84,9 @@ const mech = require('./mechanics.js');
 const ind = require('./industry.js');
 const drawMap = require('./drawMap.js');
 
+// Bezier Curve:
+// B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
+
 const hullNamer = () => {
   let id = 0;
   return () => {
@@ -91,16 +94,17 @@ const hullNamer = () => {
     return id;
   };
 };
-
 const namer = hullNamer();
-
 const makeCraft = (crafto) => {
+  const id = namer();
+  const initWait = id % 10;
   let newCrafto = {};
   Object.assign(
     newCrafto,
     crafto,
     {
-      name: namer(),
+      name: id,
+      id: id,
       x: 0, y: 0, z: 0,
       vx: 0, vy: 0, vz: 0,
       speed: 0,
@@ -110,66 +114,129 @@ const makeCraft = (crafto) => {
       route: [],
       lastStop: [],
       cargo: {},
-      fuel: crafto.fuelCapacity
+      fuel: crafto.fuelCapacity,
+      owner: 'EMPIRE',
+      waitCycle: 0 + initWait
     }
   );
 
   return newCrafto;
 };
-exports.makeCraft = makeCraft;
+const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, staro, sysObjects) => {
+  switch(crafto.status) {
+    case 'new':
+      updateParking(crafto, sysObjects[crafto.home]);
+      crafto.status = 'parked';
+      break;
+    case 'parked':
+      if (attemptSearchChecker(crafto, timeDelta)) {
+        tryToMakeRoute(crafto, indSites, staro, rendererIntercept, listOfcraft);
+      }
+      break;
+    case 'traveling':
+      calcActiveMotion(crafto, crafto.intercept, timeDelta);
+      checkProxToTarget(crafto, listOfcraft, staro, rendererIntercept);
+      break;
+    case 'drifting':
+      calcDriftMotion(crafto, timeDelta);
+      break;
+    default:
+      console.log('[!] UNKNOWN CRAFT STATUS');
+      break;
+  }
+};
+const attemptSearchChecker = (crafto, timeDelta) => {
+  crafto.waitCycle += timeDelta;
+  if (crafto.waitCycle >= 1) {
+    crafto.waitCycle = 0;
+    return true;
+  }
+  return false;
+};
+const updateParking = (crafto, parkingSpot) => {
+  ['x', 'y', 'z'].forEach(e => {
+    crafto[e] = parkingSpot[e];
+  });
+};
+const calcActiveMotion = (crafto, targeto, timeDelta) => {
+  const distToTarget = mech.calcDistSq(crafto, targeto);
+  const dir = (distToTarget < (targeto.turn * targeto.turn)) ? -1 : 1;
 
+  ['x', 'y', 'z'].forEach(e => {
+    const dV = (dir * (crafto.accel) * (targeto['p' + e]) * timeDelta);
+    crafto[e] += (crafto['v' + e] * timeDelta) + (dV * timeDelta / 2);
+    crafto['v' + e] += dV;
+  });
+
+  crafto.fuel = crafto.fuel - crafto.fuelConsumption * timeDelta;
+  if (crafto.fuel <= 0) {crafto.status = 'drifting';}
+};
+const calcDriftMotion = (crafto, timeDelta) => {
+  // timeDelta passed down in SECONDS not ms
+  ['x', 'y', 'z'].forEach(e => {
+    crafto[e] += crafto['v' + e] * timeDelta;
+  });
+};
+const checkProxToTarget = (crafto, listOfcraft, staro, rendererIntercept) => {
+  let tsoi = crafto.route[0].location.sphereOfInfluence;
+  if (
+    mech.calcDistSq(crafto, crafto.route[0].location) < tsoi * tsoi
+  ) {
+    fullStop(crafto);
+    ind.transfCraftCargo(crafto);
+    crafto.lastStop = crafto.route[0].location;
+    crafto.route.shift();
+    if (crafto.route.length === 0) {
+      crafto.status = 'parked';
+    } else {
+      crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
+    }
+    rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+  }
+};
+const fullStop = (crafto) => {
+  ['x', 'y', 'z'].forEach(e => {
+    crafto['v' + e] = 0;
+  });
+};
+const calcIntercept = (crafto, bodyo, staro) => {
+  let intercepto = {
+    x: bodyo.x, y: bodyo.y, z: bodyo.z,
+    px: 0, py: 0, pz: 0,
+    turn: 0
+  };
+  let travelTime = 0;
+  let distance = 0;
+
+// C ---P
+//   \  |
+//    \ |
+//      I
+  for (let i = 0; i < 5; i++) {
+    distance   = mech.calcDist(crafto, intercepto);
+    travelTime = mech.calcTravelTime(distance, crafto.accel);
+    intercepto  = {...mech.kepCalc(bodyo, bodyo.t + travelTime)};
+  }
+
+  intercepto.turn = distance / 2;
+
+//   \|/
+//   -O-
+//   /|\
+  if (calcSolarDanger(crafto, intercepto, staro) < staro.nopeZone) {
+    console.log(crafto.name + ' WILL BE PASSING DANGEROUSLY CLOSE TO STAR!');
+  }
+
+  ['x', 'y', 'z'].forEach(e => {
+    intercepto['p' + e] = (intercepto[e] - crafto[e]) / (distance);
+  });
+  calcCourse(crafto, intercepto);
+
+  return intercepto;
+};
 const calcCourse = (crafto, intercepto) => {
   crafto.course = (Math.atan2(intercepto.py, intercepto.px) * 180 / Math.PI) - 90;
 };
-
-
-const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, staro) => {
-  if (crafto.route.length === 0) {
-    crafto.intercept = {};
-    if (!deviseRoute(crafto, indSites, staro)) {
-      crafto.status = 'parked';
-      ['x', 'y', 'z'].forEach(e => {
-        crafto[e] = crafto.lastStop[e];
-        crafto['v' + e] = 0;
-      });
-    } else {
-      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
-    }
-  } else {
-    if (
-      mech.calcDistSq(crafto, crafto.route[0].location) <
-      (crafto.route[0].location.sphereOfInfluence *
-        crafto.route[0].location.sphereOfInfluence)
-    ) {
-
-      ['x', 'y', 'z'].forEach(e => {
-        crafto['v' + e] = 0;
-      });
-
-      ind.loadCraft(crafto);
-
-      crafto.lastStop = crafto.route[0].location;
-      crafto.route.shift();
-      // crafto.fuel = crafto.fuelCapacity;
-
-      if (crafto.route.length !== 0) {
-        crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
-      } else {
-        crafto.status = 'parked';
-      }
-
-      rendererIntercept(drawMap.drawIntercepts(listOfcraft));
-    } else {
-      if (crafto.fuel > 0) {
-        calcMotion(crafto, crafto.intercept, timeDelta);
-      } else {
-        calcDriftMotion(crafto, timeDelta);
-      }
-    }
-  }
-};
-exports.craftAI = craftAI;
-
 const buildWaypoint = (bodyo) => {
   let waypoint = {
     location: bodyo,
@@ -179,7 +246,19 @@ const buildWaypoint = (bodyo) => {
 
   return waypoint;
 };
-
+const tryToMakeRoute = (crafto, indSites, staro, rendererIntercept, listOfcraft) => {
+  crafto.intercept = {};
+  if (!deviseRoute(crafto, indSites, staro)) {
+    crafto.status = 'parked';
+    ['x', 'y', 'z'].forEach(e => {
+      crafto[e] = crafto.lastStop[e];
+      crafto['v' + e] = 0;
+    });
+  } else {
+    // console.log('here');
+    rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+  }
+};
 const enoughFuelCheck = (crafto) => {
   if (
     crafto.fuel < crafto.fuelConsumption * 30
@@ -190,20 +269,15 @@ const enoughFuelCheck = (crafto) => {
   }
   return true;
 };
-
-
 const findNearestGasStation = (crafto, indSites, staro) => {
-  // console.log('Here1');
   let fuelNeeded = crafto.fuelCapacity - crafto.fuel;
   return indSites.find(site => {
-    // console.log('Here2');
-    return site.industry.find(siteInd => {
-      // console.log('Here3');
+    return site.outputsList.find(output => {
       if (
-        siteInd.output.fuel > 0 &
+        output === 'fuel' &
         site.store.fuel >= fuelNeeded
       ) {
-        // console.log('Here4');
+
         crafto.route.push(buildWaypoint(site));
 
         crafto.route[0].pickup = {
@@ -220,50 +294,45 @@ const findNearestGasStation = (crafto, indSites, staro) => {
     });
   });
 };
-
 const findSimpleRoute = (crafto, indSites, staro) => {
   //   \|/
   //  --I--
   //   /|\
   //  /-A-\
   // /-----\
-  return indSites.find(prodSite =>
-    prodSite.industry.find(prodInd =>
-      Object.keys(prodInd.output).find(prodRes =>
-        indSites.find(consSite => {
-          if (prodSite !== consSite) {
-            return consSite.industry.find(consInd =>
-              Object.keys(consInd.input).find(consRes => {
-                if (
-                  prodRes === consRes &&
-                  prodSite.store[prodRes] >= crafto.cargoCap
-                ) {
-                  crafto.route.push(buildWaypoint(prodSite));
-                  crafto.route.push(buildWaypoint(consSite));
+  return indSites.find(prodSite => {
+    return prodSite.outputsList.find(prodRes => {
+      return indSites.find(consSite => {
+        if (prodSite !== consSite) {
+          return consSite.outputsList.find(consRes => {
+            if (
+              prodRes === consRes &&
+              prodSite.store[prodRes] >= crafto.cargoCap
+            ) {
+              // console.log('here');
+              crafto.route.push(buildWaypoint(prodSite));
+              crafto.route.push(buildWaypoint(consSite));
 
-                  crafto.route[0].pickup = {
-                    [prodRes]: crafto.cargoCap
-                  };
-                  crafto.route[1].dropoff = {
-                    [prodRes]: crafto.cargoCap
-                  };
-                  ind.moveTohold(prodSite, prodRes, crafto);
+              crafto.route[0].pickup = {
+                [prodRes]: crafto.cargoCap
+              };
+              crafto.route[1].dropoff = {
+                [prodRes]: crafto.cargoCap
+              };
+              ind.moveTohold(prodSite, prodRes, crafto);
 
-                  crafto.status = 'traveling';
+              crafto.status = 'traveling';
 
-                  crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
+              crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
 
-                  return true;
-                }
-              })
-            );
-          }
-        })
-      )
-    )
-  );
+              return true;
+            }
+          });
+        }
+      });
+    });
+  });
 };
-
 const deviseRoute = (crafto, indSites, staro) => {
   if (crafto.route.length > 0) {
     console.log('ERROR at craft.deviseRoute: Route not empty!');
@@ -276,39 +345,9 @@ const deviseRoute = (crafto, indSites, staro) => {
   if (!enoughFuelCheck(crafto)) {
     return findNearestGasStation(crafto, indSites, staro);
   }
+  // console.log('here');
   return findSimpleRoute(crafto, indSites, staro);
 };
-//Replace this part later. Make it so each planet has exports and imports list.
-
-const calcMotion = (crafto, targeto, timeDelta) => {
-  // timeDelta passed down in SECONDS not ms
-
-  //Determine the direction of acceleration based on midpoint of travel.
-  const distToTarget = mech.calcDistSq(crafto, targeto);
-  const dir = (distToTarget < (targeto.turn * targeto.turn)) ? -1 : 1;
-
-  // Bezier Curve:
-  // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
-
-  ['x', 'y', 'z'].forEach(e => {
-    const deltaVelocity = (
-      dir * (crafto.accel) * (targeto['p' + e]) * timeDelta
-    );
-
-    crafto[e] += crafto['v' + e] * timeDelta + deltaVelocity * timeDelta / 2;
-    crafto['v' + e] += deltaVelocity;
-  });
-
-  crafto.fuel = crafto.fuel - crafto.fuelConsumption * timeDelta;
-};
-
-const calcDriftMotion = (crafto, timeDelta) => {
-  // timeDelta passed down in SECONDS not ms
-  ['x', 'y', 'z'].forEach(e => {
-    crafto[e] += crafto['v' + e] * timeDelta;
-  });
-};
-
 const calcSolarDanger = (crafto, icpto, staro) => {
 // C-----S
 //  \   /
@@ -344,43 +383,8 @@ const calcSolarDanger = (crafto, icpto, staro) => {
 
 };
 
-const calcIntercept = (crafto, bodyo, staro) => {
-  let intercepto = {
-    x: bodyo.x, y: bodyo.y, z: bodyo.z,
-    px: 0, py: 0, pz: 0,
-    turn: 0
-  };
-  let travelTime = 0;
-  let distance = 0;
-
-// C ---P
-//   \  |
-//    \ |
-//      I
-
-  for (let i = 0; i < 5; i++) {
-    distance   = mech.calcDist(crafto, intercepto);
-    travelTime = mech.calcTravelTime(distance, crafto.accel);
-    intercepto  = {...mech.kepCalc(bodyo, bodyo.t + travelTime)};
-  }
-
-  intercepto.turn = distance / 2;
-
-//   \|/
-//   -O-
-//   /|\
-  if (calcSolarDanger(crafto, intercepto, staro) < staro.nopeZone) {
-    console.log(crafto.name + ' WILL BE PASSING DANGEROUSLY CLOSE TO STAR!');
-  }
-
-  ['x', 'y', 'z'].forEach(e => {
-    intercepto['p' + e] = (intercepto[e] - crafto[e]) / (distance);
-  });
-
-  calcCourse(crafto, intercepto);
-
-  return intercepto;
-};
+exports.makeCraft = makeCraft;
+exports.craftAI = craftAI;
 
 },{"./drawMap.js":3,"./industry.js":7,"./mechanics.js":12}],3:[function(require,module,exports){
 'use strict';
@@ -991,18 +995,18 @@ module.exports = {
 // Industry manager
 const indTemp = require('./industryTemp.js');
 
-const initInd = (body) => {
+const initInd = (bodyo) => {
 
-  body.store = body.store || {};
+  bodyo.store = bodyo.store || {};
 
-  body.industryList && body.industryList.forEach(bodyIndName => {
-    body.hold = body.hold || {};
-    body.industry = body.industry || [];
+  bodyo.industryList && bodyo.industryList.forEach(bodyoIndName => {
+    bodyo.hold = bodyo.hold || {};
+    bodyo.industry = bodyo.industry || [];
 
     let newInd = {};
     Object.assign(
       newInd,
-      indTemp[bodyIndName](),
+      indTemp[bodyoIndName](),
       {
         status: 'NEW',
         cycles: 0,
@@ -1010,22 +1014,32 @@ const initInd = (body) => {
       }
     );
 
-    body.industry.push(newInd);
+    bodyo.industry.push(newInd);
 
-    Object.keys(newInd.output).forEach(resName => {body.store[resName] |= 0;});
-    Object.keys(newInd.input ).forEach(resName => {body.store[resName] |= 0;});
+    Object.keys(newInd.output).forEach(resName => {
+      bodyo.store[resName] |= 0;
+      if (!bodyo.outputsList.find(e => e === resName)) {
+        bodyo.outputsList.push(resName);
+      }
+    });
+    Object.keys(newInd.input).forEach(resName => {
+      bodyo.store[resName] |= 0;
+      if (!bodyo.inputsList.find(e => e === resName)) {
+        bodyo.inputsList.push(resName);
+      }
+    });
   });
 };
 exports.initInd = initInd;
 
-const indWork = (body, ind, workTime) => {
+const indWork = (bodyo, ind, workTime) => {
 
   if (ind.status === 'WORK') {
 
     ind.workProg += workTime;
     if (ind.workProg >= ind.cycle) {
       Object.keys(ind.output).forEach(outRes => {
-        body.store[outRes] += ind.output[outRes];
+        bodyo.store[outRes] += ind.output[outRes];
       });
       ind.workProg = 0;
       ind.status = 'IDLE';
@@ -1036,15 +1050,15 @@ const indWork = (body, ind, workTime) => {
     let workGo = true;
     Object.keys(ind.input).forEach(inRes => {
       if (
-        (body.store[inRes] === undefined) ||
-        (body.store[inRes] < ind.input[inRes])
+        (bodyo.store[inRes] === undefined) ||
+        (bodyo.store[inRes] < ind.input[inRes])
       ) {
         workGo = false;
       }
     });
     if (workGo) {
       Object.keys(ind.input).forEach(inRes => {
-        body.store[inRes] -= ind.input[inRes];
+        bodyo.store[inRes] -= ind.input[inRes];
       });
       ind.status = 'WORK';
     }
@@ -1064,7 +1078,7 @@ const moveTohold = (bodyo, res, crafto) => {
 };
 exports.moveTohold = moveTohold;
 
-const loadCraft = (crafto) => {
+const transfCraftCargo = (crafto) => {
   let bodyo = crafto.route[0].location;
 
   Object.keys(crafto.route[0].dropoff).forEach(res => {
@@ -1100,7 +1114,7 @@ const loadCraft = (crafto) => {
     }
   });
 };
-exports.loadCraft = loadCraft;
+exports.transfCraftCargo = transfCraftCargo;
 
 },{"./industryTemp.js":8}],8:[function(require,module,exports){
 module.exports = {
@@ -1223,7 +1237,6 @@ const makeStar = (staro) => {
 };
 
 const makeBody = (inBodyo) => {
-  ind.initInd(inBodyo);
   // const bodyDat = mech.kepCalc(bodyo, 0);
   const bodyo = Object.assign(
     inBodyo,
@@ -1231,9 +1244,13 @@ const makeBody = (inBodyo) => {
       // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
       sphereOfInfluence: 10,
-      orient: 90
+      orient: 90,
+      inputsList: [],
+      outputsList: [],
+      owner: 'EMPIRE'
     }
   );
+  ind.initInd(bodyo);
   return bodyo;
 };
 
@@ -1296,6 +1313,31 @@ const craftStart = (craftList) => {
   });
 };
 
+const orientOnSun = (bodyo, newData) => {
+  if (bodyo.orient) {
+    ['x', 'y', 'z'].forEach(e => {bodyo['p' + e] = newData['p' + e];});
+    bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
+  }
+};
+
+const makeManyCraft = (craftType, numberToMake, craftList) => {
+  for (let i = 0; i < numberToMake; i++) {
+    const baseTemplate = hullTemps[craftType]();
+    craftList.push(craft.makeCraft(baseTemplate));
+  }
+};
+
+Window.options = {
+  rate: 1,
+  targetFrames: 60,
+  header: false,
+  planetData: true,
+  craftData: true,
+  stop: false,
+  intercepts: true
+};
+const options = Window.options;
+
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
   console.log('Use \' Window.options \' to modify settings.');
@@ -1325,40 +1367,21 @@ const main = async () => {
       default: console.log('ERROR at make. Skipping.');
     }
 
-    if (theObj.industry) {indSites.push(theObj);}
+    if (theObj.industry) { indSites.push(theObj); }
   });
 
   let movBod = [];
   movBod = movBod.concat(planets, moons, asteroids, stations);
   belts.forEach(e => (movBod = movBod.concat(e.rocks)));
 
-  const makeManyCraft = (craftType, numberToMake) => {
-    for (let i = 0; i < numberToMake; i++) {
-      const baseTemplate = hullTemps[craftType]();
-      // console.log(sysObjects[baseTemplate.home]);
-      craftList.push(craft.makeCraft(baseTemplate));
-    }
-    craftStart(craftList);
-  };
+  makeManyCraft('brick', 8, craftList);
+  makeManyCraft('boulder', 4, craftList);
+  makeManyCraft('mountain', 2, craftList);
+  makeManyCraft('barlog', 1, craftList);
 
-  makeManyCraft('brick', 8);
-  makeManyCraft('boulder', 4);
-  makeManyCraft('mountain', 2);
-  makeManyCraft('barlog', 1);
-
-  Window.options = {
-    rate: 1,
-    targetFrames: 60,
-    header: false,
-    planetData: true,
-    craftData: true,
-    stop: false,
-    intercepts: true
-  };
-  const options = Window.options;
+  craftStart(craftList);
 
   let isPaused = false;
-
   function pause() { isPaused = true; console.log('|| Paused');}
   function play() { isPaused = false; console.log('>> Unpaused');}
 
@@ -1374,13 +1397,6 @@ const main = async () => {
   const renderMoving = renderer(document.getElementById('moving'));
   const rendererIntercept = renderer(document.getElementById('intercept'));
   const rendererMovingOrbits = renderer(document.getElementById('movingOrbits'));
-
-  const orientOnSun = (bodyo, newData) => {
-    if (bodyo.orient) {
-      ['x', 'y', 'z'].forEach(e => {bodyo['p' + e] = newData['p' + e];});
-      bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
-    }
-  };
 
   const loop = () => {
     let time = performance.now();
@@ -1398,13 +1414,7 @@ const main = async () => {
       }
 
       craftList.forEach(crafto => {
-        if (crafto.status === 'new') {
-          ['x', 'y', 'z'].forEach(e => {
-            crafto[e] = sysObjects[crafto.home][e];
-          });
-          crafto.status = 'parked';
-        }
-        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime, stars[0]);
+        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime, stars[0], sysObjects);
       });
 
       indSites.forEach(bodyo => {
