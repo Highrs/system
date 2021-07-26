@@ -107,25 +107,23 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
     // focalShift: focalShift
   };
 };
-exports.kepCalc = kepCalc;
-
 const calcDist = (body1, body2) => {
   return sqrt(
             Math.pow( (body1.x - body2.x), 2 )
           + Math.pow( (body1.y - body2.y), 2 )
           + Math.pow( (body1.z - body2.z), 2 ) );
 };
-exports.calcDist = calcDist;
-
 const calcDistSq = (body1, body2) => {
   return (  Math.pow( (body1.x - body2.x), 2 )
           + Math.pow( (body1.y - body2.y), 2 )
           + Math.pow( (body1.z - body2.z), 2 )
          );
 };
-exports.calcDistSq = calcDistSq;
-
 const calcTravelTime = (dist, accel) => {
   return sqrt( dist / accel ) * 2;
 };
+
+exports.kepCalc = kepCalc;
+exports.calcDist = calcDist;
+exports.calcDistSq = calcDistSq;
 exports.calcTravelTime = calcTravelTime;

@@ -135,7 +135,9 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, st
       break;
     case 'traveling':
       calcActiveMotion(crafto, crafto.intercept, timeDelta);
-      checkProxToTarget(crafto, listOfcraft, staro, rendererIntercept);
+      if (checkProxToTarget(crafto)) {
+        manageArrival(crafto, listOfcraft, staro, rendererIntercept);
+      }
       break;
     case 'drifting':
       calcDriftMotion(crafto, timeDelta);
@@ -169,7 +171,10 @@ const calcActiveMotion = (crafto, targeto, timeDelta) => {
   });
 
   crafto.fuel = crafto.fuel - crafto.fuelConsumption * timeDelta;
-  if (crafto.fuel <= 0) {crafto.status = 'drifting';}
+  if (crafto.fuel <= 0) {
+    console.log(crafto.name + ' has run out of gas and is drifting.');
+    crafto.status = 'drifting';
+  }
 };
 const calcDriftMotion = (crafto, timeDelta) => {
   // timeDelta passed down in SECONDS not ms
@@ -177,22 +182,26 @@ const calcDriftMotion = (crafto, timeDelta) => {
     crafto[e] += crafto['v' + e] * timeDelta;
   });
 };
-const checkProxToTarget = (crafto, listOfcraft, staro, rendererIntercept) => {
+const manageArrival = (crafto, listOfcraft, staro, rendererIntercept) => {
+  fullStop(crafto);
+  ind.transfCraftCargo(crafto);
+  crafto.lastStop = crafto.route[0].location;
+  crafto.route.shift();
+  if (crafto.route.length === 0) {
+    crafto.status = 'parked';
+  } else {
+    crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
+  }
+  rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+};
+const checkProxToTarget = (crafto) => {
   let tsoi = crafto.route[0].location.sphereOfInfluence;
   if (
     mech.calcDistSq(crafto, crafto.route[0].location) < tsoi * tsoi
   ) {
-    fullStop(crafto);
-    ind.transfCraftCargo(crafto);
-    crafto.lastStop = crafto.route[0].location;
-    crafto.route.shift();
-    if (crafto.route.length === 0) {
-      crafto.status = 'parked';
-    } else {
-      crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
-    }
-    rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+    return true;
   }
+  return false;
 };
 const fullStop = (crafto) => {
   ['x', 'y', 'z'].forEach(e => {
@@ -259,73 +268,110 @@ const tryToMakeRoute = (crafto, indSites, staro, rendererIntercept, listOfcraft)
     rendererIntercept(drawMap.drawIntercepts(listOfcraft));
   }
 };
-const enoughFuelCheck = (crafto) => {
-  if (
-    crafto.fuel < crafto.fuelConsumption * 30
-    // crafto.fuel < 11
-  ) {
-    console.log(crafto.name + ' low on gas.');
-    return false;
-  }
-  return true;
+const calcFuelNeeded = (crafto, routeArr = []) => {
+  if (routeArr.length === 0) { return 0; }
+  let projectedFuelUse = 0;
+  let counter = 0;
+  let lastEl = {};
+  routeArr.forEach(e => {
+    // console.log(e);
+    if (e === undefined || !e.x) {
+      console.log('[!] ERROR IN CALCFUEL ARR');
+    } else if (counter === 0) {
+      projectedFuelUse +=
+        mech.calcTravelTime(mech.calcDist(crafto, e), crafto.accel) *
+        crafto.fuelConsumption *
+        1.1;
+      lastEl = e;
+      counter++;
+    } else {
+      projectedFuelUse +=
+        mech.calcTravelTime(mech.calcDist(lastEl, e), crafto.accel) *
+        crafto.fuelConsumption *
+        1.1;
+      lastEl = e;
+      counter++;
+    }
+  });
+  return projectedFuelUse;
 };
-const findNearestGasStation = (crafto, indSites, staro) => {
-  let fuelNeeded = crafto.fuelCapacity - crafto.fuel;
-  return indSites.find(site => {
-    return site.outputsList.find(output => {
+const findNearestGasStation = (crafto, indSites, startPoint = crafto) => {
+  let baseFuelNeeded = crafto.fuelCapacity - crafto.fuel;
+  let rangeToGasStation = Infinity;
+  let nearestGasStation = undefined;
+  indSites.forEach(site => {
+    site.outputsList.forEach(output => {
       if (
         output === 'fuel' &
-        site.store.fuel >= fuelNeeded
+        site.store.fuel >= baseFuelNeeded
       ) {
-
-        crafto.route.push(buildWaypoint(site));
-
-        crafto.route[0].pickup = {
-          fuel: fuelNeeded
-        };
-        ind.moveTohold(site, 'fuel', crafto);
-
-        crafto.status = 'traveling';
-
-        crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
-
-        return true;
+        let distToSite = mech.calcDist(startPoint, site);
+        if (distToSite < rangeToGasStation) {
+          rangeToGasStation = distToSite;
+          nearestGasStation = site;
+        }
       }
     });
   });
+  return nearestGasStation;
+};
+const enoughFuelCheck = (crafto, fuelNeeded) => {
+  if (crafto.fuel > fuelNeeded * 1.1) {
+    return true;
+  }
+  return false;
+};
+const plotToNearestGasStation = (crafto, indSites, staro) => {
+  let nearestGasStation = findNearestGasStation(crafto, indSites);
+  crafto.route.push(buildWaypoint(nearestGasStation));
+
+  crafto.route[0].pickup = {
+    fuel: crafto.fuelCapacity - crafto.fuel + calcFuelNeeded(crafto, [nearestGasStation])
+  };
+  ind.moveToHold(nearestGasStation, 'fuel', crafto);
+
+  crafto.status = 'traveling';
+
+  crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
+
+  return true;
+};
+const plotSimpleRoute = (crafto, prodSite, prodRes, consSite, staro) => {
+  crafto.route.push(buildWaypoint(prodSite));
+  crafto.route.push(buildWaypoint(consSite));
+
+  crafto.route[0].pickup = {
+    [prodRes]: crafto.cargoCap
+  };
+  crafto.route[1].dropoff = {
+    [prodRes]: crafto.cargoCap
+  };
+  ind.moveToHold(prodSite, prodRes, crafto);
+
+  crafto.status = 'traveling';
+
+  crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
+
+  return true;
 };
 const findSimpleRoute = (crafto, indSites, staro) => {
-  //   \|/
-  //  --I--
-  //   /|\
-  //  /-A-\
-  // /-----\
   return indSites.find(prodSite => {
     return prodSite.outputsList.find(prodRes => {
       return indSites.find(consSite => {
         if (prodSite !== consSite) {
-          return consSite.outputsList.find(consRes => {
+          return consSite.inputsList.find(consRes => {
             if (
-              prodRes === consRes &&
-              prodSite.store[prodRes] >= crafto.cargoCap
+              (prodRes === consRes) &&
+              (prodSite.store[prodRes] >= crafto.cargoCap)
             ) {
-              // console.log('here');
-              crafto.route.push(buildWaypoint(prodSite));
-              crafto.route.push(buildWaypoint(consSite));
-
-              crafto.route[0].pickup = {
-                [prodRes]: crafto.cargoCap
-              };
-              crafto.route[1].dropoff = {
-                [prodRes]: crafto.cargoCap
-              };
-              ind.moveTohold(prodSite, prodRes, crafto);
-
-              crafto.status = 'traveling';
-
-              crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
-
-              return true;
+              if (
+                // , findNearestGasStation(crafto, indSites, consRes)
+                !enoughFuelCheck(crafto, calcFuelNeeded(crafto, [prodSite, consSite]))
+              ) {
+                return plotToNearestGasStation(crafto, indSites, staro);
+              } else {
+                return plotSimpleRoute(crafto, prodSite, prodRes, consSite, staro);
+              }
             }
           });
         }
@@ -342,10 +388,9 @@ const deviseRoute = (crafto, indSites, staro) => {
     console.log('ERROR at craft.deviseRoute: Too few industry sites.');
     // return false;
   }
-  if (!enoughFuelCheck(crafto)) {
-    return findNearestGasStation(crafto, indSites, staro);
-  }
-  // console.log('here');
+  // if (!enoughFuelCheck(crafto)) {
+  //
+  // }
   return findSimpleRoute(crafto, indSites, staro);
 };
 const calcSolarDanger = (crafto, icpto, staro) => {
@@ -395,25 +440,9 @@ const mech = require('./mechanics.js');
 const icons = require('./icons.js');
 const lists = require('./lists.js');
 
-// const cos = Math.cos;
-// const sin = Math.sin;
 const PI = Math.PI;
-// const sqrt = Math.sqrt;
-//properties-------------
-// const sh = screen.width*(0.9);
-// const sw = screen.height*(0.9);
 const pageW = 1200;
 const pageH = 1200;
-// const pageW = (sh < 900) ? 800 : sh - (sh % 100);
-// const pageH = (sw < 800) ? 700 : sw - (sw % 100);
-// const centerX = pageW/2;
-// const centerY = pageH/2;
-//Artistic properties-------------
-// const starRadius = 10;
-// let windowWidth = 120; // width of planet data rectangles
-// let windowHeight = 25;
-// let distanceWindowLength = 44;
-//--------------------------------
 
 const drawGrid = () => {
   let grid = ['g', {}];
@@ -446,7 +475,6 @@ const drawGrid = () => {
 
   return grid;
 };
-
 const drawOrbit = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
 
@@ -495,7 +523,6 @@ const drawOrbit = (bodies) => {
 
   return retGroup;
 };
-
 const drawSimpleOrbit = (stations) => {
   if (stations.length < 1) {return ['g', {}];}
 
@@ -512,7 +539,6 @@ const drawSimpleOrbit = (stations) => {
 
   return retGroup;
 };
-
 const drawIndustryData = (body) => {
   let display = ['g', tt(10, -10)];
 
@@ -535,7 +561,7 @@ const drawIndustryData = (body) => {
       ['g', tt(0, 6),
         ['text', {x: 2,
           y: (body.industry.length + idx + 2) * 6,
-          class: 'dataText'}, e.toUpperCase() + ':' + body.store[e]
+          class: 'dataText'}, e.toUpperCase() + ':' + body.store[e].toFixed(0)
         ]
       ]
     );
@@ -543,7 +569,6 @@ const drawIndustryData = (body) => {
 
   return display;
 };
-
 const drawBodyData = (bodyo) => {
   let dataDisp = ['g', {}];
 
@@ -561,7 +586,6 @@ const drawBodyData = (bodyo) => {
 
   return dataDisp;
 };
-
 const drawBodies = (bodies, options) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
@@ -580,7 +604,6 @@ const drawBodies = (bodies, options) => {
   }
   return bodiesDrawn;
 };
-
 const drawStations = (stations, options) => {
   if (stations.length < 1) {return ['g', {}];}
   const stationsDrawn = ['g', {}];
@@ -599,7 +622,6 @@ const drawStations = (stations, options) => {
   }
   return stationsDrawn;
 };
-
 const drawBelts = (belts) => {
   let rocksDrawn = ['g', {}];
 
@@ -613,7 +635,6 @@ const drawBelts = (belts) => {
 
   return rocksDrawn;
 };
-
 const drawHeader = (clock, options) => {
   if (options.header) {
     let header = ['g', tt(10, 20)];
@@ -628,7 +649,6 @@ const drawHeader = (clock, options) => {
     return;
   }
 };
-
 const drawStars = (stars) =>{
   let drawnStars = ['g', {}];
   stars.forEach((staro) => {
@@ -636,7 +656,6 @@ const drawStars = (stars) =>{
   });
   return drawnStars;
 };
-
 const drawCraftData = (crafto) =>{
   let drawnData = ['g', {}];
 
@@ -658,7 +677,6 @@ const drawCraftData = (crafto) =>{
 
   return drawnData;
 };
-
 const drawCraft = (listOfCraft, options) => {
   let drawnCraft = ['g', {}];
 
@@ -699,7 +717,6 @@ const drawCraft = (listOfCraft, options) => {
 
   return drawnCraft;
 };
-
 const drawRanges = (bodyArr) => {
   let rangesDrawn = ['g', {}];
   let linesDrawn = ['g', {}];
@@ -737,6 +754,9 @@ const drawRanges = (bodyArr) => {
 
   return rangesDrawn;
 };
+const drawMovingOrbits = (moons) => {
+  return ['g', {}, drawOrbit(moons)];
+};
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
@@ -755,7 +775,6 @@ exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, station
     drawCraft(craft, options)
   ];
 };
-
 exports.drawIntercepts = (listOfcraft) => {
   let intercepts = ['g', {}];
 
@@ -767,11 +786,6 @@ exports.drawIntercepts = (listOfcraft) => {
 
   return intercepts;
 };
-
-const drawMovingOrbits = (moons) => {
-  return ['g', {}, drawOrbit(moons)];
-};
-
 exports.drawStatic = (options, stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['defs',
@@ -834,7 +848,7 @@ module.exports = {
     abr: 'BLD',
     cargoCap: 20,
     fuelCapacity: 20,
-    fuelConsumption: 0.2,
+    fuelConsumption: 0.1,
     accel: 2,
     home: 'beta'
   }),
@@ -844,8 +858,8 @@ module.exports = {
     abr: 'MNT',
     cargoCap: 30,
     fuelCapacity: 30,
-    fuelConsumption: 0.3,
-    accel: 1,
+    fuelConsumption: 0.1,
+    accel: 2,
     home: 'beta'
   }),
 
@@ -854,8 +868,8 @@ module.exports = {
     abr: 'BRL',
     cargoCap: 40,
     fuelCapacity: 40,
-    fuelConsumption: 0.4,
-    accel: 1,
+    fuelConsumption: 0.1,
+    accel: 2,
     home: 'beta'
   })
 
@@ -996,7 +1010,6 @@ module.exports = {
 const indTemp = require('./industryTemp.js');
 
 const initInd = (bodyo) => {
-
   bodyo.store = bodyo.store || {};
 
   bodyo.industryList && bodyo.industryList.forEach(bodyoIndName => {
@@ -1030,8 +1043,6 @@ const initInd = (bodyo) => {
     });
   });
 };
-exports.initInd = initInd;
-
 const indWork = (bodyo, ind, workTime) => {
 
   if (ind.status === 'WORK') {
@@ -1065,9 +1076,7 @@ const indWork = (bodyo, ind, workTime) => {
 
   }
 };
-exports.indWork = indWork;
-
-const moveTohold = (bodyo, res, crafto) => {
+const moveToHold = (bodyo, res, crafto) => {
   let quant = crafto.cargoCap;
 
   bodyo.hold[crafto.name] = bodyo.hold[crafto.name] || {};
@@ -1076,8 +1085,6 @@ const moveTohold = (bodyo, res, crafto) => {
   bodyo.store[res] -= quant;
   bodyo.hold[crafto.name][res] += quant;
 };
-exports.moveTohold = moveTohold;
-
 const transfCraftCargo = (crafto) => {
   let bodyo = crafto.route[0].location;
 
@@ -1100,8 +1107,21 @@ const transfCraftCargo = (crafto) => {
     crafto.cargo[res] |= 0;
 
     if (res === 'fuel') {
-      crafto.fuel += quant;
-      bodyo.hold[crafto.name][res] -= quant;
+      let actualNeededGas = crafto.fuelCapacity - crafto.fuel;
+      let gasSurplus = quant - actualNeededGas;
+      if (gasSurplus > 0) {
+        crafto.fuel += actualNeededGas;
+        bodyo.hold[crafto.name][res] -= actualNeededGas;
+        bodyo.store[res] += bodyo.hold[crafto.name][res];
+        bodyo.hold[crafto.name][res] = 0;
+      } else if (gasSurplus <= 0) {
+        crafto.fuel += quant;
+        bodyo.hold[crafto.name][res] -= quant;
+        if (bodyo.store[res] > Math.abs(gasSurplus)) {
+          bodyo.store[res] -= Math.abs(gasSurplus);
+          crafto.fuel += Math.abs(gasSurplus);
+        }
+      }
       console.log(crafto.name + ' refueled.');
     } else if (
       (crafto.cargoCap >= quant) &&
@@ -1114,6 +1134,10 @@ const transfCraftCargo = (crafto) => {
     }
   });
 };
+
+exports.indWork = indWork;
+exports.moveToHold = moveToHold;
+exports.initInd = initInd;
 exports.transfCraftCargo = transfCraftCargo;
 
 },{"./industryTemp.js":8}],8:[function(require,module,exports){
@@ -1235,7 +1259,6 @@ const majObj = require('./majorObjects2.json');
 const makeStar = (staro) => {
   return staro;
 };
-
 const makeBody = (inBodyo) => {
   // const bodyDat = mech.kepCalc(bodyo, 0);
   const bodyo = Object.assign(
@@ -1253,7 +1276,6 @@ const makeBody = (inBodyo) => {
   ind.initInd(bodyo);
   return bodyo;
 };
-
 const rockNamer = () => {
   let id = 0;
   return () => {
@@ -1261,7 +1283,6 @@ const rockNamer = () => {
     return id;
   };
 };
-
 function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
   let max = mean + deviation > upper ? upper : mean + deviation;
   let min = mean - deviation < lower ? lower : mean - deviation;
@@ -1273,8 +1294,7 @@ function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
     )
   );
 }
-
-let rock = (belto) => {
+const rock = (belto) => {
   return {
     name: rockNamer(),
     type: 'asteroid',
@@ -1291,7 +1311,6 @@ let rock = (belto) => {
     objectRadius: rand(belto.objectRadius, belto.objectRadiusD, 1),
   };
 };
-
 const makeBelt = (belto) => {
   const belt = Object.assign(
     belto,
@@ -1303,7 +1322,6 @@ const makeBelt = (belto) => {
 
   return belt;
 };
-
 const craftStart = (craftList) => {
   craftList.forEach(crafto => {
     ['x', 'y', 'z'].forEach(e => {
@@ -1312,21 +1330,18 @@ const craftStart = (craftList) => {
     crafto.lastStop = majObj[crafto.home];
   });
 };
-
 const orientOnSun = (bodyo, newData) => {
   if (bodyo.orient) {
     ['x', 'y', 'z'].forEach(e => {bodyo['p' + e] = newData['p' + e];});
     bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
   }
 };
-
 const makeManyCraft = (craftType, numberToMake, craftList) => {
   for (let i = 0; i < numberToMake; i++) {
     const baseTemplate = hullTemps[craftType]();
     craftList.push(craft.makeCraft(baseTemplate));
   }
 };
-
 Window.options = {
   rate: 1,
   targetFrames: 60,
@@ -1337,7 +1352,6 @@ Window.options = {
   intercepts: true
 };
 const options = Window.options;
-
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
   console.log('Use \' Window.options \' to modify settings.');
@@ -1736,27 +1750,25 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
     // focalShift: focalShift
   };
 };
-exports.kepCalc = kepCalc;
-
 const calcDist = (body1, body2) => {
   return sqrt(
             Math.pow( (body1.x - body2.x), 2 )
           + Math.pow( (body1.y - body2.y), 2 )
           + Math.pow( (body1.z - body2.z), 2 ) );
 };
-exports.calcDist = calcDist;
-
 const calcDistSq = (body1, body2) => {
   return (  Math.pow( (body1.x - body2.x), 2 )
           + Math.pow( (body1.y - body2.y), 2 )
           + Math.pow( (body1.z - body2.z), 2 )
          );
 };
-exports.calcDistSq = calcDistSq;
-
 const calcTravelTime = (dist, accel) => {
   return sqrt( dist / accel ) * 2;
 };
+
+exports.kepCalc = kepCalc;
+exports.calcDist = calcDist;
+exports.calcDistSq = calcDistSq;
 exports.calcTravelTime = calcTravelTime;
 
 },{"./majorObjects2.json":11}],13:[function(require,module,exports){

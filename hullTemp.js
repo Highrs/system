@@ -15,7 +15,7 @@ module.exports = {
     abr: 'BLD',
     cargoCap: 20,
     fuelCapacity: 20,
-    fuelConsumption: 0.2,
+    fuelConsumption: 0.1,
     accel: 2,
     home: 'beta'
   }),
@@ -25,8 +25,8 @@ module.exports = {
     abr: 'MNT',
     cargoCap: 30,
     fuelCapacity: 30,
-    fuelConsumption: 0.3,
-    accel: 1,
+    fuelConsumption: 0.1,
+    accel: 2,
     home: 'beta'
   }),
 
@@ -35,8 +35,8 @@ module.exports = {
     abr: 'BRL',
     cargoCap: 40,
     fuelCapacity: 40,
-    fuelConsumption: 0.4,
-    accel: 1,
+    fuelConsumption: 0.1,
+    accel: 2,
     home: 'beta'
   })
 

@@ -6,25 +6,9 @@ const mech = require('./mechanics.js');
 const icons = require('./icons.js');
 const lists = require('./lists.js');
 
-// const cos = Math.cos;
-// const sin = Math.sin;
 const PI = Math.PI;
-// const sqrt = Math.sqrt;
-//properties-------------
-// const sh = screen.width*(0.9);
-// const sw = screen.height*(0.9);
 const pageW = 1200;
 const pageH = 1200;
-// const pageW = (sh < 900) ? 800 : sh - (sh % 100);
-// const pageH = (sw < 800) ? 700 : sw - (sw % 100);
-// const centerX = pageW/2;
-// const centerY = pageH/2;
-//Artistic properties-------------
-// const starRadius = 10;
-// let windowWidth = 120; // width of planet data rectangles
-// let windowHeight = 25;
-// let distanceWindowLength = 44;
-//--------------------------------
 
 const drawGrid = () => {
   let grid = ['g', {}];
@@ -57,7 +41,6 @@ const drawGrid = () => {
 
   return grid;
 };
-
 const drawOrbit = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
 
@@ -106,7 +89,6 @@ const drawOrbit = (bodies) => {
 
   return retGroup;
 };
-
 const drawSimpleOrbit = (stations) => {
   if (stations.length < 1) {return ['g', {}];}
 
@@ -123,7 +105,6 @@ const drawSimpleOrbit = (stations) => {
 
   return retGroup;
 };
-
 const drawIndustryData = (body) => {
   let display = ['g', tt(10, -10)];
 
@@ -146,7 +127,7 @@ const drawIndustryData = (body) => {
       ['g', tt(0, 6),
         ['text', {x: 2,
           y: (body.industry.length + idx + 2) * 6,
-          class: 'dataText'}, e.toUpperCase() + ':' + body.store[e]
+          class: 'dataText'}, e.toUpperCase() + ':' + body.store[e].toFixed(0)
         ]
       ]
     );
@@ -154,7 +135,6 @@ const drawIndustryData = (body) => {
 
   return display;
 };
-
 const drawBodyData = (bodyo) => {
   let dataDisp = ['g', {}];
 
@@ -172,7 +152,6 @@ const drawBodyData = (bodyo) => {
 
   return dataDisp;
 };
-
 const drawBodies = (bodies, options) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
@@ -191,7 +170,6 @@ const drawBodies = (bodies, options) => {
   }
   return bodiesDrawn;
 };
-
 const drawStations = (stations, options) => {
   if (stations.length < 1) {return ['g', {}];}
   const stationsDrawn = ['g', {}];
@@ -210,7 +188,6 @@ const drawStations = (stations, options) => {
   }
   return stationsDrawn;
 };
-
 const drawBelts = (belts) => {
   let rocksDrawn = ['g', {}];
 
@@ -224,7 +201,6 @@ const drawBelts = (belts) => {
 
   return rocksDrawn;
 };
-
 const drawHeader = (clock, options) => {
   if (options.header) {
     let header = ['g', tt(10, 20)];
@@ -239,7 +215,6 @@ const drawHeader = (clock, options) => {
     return;
   }
 };
-
 const drawStars = (stars) =>{
   let drawnStars = ['g', {}];
   stars.forEach((staro) => {
@@ -247,7 +222,6 @@ const drawStars = (stars) =>{
   });
   return drawnStars;
 };
-
 const drawCraftData = (crafto) =>{
   let drawnData = ['g', {}];
 
@@ -269,7 +243,6 @@ const drawCraftData = (crafto) =>{
 
   return drawnData;
 };
-
 const drawCraft = (listOfCraft, options) => {
   let drawnCraft = ['g', {}];
 
@@ -310,7 +283,6 @@ const drawCraft = (listOfCraft, options) => {
 
   return drawnCraft;
 };
-
 const drawRanges = (bodyArr) => {
   let rangesDrawn = ['g', {}];
   let linesDrawn = ['g', {}];
@@ -348,6 +320,9 @@ const drawRanges = (bodyArr) => {
 
   return rangesDrawn;
 };
+const drawMovingOrbits = (moons) => {
+  return ['g', {}, drawOrbit(moons)];
+};
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
@@ -366,7 +341,6 @@ exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, station
     drawCraft(craft, options)
   ];
 };
-
 exports.drawIntercepts = (listOfcraft) => {
   let intercepts = ['g', {}];
 
@@ -378,11 +352,6 @@ exports.drawIntercepts = (listOfcraft) => {
 
   return intercepts;
 };
-
-const drawMovingOrbits = (moons) => {
-  return ['g', {}, drawOrbit(moons)];
-};
-
 exports.drawStatic = (options, stars, planets) => {
   return getSvg({w:pageW, h:pageH}).concat([
     ['defs',

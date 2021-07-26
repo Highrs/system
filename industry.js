@@ -3,7 +3,6 @@
 const indTemp = require('./industryTemp.js');
 
 const initInd = (bodyo) => {
-
   bodyo.store = bodyo.store || {};
 
   bodyo.industryList && bodyo.industryList.forEach(bodyoIndName => {
@@ -37,8 +36,6 @@ const initInd = (bodyo) => {
     });
   });
 };
-exports.initInd = initInd;
-
 const indWork = (bodyo, ind, workTime) => {
 
   if (ind.status === 'WORK') {
@@ -72,9 +69,7 @@ const indWork = (bodyo, ind, workTime) => {
 
   }
 };
-exports.indWork = indWork;
-
-const moveTohold = (bodyo, res, crafto) => {
+const moveToHold = (bodyo, res, crafto) => {
   let quant = crafto.cargoCap;
 
   bodyo.hold[crafto.name] = bodyo.hold[crafto.name] || {};
@@ -83,8 +78,6 @@ const moveTohold = (bodyo, res, crafto) => {
   bodyo.store[res] -= quant;
   bodyo.hold[crafto.name][res] += quant;
 };
-exports.moveTohold = moveTohold;
-
 const transfCraftCargo = (crafto) => {
   let bodyo = crafto.route[0].location;
 
@@ -107,8 +100,21 @@ const transfCraftCargo = (crafto) => {
     crafto.cargo[res] |= 0;
 
     if (res === 'fuel') {
-      crafto.fuel += quant;
-      bodyo.hold[crafto.name][res] -= quant;
+      let actualNeededGas = crafto.fuelCapacity - crafto.fuel;
+      let gasSurplus = quant - actualNeededGas;
+      if (gasSurplus > 0) {
+        crafto.fuel += actualNeededGas;
+        bodyo.hold[crafto.name][res] -= actualNeededGas;
+        bodyo.store[res] += bodyo.hold[crafto.name][res];
+        bodyo.hold[crafto.name][res] = 0;
+      } else if (gasSurplus <= 0) {
+        crafto.fuel += quant;
+        bodyo.hold[crafto.name][res] -= quant;
+        if (bodyo.store[res] > Math.abs(gasSurplus)) {
+          bodyo.store[res] -= Math.abs(gasSurplus);
+          crafto.fuel += Math.abs(gasSurplus);
+        }
+      }
       console.log(crafto.name + ' refueled.');
     } else if (
       (crafto.cargoCap >= quant) &&
@@ -121,4 +127,8 @@ const transfCraftCargo = (crafto) => {
     }
   });
 };
+
+exports.indWork = indWork;
+exports.moveToHold = moveToHold;
+exports.initInd = initInd;
 exports.transfCraftCargo = transfCraftCargo;

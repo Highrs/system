@@ -11,7 +11,6 @@ const majObj = require('./majorObjects2.json');
 const makeStar = (staro) => {
   return staro;
 };
-
 const makeBody = (inBodyo) => {
   // const bodyDat = mech.kepCalc(bodyo, 0);
   const bodyo = Object.assign(
@@ -29,7 +28,6 @@ const makeBody = (inBodyo) => {
   ind.initInd(bodyo);
   return bodyo;
 };
-
 const rockNamer = () => {
   let id = 0;
   return () => {
@@ -37,7 +35,6 @@ const rockNamer = () => {
     return id;
   };
 };
-
 function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
   let max = mean + deviation > upper ? upper : mean + deviation;
   let min = mean - deviation < lower ? lower : mean - deviation;
@@ -49,8 +46,7 @@ function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
     )
   );
 }
-
-let rock = (belto) => {
+const rock = (belto) => {
   return {
     name: rockNamer(),
     type: 'asteroid',
@@ -67,7 +63,6 @@ let rock = (belto) => {
     objectRadius: rand(belto.objectRadius, belto.objectRadiusD, 1),
   };
 };
-
 const makeBelt = (belto) => {
   const belt = Object.assign(
     belto,
@@ -79,7 +74,6 @@ const makeBelt = (belto) => {
 
   return belt;
 };
-
 const craftStart = (craftList) => {
   craftList.forEach(crafto => {
     ['x', 'y', 'z'].forEach(e => {
@@ -88,21 +82,18 @@ const craftStart = (craftList) => {
     crafto.lastStop = majObj[crafto.home];
   });
 };
-
 const orientOnSun = (bodyo, newData) => {
   if (bodyo.orient) {
     ['x', 'y', 'z'].forEach(e => {bodyo['p' + e] = newData['p' + e];});
     bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
   }
 };
-
 const makeManyCraft = (craftType, numberToMake, craftList) => {
   for (let i = 0; i < numberToMake; i++) {
     const baseTemplate = hullTemps[craftType]();
     craftList.push(craft.makeCraft(baseTemplate));
   }
 };
-
 Window.options = {
   rate: 1,
   targetFrames: 60,
@@ -113,7 +104,6 @@ Window.options = {
   intercepts: true
 };
 const options = Window.options;
-
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
   console.log('Use \' Window.options \' to modify settings.');
