@@ -247,7 +247,7 @@ const drawCraft = (listOfCraft, options) => {
   let drawnCraft = ['g', {}];
 
   listOfCraft.forEach(crafto => {
-    if (crafto.status === 'traveling') {
+    if (crafto.status === 'traveling' || crafto.status === 'drifting') {
       let partCraft = ['g', tt(crafto.x, crafto.y)];
 
       // Vector Line
