@@ -35,7 +35,7 @@ html, body {
   fill: none;
   stroke-width: 0.2px;
   stroke: #c3c3c3ff;
-  stroke-dasharray: 5 3;
+  stroke-dasharray: 5 10;
 }
 .orbitDivLine {
   fill: none;

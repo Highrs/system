@@ -164,25 +164,26 @@ const main = async () => {
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
   function updatePan() {
-    document.getElementById('map').setAttribute('transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')');
+    document.getElementById('map').setAttribute(
+      'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
+    );
   }
   function checkKey(e) {
-
     if (e.keyCode == '38') {
         // up arrow
-        mapPan.y -= 10;
+        mapPan.y += 10;
     }
     else if (e.keyCode == '40') {
         // down arrow
-        mapPan.y += 10;
+        mapPan.y -= 10;
     }
     else if (e.keyCode == '37') {
        // left arrow
-       mapPan.x -= 10;
+       mapPan.x += 10;
     }
     else if (e.keyCode == '39') {
        // right arrow
-       mapPan.x += 10;
+       mapPan.x -= 10;
     }
     updatePan();
   }
