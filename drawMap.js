@@ -7,15 +7,52 @@ const icons = require('./icons.js');
 const lists = require('./lists.js');
 
 const PI = Math.PI;
-const pageW = 1200;
-const pageH = 1200;
+// const pageW = 1200;
+// const pageH = 1200;
+function getPageWidth() {
+  // return Math.max(
+  //   document.body.scrollWidth,
+  //   document.documentElement.scrollWidth,
+  //   document.body.offsetWidth,
+  //   document.documentElement.offsetWidth,
+  //   document.documentElement.clientWidth
+  // );
+  return document.body.clientWidth;
+}
 
-const drawGrid = () => {
+function getPageHeight() {
+  // return Math.max(
+  //   document.body.scrollHeight,
+  //   document.documentElement.scrollHeight,
+  //   document.body.offsetHeight,
+  //   document.documentElement.offsetHeight,
+  //   document.documentElement.clientHeight
+  // );
+  return document.body.clientHeight;
+}
+
+// const drawPolarGrid = (staro) => {
+//   let polarGrid = ['g', tt(staro.x, staro.y)];
+//
+//   for (let i = 1; i < 5; i++) {
+//     polarGrid.push(['circle', {r: 150 * i, class: 'grid'}]);
+//     for (let j = 0; j < 16; j++) {
+//       polarGrid.push(['line', {
+//         transform: 'rotate(' + ((360 / 16) * j) +')',
+//         x1: 150 * i + 15,
+//         x2: 150 * i - 5,
+//         class: 'grid'}]);
+//     }
+//   }
+//   return polarGrid;
+// };
+
+const drawGrid = (staro) => {
   let grid = ['g', {}];
   let crossSize = 5;
 
-  for (let x = 100; x < pageW; x += 100) {
-    for (let y = 100; y < pageH; y += 100) {
+  for (let x = 0 + staro.x%100; x <= getPageWidth(); x += 100) {
+    for (let y = 0 + staro.y%100; y <= getPageHeight(); y += 100) {
       grid.push(
         ['line', { x1: x - crossSize, y1: y,
           x2: x + crossSize, y2: y, class: 'grid'}],
@@ -23,21 +60,14 @@ const drawGrid = () => {
           x2: x, y2: y - crossSize, class: 'grid'}]
       );
     }
-  }
-  let polarMap = ['g', tt(pageW/2, pageH/2)];
 
-  for (let i = 1; i < 5; i++) {
-    polarMap.push(['circle', {r: 150 * i, class: 'grid'}]);
-    for (let j = 0; j < 16; j++) {
-      polarMap.push(['line', {
-        transform: 'rotate(' + ((360 / 16) * j) +')',
-        x1: 150 * i + 15,
-        x2: 150 * i - 5,
-        class: 'grid'}]);
-    }
+    grid.push(
+      ['line', { x1: staro.x, y1: x + 10,
+        x2: staro.x, y2: x + 90, class: 'grid'}],
+      ['line', { x1: x + 10, y1: staro.y,
+        x2: x + 90, y2: staro.y, class: 'grid'}],
+    );
   }
-
-  grid.push(polarMap);
 
   return grid;
 };
@@ -219,6 +249,7 @@ const drawStars = (stars) =>{
   let drawnStars = ['g', {}];
   stars.forEach((staro) => {
     drawnStars.push(icons.star(staro));
+    // drawnStars.push(drawPolarGrid(staro));
   });
   return drawnStars;
 };
@@ -353,11 +384,11 @@ exports.drawIntercepts = (listOfcraft) => {
   return intercepts;
 };
 exports.drawStatic = (options, stars, planets) => {
-  return getSvg({w:pageW, h:pageH}).concat([
+  return getSvg({w:getPageWidth(), h:getPageHeight()}).concat([
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
         ['stop', {offset: "0%", 'stop-color': stars[0].color, 'stop-opacity': 0.5 }],
-        ['stop', {offset: "100%", 'stop-color': "#000000", 'stop-opacity':    0 }]
+        ['stop', {offset: "100%", 'stop-color': "#363636", 'stop-opacity':    0 }]
       ],
       ['radialGradient', {id: "RadialGradient2", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
         ['stop', {offset: "25%", 'stop-color': "#000000", 'stop-opacity':   0.25 }],
@@ -371,11 +402,11 @@ exports.drawStatic = (options, stars, planets) => {
         ['stop', {offset: "100%", 'stop-color': stars[0].color, 'stop-opacity': 0 }]
       ]
     ],
-    ['g', {},
+    ['g', {id: 'map'},
       drawOrbit(planets),
       ['g', {id: 'movingOrbits'}],
       drawStars(stars),
-      drawGrid(),
+      drawGrid(stars[0]),
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ]

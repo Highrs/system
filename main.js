@@ -96,7 +96,7 @@ const makeManyCraft = (craftType, numberToMake, craftList) => {
 };
 Window.options = {
   rate: 1,
-  targetFrames: 60,
+  targetFrames: 30,
   header: false,
   planetData: true,
   craftData: true,
@@ -106,6 +106,7 @@ Window.options = {
 const options = Window.options;
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
+  console.log('V 0.1.003');
   console.log('Use \' Window.options \' to modify settings.');
 
   let stars = [];
@@ -116,7 +117,7 @@ const main = async () => {
   let belts = [];
   let stations = [];
 
-  const craftList = [];
+  let craftList = [];
 
   let sysObjects = {...majObj,...constructs};
 
@@ -154,12 +155,45 @@ const main = async () => {
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
 
+  let mapPan = {
+    x: 0,
+    y: 0,
+    zoom: 1
+  };
+
+  document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
+  document.onkeydown = checkKey;
+  function updatePan() {
+    document.getElementById('map').setAttribute('transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')');
+  }
+  function checkKey(e) {
+
+    if (e.keyCode == '38') {
+        // up arrow
+        mapPan.y -= 10;
+    }
+    else if (e.keyCode == '40') {
+        // down arrow
+        mapPan.y += 10;
+    }
+    else if (e.keyCode == '37') {
+       // left arrow
+       mapPan.x -= 10;
+    }
+    else if (e.keyCode == '39') {
+       // right arrow
+       mapPan.x += 10;
+    }
+    updatePan();
+  }
+
   let simpRate = 1 / 1000;
 
   let clockZero = performance.now();
   let currentTime = Date.now();
 
-  renderer(document.getElementById('content'))(drawMap.drawStatic(options, stars, planets));
+  const renderMap = renderer(document.getElementById('content'));
+  renderMap(drawMap.drawStatic(options, stars, planets));
   const renderMoving = renderer(document.getElementById('moving'));
   const rendererIntercept = renderer(document.getElementById('intercept'));
   const rendererMovingOrbits = renderer(document.getElementById('movingOrbits'));
