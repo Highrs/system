@@ -7,27 +7,10 @@ const icons = require('./icons.js');
 const lists = require('./lists.js');
 
 const PI = Math.PI;
-// const pageW = 1200;
-// const pageH = 1200;
 function getPageWidth() {
-  // return Math.max(
-  //   document.body.scrollWidth,
-  //   document.documentElement.scrollWidth,
-  //   document.body.offsetWidth,
-  //   document.documentElement.offsetWidth,
-  //   document.documentElement.clientWidth
-  // );
   return document.body.clientWidth;
 }
-
 function getPageHeight() {
-  // return Math.max(
-  //   document.body.scrollHeight,
-  //   document.documentElement.scrollHeight,
-  //   document.body.offsetHeight,
-  //   document.documentElement.offsetHeight,
-  //   document.documentElement.clientHeight
-  // );
   return document.body.clientHeight;
 }
 
@@ -71,7 +54,8 @@ const drawGrid = (staro) => {
 
   return grid;
 };
-const drawOrbit = (bodies) => {
+exports.drawGrid = drawGrid;
+const drawOrbits = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
 
   let divline1;
@@ -119,6 +103,7 @@ const drawOrbit = (bodies) => {
 
   return retGroup;
 };
+exports.drawOrbits = drawOrbits;
 const drawSimpleOrbit = (stations) => {
   if (stations.length < 1) {return ['g', {}];}
 
@@ -253,6 +238,7 @@ const drawStars = (stars) =>{
   });
   return drawnStars;
 };
+exports.drawStars = drawStars;
 const drawCraftData = (crafto) =>{
   let drawnData = ['g', {}];
 
@@ -352,7 +338,23 @@ const drawRanges = (bodyArr) => {
   return rangesDrawn;
 };
 const drawMovingOrbits = (moons) => {
-  return ['g', {}, drawOrbit(moons)];
+  return ['g', {}, drawOrbits(moons)];
+};
+const drawScreenFrame = () => {
+  return ['g', {},
+    ['path',
+      { d: 'M 40, 20 L 20, 20 L 20, 40',
+      class: 'frame' }],
+    ['path',
+      { d: 'M ' + (getPageWidth() - 40) + ', 20 L ' + (getPageWidth() - 20) + ', 20 L ' + (getPageWidth() - 20) + ', 40',
+      class: 'frame' }],
+    ['path',
+      { d: 'M ' + (getPageWidth() - 40) + ', ' + (getPageHeight() - 20) + ' L ' + (getPageWidth() - 20) + ', ' + (getPageHeight() - 20) + ' L ' + (getPageWidth() - 20) + ', ' + (getPageHeight() - 40) + '',
+      class: 'frame' }],
+    ['path',
+      { d: 'M 40, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 40) + '',
+      class: 'frame' }]
+  ];
 };
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits) => {
@@ -383,7 +385,7 @@ exports.drawIntercepts = (listOfcraft) => {
 
   return intercepts;
 };
-exports.drawStatic = (options, stars, planets) => {
+exports.drawStatic = (options, stars) => {
   return getSvg({w:getPageWidth(), h:getPageHeight()}).concat([
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
@@ -402,11 +404,17 @@ exports.drawStatic = (options, stars, planets) => {
         ['stop', {offset: "100%", 'stop-color': stars[0].color, 'stop-opacity': 0 }]
       ]
     ],
+    ['g', {},
+      drawScreenFrame()
+    ],
     ['g', {id: 'map'},
-      drawOrbit(planets),
+      // drawOrbits(planets),
+      ['g', {id: 'staticOrbits'}],
       ['g', {id: 'movingOrbits'}],
-      drawStars(stars),
-      drawGrid(stars[0]),
+      ['g', {id: 'stars'}],
+      // drawStars(stars),
+      // drawGrid(stars[0], mapPan),
+      ['g', {id: 'grid'}],
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ]

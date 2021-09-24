@@ -441,27 +441,10 @@ const icons = require('./icons.js');
 const lists = require('./lists.js');
 
 const PI = Math.PI;
-// const pageW = 1200;
-// const pageH = 1200;
 function getPageWidth() {
-  // return Math.max(
-  //   document.body.scrollWidth,
-  //   document.documentElement.scrollWidth,
-  //   document.body.offsetWidth,
-  //   document.documentElement.offsetWidth,
-  //   document.documentElement.clientWidth
-  // );
   return document.body.clientWidth;
 }
-
 function getPageHeight() {
-  // return Math.max(
-  //   document.body.scrollHeight,
-  //   document.documentElement.scrollHeight,
-  //   document.body.offsetHeight,
-  //   document.documentElement.offsetHeight,
-  //   document.documentElement.clientHeight
-  // );
   return document.body.clientHeight;
 }
 
@@ -505,7 +488,8 @@ const drawGrid = (staro) => {
 
   return grid;
 };
-const drawOrbit = (bodies) => {
+exports.drawGrid = drawGrid;
+const drawOrbits = (bodies) => {
   if (bodies.length < 1) {return ['g', {}];}
 
   let divline1;
@@ -553,6 +537,7 @@ const drawOrbit = (bodies) => {
 
   return retGroup;
 };
+exports.drawOrbits = drawOrbits;
 const drawSimpleOrbit = (stations) => {
   if (stations.length < 1) {return ['g', {}];}
 
@@ -687,6 +672,7 @@ const drawStars = (stars) =>{
   });
   return drawnStars;
 };
+exports.drawStars = drawStars;
 const drawCraftData = (crafto) =>{
   let drawnData = ['g', {}];
 
@@ -786,7 +772,23 @@ const drawRanges = (bodyArr) => {
   return rangesDrawn;
 };
 const drawMovingOrbits = (moons) => {
-  return ['g', {}, drawOrbit(moons)];
+  return ['g', {}, drawOrbits(moons)];
+};
+const drawScreenFrame = () => {
+  return ['g', {},
+    ['path',
+      { d: 'M 40, 20 L 20, 20 L 20, 40',
+      class: 'frame' }],
+    ['path',
+      { d: 'M ' + (getPageWidth() - 40) + ', 20 L ' + (getPageWidth() - 20) + ', 20 L ' + (getPageWidth() - 20) + ', 40',
+      class: 'frame' }],
+    ['path',
+      { d: 'M ' + (getPageWidth() - 40) + ', ' + (getPageHeight() - 20) + ' L ' + (getPageWidth() - 20) + ', ' + (getPageHeight() - 20) + ' L ' + (getPageWidth() - 20) + ', ' + (getPageHeight() - 40) + '',
+      class: 'frame' }],
+    ['path',
+      { d: 'M 40, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 40) + '',
+      class: 'frame' }]
+  ];
 };
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits) => {
@@ -817,7 +819,7 @@ exports.drawIntercepts = (listOfcraft) => {
 
   return intercepts;
 };
-exports.drawStatic = (options, stars, planets) => {
+exports.drawStatic = (options, stars) => {
   return getSvg({w:getPageWidth(), h:getPageHeight()}).concat([
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
@@ -836,11 +838,17 @@ exports.drawStatic = (options, stars, planets) => {
         ['stop', {offset: "100%", 'stop-color': stars[0].color, 'stop-opacity': 0 }]
       ]
     ],
+    ['g', {},
+      drawScreenFrame()
+    ],
     ['g', {id: 'map'},
-      drawOrbit(planets),
+      // drawOrbits(planets),
+      ['g', {id: 'staticOrbits'}],
       ['g', {id: 'movingOrbits'}],
-      drawStars(stars),
-      drawGrid(stars[0]),
+      ['g', {id: 'stars'}],
+      // drawStars(stars),
+      // drawGrid(stars[0], mapPan),
+      ['g', {id: 'grid'}],
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ]
@@ -1434,49 +1442,103 @@ const main = async () => {
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
 
-  let mapPan = {
-    x: 0,
-    y: 0,
-    zoom: 1
-  };
+  const updateMap = () => {console.log('Resized.');};
 
-  document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
-  document.onkeydown = checkKey;
-  function updatePan() {
-    document.getElementById('map').setAttribute(
-      'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
-    );
-  }
-  function checkKey(e) {
-    if (e.keyCode == '38') {
-        // up arrow
-        mapPan.y += 10;
-    }
-    else if (e.keyCode == '40') {
-        // down arrow
-        mapPan.y -= 10;
-    }
-    else if (e.keyCode == '37') {
-       // left arrow
-       mapPan.x += 10;
-    }
-    else if (e.keyCode == '39') {
-       // right arrow
-       mapPan.x -= 10;
-    }
-    updatePan();
-  }
+  window.addEventListener('resize', updateMap);
 
   let simpRate = 1 / 1000;
 
   let clockZero = performance.now();
   let currentTime = Date.now();
 
-  const renderMap = renderer(document.getElementById('content'));
-  renderMap(drawMap.drawStatic(options, stars, planets));
-  const renderMoving = renderer(document.getElementById('moving'));
-  const rendererIntercept = renderer(document.getElementById('intercept'));
-  const rendererMovingOrbits = renderer(document.getElementById('movingOrbits'));
+  let mapPan = {
+    x: 650,
+    y: 650,
+    zoom: 1
+  };
+
+  const renderStatic          = renderer(document.getElementById('content'));
+  renderStatic(drawMap.drawStatic(options, stars));
+  const renderStaticOrbits    = renderer(document.getElementById('staticOrbits'));
+  const renderStars           = renderer(document.getElementById('stars'));
+  const renderGrid            = renderer(document.getElementById('grid'));
+  const renderMoving          = renderer(document.getElementById('moving'));
+  const rendererIntercept     = renderer(document.getElementById('intercept'));
+  const rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
+
+  const render = (options, stars, planets, mapPan) => {
+    renderStaticOrbits(drawMap.drawOrbits(planets));
+    renderStars(drawMap.drawStars(stars));
+    renderGrid(drawMap.drawGrid(stars[0], mapPan));
+  };
+
+  const updatePan = () => {
+    document.getElementById('map').setAttribute(
+      'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
+    );
+  };
+
+  updatePan();
+  render(options, stars, planets, mapPan);
+
+  document.getElementById('map').addEventListener('click', function () {console.log('Click!');});
+  document.onkeydown = checkKey;
+  function checkKey(e) {
+  if (e.keyCode == '38') {
+      // up arrow
+      mapPan.y += 10;
+    }
+    else if (e.keyCode == '40') {
+      // down arrow
+      mapPan.y -= 10;
+    }
+    else if (e.keyCode == '37') {
+      // left arrow
+      mapPan.x += 10;
+    }
+    else if (e.keyCode == '39') {
+      // right arrow
+      mapPan.x -= 10;
+    }
+    updatePan();
+  }
+
+  let isPanning = false;
+  document.getElementById('map').addEventListener('mousedown', e => {
+    console.log(e.which);
+    if (e.which === 3) {
+      isPanning = true;
+    }
+  });
+  document.getElementById('map').addEventListener('mousemove', e => {
+    if (isPanning === true) {
+      mapPan.x += e.offsetX - mapPan.x;
+      mapPan.y += e.offsetY - mapPan.y;
+      updatePan();
+    }
+  });
+  window.addEventListener('mouseup', e => {
+    if (isPanning === true) {
+      isPanning = false;
+    }
+  });
+  // $('#element').mousedown(function(event) {
+  //   switch (event.which) {
+  //       case 1:
+  //           alert('Left Mouse button pressed.');
+  //           break;
+  //       case 2:
+  //           alert('Middle Mouse button pressed.');
+  //           break;
+  //       case 3:
+  //           alert('Right Mouse button pressed.');
+  //           break;
+  //       default:
+  //           alert('You have a strange Mouse!');
+  //   }
+  // });
+
+// <---------LOOP---------->
 
   const loop = () => {
     let time = performance.now();
@@ -1507,6 +1569,7 @@ const main = async () => {
         drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
         craftList, stations, rendererMovingOrbits)
       );
+
     }
 
     if (options.stop) {return;}
@@ -1524,8 +1587,8 @@ module.exports={
     "name": "Prime",
     "type": "star",
     "mass": 20000000000,
-    "x": 650,
-    "y": 650,
+    "x": 0,
+    "y": 0,
     "z": 0,
     "objectRadius": 15,
     "color": "#ff7800",

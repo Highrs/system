@@ -155,49 +155,103 @@ const main = async () => {
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
 
-  let mapPan = {
-    x: 0,
-    y: 0,
-    zoom: 1
-  };
+  const updateMap = () => {console.log('Resized.');};
 
-  document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
-  document.onkeydown = checkKey;
-  function updatePan() {
-    document.getElementById('map').setAttribute(
-      'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
-    );
-  }
-  function checkKey(e) {
-    if (e.keyCode == '38') {
-        // up arrow
-        mapPan.y += 10;
-    }
-    else if (e.keyCode == '40') {
-        // down arrow
-        mapPan.y -= 10;
-    }
-    else if (e.keyCode == '37') {
-       // left arrow
-       mapPan.x += 10;
-    }
-    else if (e.keyCode == '39') {
-       // right arrow
-       mapPan.x -= 10;
-    }
-    updatePan();
-  }
+  window.addEventListener('resize', updateMap);
 
   let simpRate = 1 / 1000;
 
   let clockZero = performance.now();
   let currentTime = Date.now();
 
-  const renderMap = renderer(document.getElementById('content'));
-  renderMap(drawMap.drawStatic(options, stars, planets));
-  const renderMoving = renderer(document.getElementById('moving'));
-  const rendererIntercept = renderer(document.getElementById('intercept'));
-  const rendererMovingOrbits = renderer(document.getElementById('movingOrbits'));
+  let mapPan = {
+    x: 650,
+    y: 650,
+    zoom: 1
+  };
+
+  const renderStatic          = renderer(document.getElementById('content'));
+  renderStatic(drawMap.drawStatic(options, stars));
+  const renderStaticOrbits    = renderer(document.getElementById('staticOrbits'));
+  const renderStars           = renderer(document.getElementById('stars'));
+  const renderGrid            = renderer(document.getElementById('grid'));
+  const renderMoving          = renderer(document.getElementById('moving'));
+  const rendererIntercept     = renderer(document.getElementById('intercept'));
+  const rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
+
+  const render = (options, stars, planets, mapPan) => {
+    renderStaticOrbits(drawMap.drawOrbits(planets));
+    renderStars(drawMap.drawStars(stars));
+    renderGrid(drawMap.drawGrid(stars[0], mapPan));
+  };
+
+  const updatePan = () => {
+    document.getElementById('map').setAttribute(
+      'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
+    );
+  };
+
+  updatePan();
+  render(options, stars, planets, mapPan);
+
+  document.getElementById('map').addEventListener('click', function () {console.log('Click!');});
+  document.onkeydown = checkKey;
+  function checkKey(e) {
+  if (e.keyCode == '38') {
+      // up arrow
+      mapPan.y += 10;
+    }
+    else if (e.keyCode == '40') {
+      // down arrow
+      mapPan.y -= 10;
+    }
+    else if (e.keyCode == '37') {
+      // left arrow
+      mapPan.x += 10;
+    }
+    else if (e.keyCode == '39') {
+      // right arrow
+      mapPan.x -= 10;
+    }
+    updatePan();
+  }
+
+  let isPanning = false;
+  document.getElementById('map').addEventListener('mousedown', e => {
+    console.log(e.which);
+    if (e.which === 3) {
+      isPanning = true;
+    }
+  });
+  document.getElementById('map').addEventListener('mousemove', e => {
+    if (isPanning === true) {
+      mapPan.x += e.offsetX - mapPan.x;
+      mapPan.y += e.offsetY - mapPan.y;
+      updatePan();
+    }
+  });
+  window.addEventListener('mouseup', e => {
+    if (isPanning === true) {
+      isPanning = false;
+    }
+  });
+  // $('#element').mousedown(function(event) {
+  //   switch (event.which) {
+  //       case 1:
+  //           alert('Left Mouse button pressed.');
+  //           break;
+  //       case 2:
+  //           alert('Middle Mouse button pressed.');
+  //           break;
+  //       case 3:
+  //           alert('Right Mouse button pressed.');
+  //           break;
+  //       default:
+  //           alert('You have a strange Mouse!');
+  //   }
+  // });
+
+// <---------LOOP---------->
 
   const loop = () => {
     let time = performance.now();
@@ -228,6 +282,7 @@ const main = async () => {
         drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
         craftList, stations, rendererMovingOrbits)
       );
+
     }
 
     if (options.stop) {return;}

@@ -130,3 +130,8 @@ html, body {
   fill: #363636;
   stroke-width: 1px;
 }
+.frame {
+  fill: none;
+  stroke-width: 1px;
+  stroke: #00ff66ff;
+}
