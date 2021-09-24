@@ -1472,16 +1472,22 @@ const main = async () => {
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
   };
 
-  const updatePan = () => {
-    document.getElementById('map').setAttribute(
-      'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
-    );
+  const updatePan = (mapPan) => {
+    if (mapPan.x > 3000) {mapPan.x = 3000;} else
+    if (mapPan.x < -500) {mapPan.x = -500;} else
+    if (mapPan.y > 1700) {mapPan.y = 1700;} else
+    if (mapPan.y < -500) {mapPan.y = -500;} else
+    {
+      document.getElementById('map').setAttribute(
+        'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
+      );
+    }
   };
 
-  updatePan();
+  updatePan(mapPan);
   render(options, stars, planets, mapPan);
 
-  document.getElementById('map').addEventListener('click', function () {console.log('Click!');});
+  document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
   function checkKey(e) {
   if (e.keyCode == '38') {
@@ -1506,19 +1512,18 @@ const main = async () => {
   let isPanning = false;
   let pastOffsetX = 0;
   let pastOffsetY = 0;
-  document.getElementById('map').addEventListener('mousedown', e => {
-    // console.log(e.which);
+  document.getElementById('content').addEventListener('mousedown', e => {
     if (e.which === 3) {
       pastOffsetX = e.offsetX;
       pastOffsetY = e.offsetY;
       isPanning = true;
     }
   });
-  document.getElementById('map').addEventListener('mousemove', e => {
+  document.getElementById('content').addEventListener('mousemove', e => {
     if (isPanning === true) {
       mapPan.x += e.offsetX - pastOffsetX;
       mapPan.y += e.offsetY - pastOffsetY;
-      updatePan();
+      updatePan(mapPan);
       pastOffsetX = e.offsetX;
       pastOffsetY = e.offsetY;
     }
