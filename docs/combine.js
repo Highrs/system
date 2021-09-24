@@ -1452,8 +1452,8 @@ const main = async () => {
   let currentTime = Date.now();
 
   let mapPan = {
-    x: 650,
-    y: 650,
+    x: document.body.clientWidth / 2,
+    y: document.body.clientHeight / 2,
     zoom: 1
   };
 
@@ -1504,39 +1504,32 @@ const main = async () => {
   }
 
   let isPanning = false;
+  let pastOffsetX = 0;
+  let pastOffsetY = 0;
   document.getElementById('map').addEventListener('mousedown', e => {
-    console.log(e.which);
+    // console.log(e.which);
     if (e.which === 3) {
+      pastOffsetX = e.offsetX;
+      pastOffsetY = e.offsetY;
       isPanning = true;
     }
   });
   document.getElementById('map').addEventListener('mousemove', e => {
     if (isPanning === true) {
-      mapPan.x += e.offsetX - mapPan.x;
-      mapPan.y += e.offsetY - mapPan.y;
+      mapPan.x += e.offsetX - pastOffsetX;
+      mapPan.y += e.offsetY - pastOffsetY;
       updatePan();
+      pastOffsetX = e.offsetX;
+      pastOffsetY = e.offsetY;
     }
   });
-  window.addEventListener('mouseup', e => {
+  window.addEventListener('mouseup', function () {
     if (isPanning === true) {
       isPanning = false;
+      pastOffsetX = 0;
+      pastOffsetY = 0;
     }
   });
-  // $('#element').mousedown(function(event) {
-  //   switch (event.which) {
-  //       case 1:
-  //           alert('Left Mouse button pressed.');
-  //           break;
-  //       case 2:
-  //           alert('Middle Mouse button pressed.');
-  //           break;
-  //       case 3:
-  //           alert('Right Mouse button pressed.');
-  //           break;
-  //       default:
-  //           alert('You have a strange Mouse!');
-  //   }
-  // });
 
 // <---------LOOP---------->
 
