@@ -30,48 +30,58 @@ function getPageHeight() {
 //   return polarGrid;
 // };
 
-const drawGrid = (staro) => {
+const drawGrid = (staro, mapPan) => {
   let grid = ['g', {}];
-  let crossSize = 5;
+  let crossSize = 5 * mapPan.zoom;
+  if (crossSize < 1) {crossSize = 1;}
 
-  for (let x = 0 + staro.x%100; x <= getPageWidth(); x += 100) {
-    for (let y = 0 + staro.y%100; y <= getPageHeight(); y += 100) {
+  for (let x = 0 + staro.x%100; ((x <= getPageWidth()) && (x <= 1000 * mapPan.zoom)); x += 100 * mapPan.zoom) {
+    for (let y = 0 + staro.y%100; ((y <= getPageHeight()) && (y <= 1000 * mapPan.zoom) ); y += 100 * mapPan.zoom) {
       grid.push(
-        ['line', { x1: x - crossSize, y1: y,
-          x2: x + crossSize, y2: y, class: 'grid'}],
-        ['line', { x1: x, y1: y + crossSize,
-          x2: x, y2: y - crossSize, class: 'grid'}]
+        icons.gridCross(crossSize,  x,  y),
+        icons.gridCross(crossSize, -x,  y),
+        icons.gridCross(crossSize,  x, -y),
+        icons.gridCross(crossSize, -x, -y)
       );
     }
 
     grid.push(
-      ['line', { x1: staro.x, y1: x + 10,
-        x2: staro.x, y2: x + 90, class: 'grid'}],
-      ['line', { x1: x + 10, y1: staro.y,
-        x2: x + 90, y2: staro.y, class: 'grid'}],
+      ['line', {
+        x1: staro.x,
+        y1: x + 10 * mapPan.zoom,
+        x2: staro.x,
+        y2: x + 90 * mapPan.zoom,
+        class: 'grid'}],
+      ['line', {
+        x1: x + 10 * mapPan.zoom,
+        y1: staro.y,
+        x2: x + 90 * mapPan.zoom,
+        y2: staro.y,
+        class: 'grid'}],
     );
   }
 
   return grid;
 };
 exports.drawGrid = drawGrid;
-const drawOrbits = (bodies) => {
+const drawOrbits = (bodies, mapPan) => {
   if (bodies.length < 1) {return ['g', {}];}
 
   let divline1;
   let divline2;
   let retGroup = ['g', {}];
-
-  for (let i = 0; i < bodies.length; i++) {
-    let body = bodies[i];
+// ----------------------
+  bodies.forEach(bodyo => {
     let coords = 'M ';
     let points = 128;
-    if (body.type === 'moon') {
+    if (bodyo.type === 'moon') {
       points = 32;
     }
 
     for (let i = 0; i < points; i++) {
-      let currCoord = mech.kepCalc(body, undefined, 's', ((i * 2 * PI) / points));
+      let currCoord = mech.kepCalc(bodyo, undefined, 's', ((i * 2 * PI) / points));
+      currCoord.x = currCoord.x * mapPan.zoom;
+      currCoord.y = currCoord.y * mapPan.zoom;
       if (i === 0) {
         divline1 = currCoord;
       } else if (Math.abs(points/2 - i) < 1) {
@@ -99,12 +109,12 @@ const drawOrbits = (bodies) => {
         icons.apsis()
       ]
     );
-  }
-
+  });
+// ----------------------
   return retGroup;
 };
 exports.drawOrbits = drawOrbits;
-const drawSimpleOrbit = (stations) => {
+const drawSimpleOrbit = (stations, mapPan) => {
   if (stations.length < 1) {return ['g', {}];}
 
   let retGroup = ['g', {}];
@@ -113,43 +123,56 @@ const drawSimpleOrbit = (stations) => {
     retGroup.push(
       ['g', tt(stations[i].px, stations[i].py), [
         'circle',
-        {r : stations[i].a, class: 'minorOrbit'}
+        {
+          r : stations[i].a * mapPan.zoom,
+          class: 'minorOrbit'
+        }
       ]]
     );
   }
 
   return retGroup;
 };
-const drawIndustryData = (body) => {
-  let display = ['g', tt(10, -10)];
-
-  display.push(
-    ['text', {x: 0, y: 6, class: 'dataText'}, 'IND:'],
-    ['text', {x: 0, y: (body.industry.length + 2) * 6, class: 'dataText'}, 'STORE:']
-  );
-
-  body.industry.forEach((e, idx) => {
-    display.push(
-      ['g', tt(0, 6),
-        ['text', {x: 2, y: (idx + 1) * 6, class: 'dataText'},
-          e.abr +":" + e.status
-        ]
-      ]
-    );
-  });
-  Object.keys(body.store).forEach((e, idx) => {
-    display.push(
-      ['g', tt(0, 6),
-        ['text', {x: 2,
-          y: (body.industry.length + idx + 2) * 6,
-          class: 'dataText'}, e.toUpperCase() + ':' + body.store[e].toFixed(0)
-        ]
-      ]
-    );
-  });
-
-  return display;
-};
+// const drawIndustryData = (body) => {
+//   let display = ['g', tt(10, -10)];
+//
+//   display.push(
+//     ['text', {
+//       x: 0,
+//       y: 6,
+//       class: 'dataText'
+//     }, 'IND:'],
+//     ['text', {
+//       x: 0,
+//       y: (body.industry.length + 2) * 6,
+//       class: 'dataText'
+//     }, 'STORE:']
+//   );
+//
+//   body.industry.forEach((e, idx) => {
+//     display.push(
+//       ['g', tt(0, 6),
+//         ['text', {
+//           x: 2,
+//           y: (idx + 1) * 6,
+//           class: 'dataText'
+//         }, e.abr +":" + e.status]
+//       ]
+//     );
+//   });
+//   Object.keys(body.store).forEach((e, idx) => {
+//     display.push(
+//       ['g', tt(0, 6),
+//         ['text', {x: 2,
+//           y: (body.industry.length + idx + 2) * 6,
+//           class: 'dataText'}, e.toUpperCase() + ':' + body.store[e].toFixed(0)
+//         ]
+//       ]
+//     );
+//   });
+//
+//   return display;
+// };
 const drawBodyData = (bodyo) => {
   let dataDisp = ['g', {}];
 
@@ -163,77 +186,95 @@ const drawBodyData = (bodyo) => {
     // ]
   );
 
-  if (bodyo.industry) { dataDisp.push(drawIndustryData(bodyo)); }
+  // if (bodyo.industry) { dataDisp.push(drawIndustryData(bodyo)); }
 
   return dataDisp;
 };
-const drawBodies = (bodies, options) => {
+const drawBodies = (bodies, options, mapPan) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
-  for (let i = 0; i < bodies.length; i++) {
+  bodies.forEach (bodyo =>{
+    let partBody = ['g', tt(bodyo.x * mapPan.zoom, bodyo.y * mapPan.zoom)];
     if (
       options.planetData
     ) {
-      bodiesDrawn.push(
-        ['g', tt(bodies[i].x, bodies[i].y), drawBodyData(bodies[i]),]
+      partBody.push(
+        drawBodyData(bodyo),
       );
     }
 
-    bodiesDrawn.push(
-      icons.body(bodies[i])
+    partBody.push(
+      icons.body(bodyo)
     );
-  }
+    bodiesDrawn.push(partBody);
+  });
   return bodiesDrawn;
 };
-const drawStations = (stations, options) => {
+const drawStations = (stations, options, mapPan) => {
   if (stations.length < 1) {return ['g', {}];}
   const stationsDrawn = ['g', {}];
-  for (let i = 0; i < stations.length; i++) {
-    if (
-      options.planetData
-    ) {
-      stationsDrawn.push(
-        ['g', tt(stations[i].x, stations[i].y), drawBodyData(stations[i]),]
-      );
-    }
+  stations.forEach(stationo => {
+    for (let i = 0; i < stations.length; i++) {
+      let partStation = ['g', tt((stationo.x * mapPan.zoom), (stationo.y * mapPan.zoom))];
+      if (
+        options.planetData
+      ) {
+        partStation.push(
+          ['g', {}, drawBodyData(stationo),]
+        );
+      }
 
-    stationsDrawn.push(
-      icons.station(stations[i])
-    );
-  }
+      partStation.push(
+        icons.station(stationo)
+      );
+      stationsDrawn.push(partStation);
+    }
+  });
+
+
   return stationsDrawn;
 };
-const drawBelts = (belts) => {
+const drawBelts = (belts, mapPan) => {
   let rocksDrawn = ['g', {}];
 
   belts.forEach(e => {
-    e.rocks.forEach(r => {
+    e.rocks.forEach(rocko => {
       rocksDrawn.push(
-        icons.body(r)
+        ['g', tt(rocko.x * mapPan.zoom, rocko.y * mapPan.zoom), icons.body(rocko)]
       );
     });
   });
 
   return rocksDrawn;
 };
-const drawHeader = (clock, options) => {
-  if (options.header) {
-    let header = ['g', tt(10, 20)];
-
-    for (let i = 0; i < lists.toDo().length; i++) {
-      let hShift = lists.toDo()[i][0] === '-' ? 10 : 0;
-      header.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.toDo(clock)[i] ]],);
-    }
-
-    return header;
-  } else {
-    return;
-  }
-};
-const drawStars = (stars) =>{
+// const drawHeader = (clock, options) => {
+//   if (options.header) {
+//     let header = ['g', tt(10, 20)];
+//
+//     for (let i = 0; i < lists.toDo().length; i++) {
+//       let hShift = lists.toDo()[i][0] === '-' ? 10 : 0;
+//       header.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.toDo(clock)[i] ]],);
+//     }
+//
+//     return header;
+//   }
+//   if (options.headerKeys) {
+//     let keys = ['g', tt(10, 20)];
+//
+//     for (let i = 0; i < lists.keys().length; i++) {
+//       let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
+//       keys.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.keys(clock)[i] ]],);
+//     }
+//
+//     return keys;
+//   }
+//   return;
+//
+// };
+const drawStars = (stars, mapPan) =>{
   let drawnStars = ['g', {}];
   stars.forEach((staro) => {
-    drawnStars.push(icons.star(staro));
+    drawnStars.push(icons.star(staro, mapPan));
     // drawnStars.push(drawPolarGrid(staro));
   });
   return drawnStars;
@@ -245,27 +286,32 @@ const drawCraftData = (crafto) =>{
   drawnData.push(
     ['path', {d: 'M 0,0 L 10, -10 L 25, -10', class: 'dataLine'}],
     ['text', {x: 10, y: -11, class: 'dataText'}, crafto.name + ' ' + crafto.abr],
-    ['text', {x: 10, y: -4, class: 'dataText'}, 'F:' + ((crafto.fuel / crafto.fuelCapacity) * 100).toFixed(0) + '%']
+    // ['text', {x: 10, y: -4, class: 'dataText'}, 'F:' + ((crafto.fuel / crafto.fuelCapacity) * 100).toFixed(0) + '%']
   );
 
-  let offset = 0;
-  Object.keys(crafto.cargo).forEach(specCargo => {
-    if (crafto.cargo[specCargo] > 0) {
-      drawnData.push(
-        ['text', {x: 10, y: 8 * offset, class: 'dataText'}, specCargo + ':' + crafto.cargo[specCargo]]
-      );
-      offset++;
-    }
-  });
+  // let offset = 0;
+  // Object.keys(crafto.cargo).forEach(specCargo => {
+  //   if (crafto.cargo[specCargo] > 0) {
+  //     drawnData.push(
+  //       ['text', {x: 10, y: 8 * offset, class: 'dataText'}, specCargo + ':' + crafto.cargo[specCargo]]
+  //     );
+  //     offset++;
+  //   }
+  // });
 
   return drawnData;
 };
-const drawCraft = (listOfCraft, options) => {
+const drawCraft = (listOfCraft, options, mapPan) => {
   let drawnCraft = ['g', {}];
 
   listOfCraft.forEach(crafto => {
     if (crafto.status === 'traveling' || crafto.status === 'drifting') {
-      let partCraft = ['g', tt(crafto.x, crafto.y)];
+      let partCraft = ['g', tt((crafto.x * mapPan.zoom), (crafto.y * mapPan.zoom))];
+
+      // Accel Indicator
+      partCraft.push(
+        icons.thrustVector(crafto)
+      );
 
       // Vector Line
       partCraft.push(
@@ -300,7 +346,7 @@ const drawCraft = (listOfCraft, options) => {
 
   return drawnCraft;
 };
-const drawRanges = (bodyArr) => {
+const drawRanges = (bodyArr, mapPan) => {
   let rangesDrawn = ['g', {}];
   let linesDrawn = ['g', {}];
   let windowsDrawn = ['g', {}];
@@ -310,24 +356,27 @@ const drawRanges = (bodyArr) => {
       for (let j = i + 1; j < bodyArr.length; j++) {
         if (bodyArr[j].industry) {
           linesDrawn.push(['line', {
-            x1: bodyArr[i].x,
-            y1: bodyArr[i].y,
-            x2: bodyArr[j].x,
-            y2: bodyArr[j].y,
+            x1: bodyArr[i].x * mapPan.zoom,
+            y1: bodyArr[i].y * mapPan.zoom,
+            x2: bodyArr[j].x * mapPan.zoom,
+            y2: bodyArr[j].y * mapPan.zoom,
             class: 'rangeLine'
           }]);
 
           let dist = mech.calcDist(bodyArr[i], bodyArr[j]);
 
           windowsDrawn.push(['g',
-          tt((((bodyArr[j].x) + (bodyArr[i].x)) / 2 - 11),
-            (((bodyArr[j].y) + (bodyArr[i].y)) / 2 - 2.25)),
+          tt((((bodyArr[j].x) + (bodyArr[i].x)) / 2 - 11) * mapPan.zoom,
+            (((bodyArr[j].y) + (bodyArr[i].y)) / 2 - 2.25) * mapPan.zoom),
             ['rect', {
               width: 22,
               height: 6.5,
               class: 'rangeWindow'
             }],
-            ['text', {x: 1, y: 5, class: 'rangeText'}, (dist).toFixed(2)]
+            ['text', {
+              x: 1,
+              y: 5,
+              class: 'rangeText'}, (dist).toFixed(2)]
           ]);
         }
       }
@@ -337,11 +386,24 @@ const drawRanges = (bodyArr) => {
 
   return rangesDrawn;
 };
-const drawMovingOrbits = (moons) => {
-  return ['g', {}, drawOrbits(moons)];
-};
-const drawScreenFrame = () => {
-  return ['g', {},
+// const drawMovingOrbits = (moons, mapPan) => {
+//   return ['g', {}, drawOrbits(moons, mapPan)];
+// };
+const drawScreenFrame = (options) => {
+  let frame = ['g', {}];
+
+    if (options.headerKeys) {
+      let keys = ['g', tt(20, 6)];
+
+      for (let i = 0; i < lists.keys().length; i++) {
+        let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
+        keys.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
+      }
+      
+      frame.push(keys);
+    }
+
+  frame.push( ['g', {},
     ['path',
       { d: 'M 40, 20 L 20, 20 L 20, 40',
       class: 'frame' }],
@@ -354,32 +416,34 @@ const drawScreenFrame = () => {
     ['path',
       { d: 'M 40, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 40) + '',
       class: 'frame' }]
-  ];
+  ]);
+
+  return frame;
 };
 
-exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits) => {
+exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
 
-  rendererMovingOrbits(drawMovingOrbits(moons));
+  // rendererMovingOrbits(drawMovingOrbits(moons, mapPan));
 
   return ['g', {},
-    drawHeader(clock, options),
-    drawBelts(belts),
-    drawSimpleOrbit(stations),
-    drawRanges(rangeCandidates),
-    drawBodies(moons, options),
-    drawBodies(planets, options),
-    drawBodies(ast, options),
-    drawStations(stations, options),
-    drawCraft(craft, options)
+    // drawHeader(clock, options),
+    drawBelts(belts, mapPan),
+    // drawSimpleOrbit(stations, mapPan),
+    drawRanges(rangeCandidates, mapPan),
+    drawBodies(moons, options, mapPan),
+    drawBodies(planets, options, mapPan),
+    drawBodies(ast, options, mapPan),
+    drawStations(stations, options, mapPan),
+    drawCraft(craft, options, mapPan)
   ];
 };
-exports.drawIntercepts = (listOfcraft) => {
+exports.drawIntercepts = (listOfcraft, mapPan) => {
   let intercepts = ['g', {}];
 
-  listOfcraft.forEach(e => {
-    if (e.intercept && (e.status === 'traveling')) {
-      intercepts.push(icons.marker(e.intercept.x, e.intercept.y));
+  listOfcraft.forEach(crafto => {
+    if (crafto.intercept && (crafto.status === 'traveling')) {
+      intercepts.push(['g', tt(crafto.intercept.x * mapPan.zoom, crafto.intercept.y * mapPan.zoom), icons.marker()]);
     }
   });
 
@@ -404,19 +468,19 @@ exports.drawStatic = (options, stars) => {
         ['stop', {offset: "100%", 'stop-color': stars[0].color, 'stop-opacity': 0 }]
       ]
     ],
-    ['g', {},
-      drawScreenFrame()
-    ],
     ['g', {id: 'map'},
       // drawOrbits(planets),
       ['g', {id: 'staticOrbits'}],
-      ['g', {id: 'movingOrbits'}],
+      // ['g', {id: 'movingOrbits'}],
       ['g', {id: 'stars'}],
       // drawStars(stars),
       // drawGrid(stars[0], mapPan),
       ['g', {id: 'grid'}],
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
-    ]
+    ],
+    ['g', {},
+      drawScreenFrame(options)
+    ],
   ]);
 };

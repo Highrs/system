@@ -3,11 +3,14 @@ const tt = require('onml/tt.js');
 module.exports = {
 
   body: (bodyo) => {
-    let tempBod = ['g', tt(bodyo.x, bodyo.y)];
+    let tempBod = ['g', {}];
 
     if (bodyo.industry) {
       tempBod.push(
-        ['circle', { r: bodyo.sphereOfInfluence, class: 'bodyZone'}]
+        ['circle', {
+          r: bodyo.sphereOfInfluence,
+          class: 'bodyZone'
+        }]
       );
     }
 
@@ -17,31 +20,34 @@ module.exports = {
         fill: "url(#RadialGradient2)"
       }],
       ['g', {},
-        ['circle', { r: bodyo.objectRadius, class: bodyo.industry?'majorObject':'minorObject'}]
+        ['circle', {
+          r: bodyo.objectRadius,
+          class: bodyo.industry?'majorObject':'minorObject'
+        }]
       ]
     );
 
     return tempBod;
   },
 
-  star: (staro) => {
-    let drawnStar = ['g', tt(staro.x, staro.y)];
+  star: (staro, mapPan) => {
+    let drawnStar = ['g', tt(staro.x * mapPan.zoom, staro.y * mapPan.zoom)];
 
     drawnStar.push(
       ['circle', {
-        r: staro.objectRadius * 50,
+        r: staro.objectRadius * 50 * mapPan.zoom,
         fill: "url(#RadialGradient1)"
       }],
       ['circle', {
-        r: staro.objectRadius * 4,
+        r: staro.objectRadius * 4 * mapPan.zoom,
         fill: "url(#RadialGradient3)"
       }],
       ['circle', {
-        r: 20,
+        r: 20 * mapPan.zoom,
         class: 'minorOrbit'
       }],
       ['circle', {
-        r: staro.objectRadius,
+        r: staro.objectRadius * mapPan.zoom,
         stroke: staro.color,
         fill: '#363636'
         // class: 'star'
@@ -61,8 +67,8 @@ module.exports = {
     ]
   ),
 
-  marker: (x, y) => (
-    ['g', tt(x, y),
+  marker: () => (
+    ['g', {},
       ['path', {d: 'M  3, 3 L  1, 1', class: 'gridBold'}],
       ['path', {d: 'M  3,-3 L  1,-1', class: 'gridBold'}],
       ['path', {d: 'M -3, 3 L -1, 1', class: 'gridBold'}],
@@ -73,7 +79,10 @@ module.exports = {
 
   apsis: (m = '') => (
     ['g', {},
-      ['path', {d: 'M -2,'+m+'5 L 0,0 L 2,'+m+'5 Z', class: 'symbolLine'}]
+      ['path', {
+        d: 'M -2,'+m+'5 L 0,0 L 2,'+m+'5 Z',
+        class: 'symbolLine'
+      }]
     ]
   ),
 
@@ -93,17 +102,21 @@ module.exports = {
       icono[crafto.class] :
       'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
 
-    return ['path', {d: iconString, class: 'craft'}];
+    return ['path', {
+      transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + ')',
+      d: iconString,
+      class: 'craft'
+    }];
   },
 
   station: (stationo) => {
-    let retStat = ['g', tt(stationo.x, stationo.y)];
+    let retStat = ['g', {}];
 
     const icono = {
       extractor:
 'M 2,2 L 6,0 L 2,-2 L 0,-8 L -2,-2 L -6,0 L -2,2 Z M -8,-1 L -7,0 L -6,0 M 8,-1 L 7,0 L 6,0',
       small:
-'M 1,4 L 3, 0 L 1,-4 L -1,-4 L -3,0 L -1,4 Z M 0,7 L 0, 4 M 0,-7 L 0,-4'
+'M 1,4 L 3, 0 L 1,-4 L -1,-4 L -3,0 L -1,4 Z M 0,7 L 0, 4 M 0,-10 L 0,-4'
     };
 
     let iconString =
@@ -113,15 +126,51 @@ module.exports = {
 
     if (stationo.industry) {
       retStat.push(
-        ['circle', { r: stationo.sphereOfInfluence, class: 'bodyZone'}]
+        ['circle', {
+          r: stationo.sphereOfInfluence,
+          class: 'bodyZone'
+        }]
       );
     }
 
     retStat.push(
-      ['path', {transform: 'rotate(' + stationo.orient + ')', d: iconString, class: 'station'}]
+      ['path', {
+        transform: 'rotate(' + stationo.orient + ')',
+        d: iconString,
+        class: 'station'
+      }]
     );
 
     return retStat;
-  }
+  },
 
+  thrustVector: (crafto) => {
+    let drawnVector = ['g', {
+      transform: 'rotate(' + (crafto.accelStat === 1 ? crafto.course : crafto.course + 180) + ')'
+    }];
+
+    drawnVector.push(
+      ['path', {
+        d: 'M 0,0 L -1, '+(-crafto.accel*4)+' L 1, '+(-crafto.accel*4)+' Z',
+        class: 'vector'
+      }],
+    );
+
+    return drawnVector;
+  },
+
+  gridCross: (crossSize, x, y) => {
+    return ['g', {},
+      ['line', {
+        x1: x - crossSize, y1: y,
+        x2: x + crossSize, y2: y,
+        class: 'grid'
+      }],
+      ['line', {
+        x1: x, y1: y + crossSize,
+        x2: x, y2: y - crossSize,
+        class: 'grid'
+      }]
+    ];
+  }
 };

@@ -132,6 +132,6 @@ html, body {
 }
 .frame {
   fill: none;
-  stroke-width: 1px;
+  stroke-width: 0.25px;
   stroke: #00ff66ff;
 }

@@ -95,9 +95,10 @@ const makeManyCraft = (craftType, numberToMake, craftList) => {
   }
 };
 Window.options = {
-  rate: 1,
+  rate: 2,
   targetFrames: 30,
   header: false,
+  headerKeys: true,
   planetData: true,
   craftData: true,
   stop: false,
@@ -106,7 +107,7 @@ Window.options = {
 const options = Window.options;
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
-  console.log('V 0.1.003');
+  console.log('V 0.1.006');
   console.log('Use \' Window.options \' to modify settings.');
 
   let stars = [];
@@ -167,7 +168,14 @@ const main = async () => {
   let mapPan = {
     x: document.body.clientWidth / 2,
     y: document.body.clientHeight / 2,
-    zoom: 1
+    xLast: 0,
+    yLast: 0,
+    zoom: 1,
+    zoomLast: 1,
+    cursOriginX: 0,
+    cursOriginY: 0,
+    zoomChange: 0,
+    interceptUpdated: false
   };
 
   const renderStatic          = renderer(document.getElementById('content'));
@@ -180,46 +188,57 @@ const main = async () => {
   const rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
 
   const render = (options, stars, planets, mapPan) => {
-    renderStaticOrbits(drawMap.drawOrbits(planets));
-    renderStars(drawMap.drawStars(stars));
+    // renderStatic(drawMap.drawStatic(options, stars));
+    renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
+    renderStars(drawMap.drawStars(stars, mapPan));
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
   };
 
+  render(options, stars, planets, mapPan);
+
   const updatePan = (mapPan) => {
-    if (mapPan.x > 3000) {mapPan.x = 3000;} else
-    if (mapPan.x < -500) {mapPan.x = -500;} else
-    if (mapPan.y > 1700) {mapPan.y = 1700;} else
-    if (mapPan.y < -500) {mapPan.y = -500;} else
-    {
+    // Update Pan here
+
+    // if (mapPan.x > document.body.clientWidth) {mapPan.x = document.body.clientWidth;}
+    // if (mapPan.x < 0) {mapPan.x = 0;}
+    // if (mapPan.y > document.body.clientHeight) {mapPan.y = document.body.clientHeight;}
+    // if (mapPan.y < 0) {mapPan.y = 0;}
+
+    if ((mapPan.x != mapPan.xLast) || (mapPan.y != mapPan.yLast)) {
       document.getElementById('map').setAttribute(
         'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
       );
+      mapPan.xLast = mapPan.x;
+      mapPan.yLast = mapPan.y;
     }
   };
 
-  updatePan(mapPan);
-  render(options, stars, planets, mapPan);
+  const updateZoom = (mapPan) => {
+    // Update Zoom here
+    if (mapPan.zoom != mapPan.zoomLast) {
+
+      if (mapPan.zoom < 0.3) {
+        mapPan.zoom = 0.3;
+      } else {
+        mapPan.x -= (mapPan.cursOriginX * (mapPan.zoomChange));
+        mapPan.y -= (mapPan.cursOriginY * (mapPan.zoomChange));
+      }
+      mapPan.zoomLast = mapPan.zoom;
+      // console.log('here');
+      return true;
+    }
+    return false;
+  };
+
+
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
   function checkKey(e) {
-  if (e.keyCode == '38') {
-      // up arrow
-      mapPan.y += 10;
-    }
-    else if (e.keyCode == '40') {
-      // down arrow
-      mapPan.y -= 10;
-    }
-    else if (e.keyCode == '37') {
-      // left arrow
-      mapPan.x += 10;
-    }
-    else if (e.keyCode == '39') {
-      // right arrow
-      mapPan.x -= 10;
-    }
-    updatePan();
+    if      (e.keyCode == '38') {/* up arrow */     mapPan.y += 10;}
+    else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= 10;}
+    else if (e.keyCode == '37') {/* left arrow */   mapPan.x += 10;}
+    else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= 10;}
   }
 
   let isPanning = false;
@@ -236,18 +255,32 @@ const main = async () => {
     if (isPanning === true) {
       mapPan.x += e.offsetX - pastOffsetX;
       mapPan.y += e.offsetY - pastOffsetY;
-      updatePan(mapPan);
       pastOffsetX = e.offsetX;
       pastOffsetY = e.offsetY;
     }
   });
   window.addEventListener('mouseup', function () {
-    if (isPanning === true) {
-      isPanning = false;
-      pastOffsetX = 0;
-      pastOffsetY = 0;
-    }
+    isPanning = false;
   });
+
+  document.getElementById('content').addEventListener('wheel', function (e) {
+    const zoomStep = 0.05;
+    mapPan.cursOriginX = e.offsetX - mapPan.x;
+    mapPan.cursOriginY = e.offsetY - mapPan.y;
+    if (e.deltaY < 0) {
+      // console.log('Zooming in ... ' + e.offsetX + ' ' + e.offsetY);
+      mapPan.zoom += zoomStep;
+      mapPan.zoomChange = zoomStep;
+    }
+    if (e.deltaY > 0) {
+      // console.log('Zooming out... ' + e.offsetX + ' ' + e.offsetY);
+      mapPan.zoom -= zoomStep;
+      mapPan.zoomChange = -zoomStep;
+    }
+    // updateZoom(mapPan);
+  }, {passive: true});
+
+
 
 // <---------LOOP---------->
 
@@ -255,6 +288,7 @@ const main = async () => {
     let time = performance.now();
     let timeDelta = time - clockZero;
     clockZero = time;
+
     if ( !isPaused ) {
       let workTime = (timeDelta * options.rate * simpRate);
       currentTime += workTime;
@@ -266,8 +300,21 @@ const main = async () => {
         orientOnSun(movBod[i], newData);
       }
 
+      if ((mapPan.zoom != mapPan.zoomLast) || (mapPan.interceptUpdated)) {
+        rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
+        mapPan.interceptUpdated = false;
+      }
+
+      if (updateZoom(mapPan)) render(options, stars, planets, mapPan);
+      updatePan(mapPan);
+
+      renderMoving(
+        drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
+        craftList, stations, rendererMovingOrbits, mapPan)
+      );
+
       craftList.forEach(crafto => {
-        craft.craftAI(crafto, indSites, rendererIntercept, craftList, workTime, stars[0], sysObjects);
+        craft.craftAI(crafto, indSites, craftList, workTime, stars[0], sysObjects, mapPan);
       });
 
       indSites.forEach(bodyo => {
@@ -275,12 +322,6 @@ const main = async () => {
           ind.indWork(bodyo, industyo, workTime);
         });
       });
-
-      renderMoving(
-        drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
-        craftList, stations, rendererMovingOrbits)
-      );
-
     }
 
     if (options.stop) {return;}

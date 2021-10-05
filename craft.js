@@ -1,7 +1,7 @@
 'use strict';
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
-const drawMap = require('./drawMap.js');
+// const drawMap = require('./drawMap.js');
 
 // Bezier Curve:
 // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
@@ -28,6 +28,7 @@ const makeCraft = (crafto) => {
       vx: 0, vy: 0, vz: 0,
       speed: 0,
       course: 0,
+      accelStat: 0,
       intercept: {},
       status: 'new',
       route: [],
@@ -41,7 +42,8 @@ const makeCraft = (crafto) => {
 
   return newCrafto;
 };
-const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, staro, sysObjects) => {
+const craftAI = (crafto, indSites, listOfcraft, timeDelta, staro, sysObjects, mapPan) => {
+  //             crafto, indSites, craftList, workTime, stars[0], sysObjects, mapPan
   switch(crafto.status) {
     case 'new':
       updateParking(crafto, sysObjects[crafto.home]);
@@ -49,13 +51,13 @@ const craftAI = (crafto, indSites, rendererIntercept, listOfcraft, timeDelta, st
       break;
     case 'parked':
       if (attemptSearchChecker(crafto, timeDelta)) {
-        tryToMakeRoute(crafto, indSites, staro, rendererIntercept, listOfcraft);
+        tryToMakeRoute(crafto, indSites, staro, listOfcraft, mapPan);
       }
       break;
     case 'traveling':
       calcActiveMotion(crafto, crafto.intercept, timeDelta);
       if (checkProxToTarget(crafto)) {
-        manageArrival(crafto, listOfcraft, staro, rendererIntercept);
+        manageArrival(crafto, listOfcraft, staro, mapPan);
       }
       break;
     case 'drifting':
@@ -93,6 +95,9 @@ const calcActiveMotion = (crafto, targeto, timeDelta) => {
   if (crafto.fuel <= 0) {
     console.log(crafto.name + ' has run out of gas and is drifting.');
     crafto.status = 'drifting';
+    crafto.accelStat = 0;
+  } else {
+    crafto.accelStat = dir;
   }
 };
 const calcDriftMotion = (crafto, timeDelta) => {
@@ -101,7 +106,7 @@ const calcDriftMotion = (crafto, timeDelta) => {
     crafto[e] += crafto['v' + e] * timeDelta;
   });
 };
-const manageArrival = (crafto, listOfcraft, staro, rendererIntercept) => {
+const manageArrival = (crafto, listOfcraft, staro, mapPan) => {
   fullStop(crafto);
   ind.transfCraftCargo(crafto);
   crafto.lastStop = crafto.route[0].location;
@@ -111,7 +116,8 @@ const manageArrival = (crafto, listOfcraft, staro, rendererIntercept) => {
   } else {
     crafto.intercept = calcIntercept(crafto, crafto.route[0].location, staro);
   }
-  rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+  // rendererIntercept(drawMap.drawIntercepts(listOfcraft, mapPan));
+  mapPan.interceptUpdated = true;
 };
 const checkProxToTarget = (crafto) => {
   let tsoi = crafto.route[0].location.sphereOfInfluence;
@@ -174,7 +180,7 @@ const buildWaypoint = (bodyo) => {
 
   return waypoint;
 };
-const tryToMakeRoute = (crafto, indSites, staro, rendererIntercept, listOfcraft) => {
+const tryToMakeRoute = (crafto, indSites, staro, listOfcraft, mapPan) => {
   crafto.intercept = {};
   if (!deviseRoute(crafto, indSites, staro)) {
     crafto.status = 'parked';
@@ -184,7 +190,8 @@ const tryToMakeRoute = (crafto, indSites, staro, rendererIntercept, listOfcraft)
     });
   } else {
     // console.log('here');
-    rendererIntercept(drawMap.drawIntercepts(listOfcraft));
+    // rendererIntercept(drawMap.drawIntercepts(listOfcraft, mapPan));
+    mapPan.interceptUpdated = true;
   }
 };
 const calcFuelNeeded = (crafto, routeArr = []) => {
@@ -214,6 +221,12 @@ const calcFuelNeeded = (crafto, routeArr = []) => {
   });
   return projectedFuelUse;
 };
+const enoughFuelCheck = (crafto, fuelNeeded) => {
+  if (crafto.fuel > fuelNeeded * 1.1) {
+    return true;
+  }
+  return false;
+};
 const findNearestGasStation = (crafto, indSites, startPoint = crafto) => {
   let baseFuelNeeded = crafto.fuelCapacity - crafto.fuel;
   let rangeToGasStation = Infinity;
@@ -233,12 +246,6 @@ const findNearestGasStation = (crafto, indSites, startPoint = crafto) => {
     });
   });
   return nearestGasStation;
-};
-const enoughFuelCheck = (crafto, fuelNeeded) => {
-  if (crafto.fuel > fuelNeeded * 1.1) {
-    return true;
-  }
-  return false;
 };
 const plotToNearestGasStation = (crafto, indSites, staro) => {
   let nearestGasStation = findNearestGasStation(crafto, indSites);

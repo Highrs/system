@@ -49,6 +49,11 @@ module.exports = {
     "Gasoline station has no navy craft refueling at it",
     "Gasoline station does not belong to warlord sponsor",
     "Station carries day-old hotdogs and scratch-off tickets"
-  ];}
+  ];},
+
+  keys: () => {return [
+    "RMB + Drag to pan.",
+    "Scroll to zoom"
+  ];},
 
 };
