@@ -70,7 +70,7 @@ const drawOrbits = (bodies, mapPan) => {
   let divline1;
   let divline2;
   let retGroup = ['g', {}];
-// ----------------------
+
   bodies.forEach(bodyo => {
     let coords = 'M ';
     let points = 128;
@@ -110,29 +110,29 @@ const drawOrbits = (bodies, mapPan) => {
       ]
     );
   });
-// ----------------------
+
   return retGroup;
 };
 exports.drawOrbits = drawOrbits;
-const drawSimpleOrbit = (stations, mapPan) => {
-  if (stations.length < 1) {return ['g', {}];}
-
-  let retGroup = ['g', {}];
-
-  for (let i = 0; i < stations.length; i++) {
-    retGroup.push(
-      ['g', tt(stations[i].px, stations[i].py), [
-        'circle',
-        {
-          r : stations[i].a * mapPan.zoom,
-          class: 'minorOrbit'
-        }
-      ]]
-    );
-  }
-
-  return retGroup;
-};
+// const drawSimpleOrbit = (stations, mapPan) => {
+//   if (stations.length < 1) {return ['g', {}];}
+//
+//   let retGroup = ['g', {}];
+//
+//   for (let i = 0; i < stations.length; i++) {
+//     retGroup.push(
+//       ['g', tt(stations[i].px, stations[i].py), [
+//         'circle',
+//         {
+//           r : stations[i].a * mapPan.zoom,
+//           class: 'minorOrbit'
+//         }
+//       ]]
+//     );
+//   }
+//
+//   return retGroup;
+// };
 // const drawIndustryData = (body) => {
 //   let display = ['g', tt(10, -10)];
 //
@@ -204,7 +204,7 @@ const drawBodies = (bodies, options, mapPan) => {
     }
 
     partBody.push(
-      icons.body(bodyo)
+      icons.body(bodyo, mapPan)
     );
     bodiesDrawn.push(partBody);
   });
@@ -240,7 +240,7 @@ const drawBelts = (belts, mapPan) => {
   belts.forEach(e => {
     e.rocks.forEach(rocko => {
       rocksDrawn.push(
-        ['g', tt(rocko.x * mapPan.zoom, rocko.y * mapPan.zoom), icons.body(rocko)]
+        ['g', tt(rocko.x * mapPan.zoom, rocko.y * mapPan.zoom), icons.body(rocko, mapPan)]
       );
     });
   });
@@ -399,7 +399,7 @@ const drawScreenFrame = (options) => {
         let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
         keys.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
       }
-      
+
       frame.push(keys);
     }
 
@@ -469,12 +469,9 @@ exports.drawStatic = (options, stars) => {
       ]
     ],
     ['g', {id: 'map'},
-      // drawOrbits(planets),
       ['g', {id: 'staticOrbits'}],
       // ['g', {id: 'movingOrbits'}],
       ['g', {id: 'stars'}],
-      // drawStars(stars),
-      // drawGrid(stars[0], mapPan),
       ['g', {id: 'grid'}],
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]

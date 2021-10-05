@@ -2,13 +2,13 @@ const tt = require('onml/tt.js');
 
 module.exports = {
 
-  body: (bodyo) => {
+  body: (bodyo, mapPan) => {
     let tempBod = ['g', {}];
 
     if (bodyo.industry) {
       tempBod.push(
         ['circle', {
-          r: bodyo.sphereOfInfluence,
+          r: bodyo.sphereOfInfluence * mapPan.zoom,
           class: 'bodyZone'
         }]
       );

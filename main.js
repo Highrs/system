@@ -22,7 +22,8 @@ const makeBody = (inBodyo) => {
       orient: 90,
       inputsList: [],
       outputsList: [],
-      owner: 'EMPIRE'
+      owner: 'EMPIRE',
+      orbitPointsArr: []
     }
   );
   ind.initInd(bodyo);
