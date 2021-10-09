@@ -440,6 +440,8 @@ exports.craftAI = craftAI;
 
 },{"./industry.js":7,"./mechanics.js":12}],3:[function(require,module,exports){
 'use strict';
+//What are you doing here? How did you get here? Leave.
+
 // const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
@@ -447,7 +449,7 @@ const mech = require('./mechanics.js');
 const icons = require('./icons.js');
 const lists = require('./lists.js');
 
-const PI = Math.PI;
+// const PI = Math.PI;
 function getPageWidth() {
   return document.body.clientWidth;
 }
@@ -494,12 +496,24 @@ const drawGrid = (staro, mapPan) => {
         y2: x + 90 * mapPan.zoom,
         class: 'grid'}],
       ['line', {
+        x1: staro.x,
+        y1: - x - 10 * mapPan.zoom,
+        x2: staro.x,
+        y2: - x - 90 * mapPan.zoom,
+        class: 'grid'}],
+      ['line', {
         x1: x + 10 * mapPan.zoom,
         y1: staro.y,
         x2: x + 90 * mapPan.zoom,
         y2: staro.y,
         class: 'grid'}],
-    );
+      ['line', {
+        x1: - x - 10 * mapPan.zoom,
+        y1: staro.y,
+        x2: - x - 90 * mapPan.zoom,
+        y2: staro.y,
+        class: 'grid'}]
+  );
   }
 
   return grid;
@@ -508,72 +522,66 @@ exports.drawGrid = drawGrid;
 const drawOrbits = (bodies, mapPan) => {
   if (bodies.length < 1) {return ['g', {}];}
 
-  let divline1;
-  let divline2;
   let retGroup = ['g', {}];
 
   bodies.forEach(bodyo => {
+    // console.log(bodyo);
+    let partOrbit = ['g', tt(bodyo.primaryo.x * mapPan.zoom, bodyo.primaryo.y * mapPan.zoom)];
     let coords = 'M ';
-    let points = 128;
-    if (bodyo.type === 'moon') {
-      points = 32;
+
+    for (let i = 0; i < bodyo.orbitPointsArr.length; i++) {
+      let currCoord = bodyo.orbitPointsArr[i];
+      ///stopped here
+      let currX = currCoord.ax * mapPan.zoom;
+      let currY = currCoord.ay * mapPan.zoom;
+
+      coords += currX + ',' + currY;
+      (i === bodyo.orbitPointsArr.length - 1)?(coords += 'Z'):(coords += 'L');
     }
 
-    for (let i = 0; i < points; i++) {
-      let currCoord = mech.kepCalc(bodyo, undefined, 's', ((i * 2 * PI) / points));
-      currCoord.x = currCoord.x * mapPan.zoom;
-      currCoord.y = currCoord.y * mapPan.zoom;
-      if (i === 0) {
-        divline1 = currCoord;
-      } else if (Math.abs(points/2 - i) < 1) {
-        divline2 = currCoord;
-      }
-      coords += currCoord.x + ',' + currCoord.y;
-      (i === points - 1)?(coords += 'Z'):(coords += 'L');
-    }
-
-    retGroup.push(['path',
+    partOrbit.push(['path',
       { d: coords, class: 'majorOrbit' }]);
-    retGroup.push(['line',
+    partOrbit.push(['line',
       {
-        x1: divline1.x,
-        y1: divline1.y,
-        x2: divline2.x,
-        y2: divline2.y,
+        x1: bodyo.orbitDivLine[0].ax * mapPan.zoom,
+        y1: bodyo.orbitDivLine[0].ay * mapPan.zoom,
+        x2: bodyo.orbitDivLine[1].ax * mapPan.zoom,
+        y2: bodyo.orbitDivLine[1].ay * mapPan.zoom,
         class: 'orbitDivLine'
       }]);
-    retGroup.push(
-      ['g', tt(divline1.x, divline1.y),
+    partOrbit.push(
+      ['g', tt(bodyo.orbitDivLine[0].ax * mapPan.zoom, bodyo.orbitDivLine[0].ay * mapPan.zoom),
         icons.apsis('-')
       ],
-      ['g', tt(divline2.x, divline2.y),
+      ['g', tt(bodyo.orbitDivLine[1].ax * mapPan.zoom, bodyo.orbitDivLine[1].ay * mapPan.zoom),
         icons.apsis()
       ]
     );
+    retGroup.push(partOrbit);
   });
 
   return retGroup;
 };
 exports.drawOrbits = drawOrbits;
-// const drawSimpleOrbit = (stations, mapPan) => {
-//   if (stations.length < 1) {return ['g', {}];}
-//
-//   let retGroup = ['g', {}];
-//
-//   for (let i = 0; i < stations.length; i++) {
-//     retGroup.push(
-//       ['g', tt(stations[i].px, stations[i].py), [
-//         'circle',
-//         {
-//           r : stations[i].a * mapPan.zoom,
-//           class: 'minorOrbit'
-//         }
-//       ]]
-//     );
-//   }
-//
-//   return retGroup;
-// };
+const drawSimpleOrbit = (stations, mapPan) => {
+  if (stations.length < 1) {return ['g', {}];}
+
+  let retGroup = ['g', {}];
+
+  stations.forEach(e => {
+    retGroup.push(
+      ['g', tt(e.px * mapPan.zoom, e.py * mapPan.zoom), [
+        'circle',
+        {
+          r : e.a * mapPan.zoom,
+          class: 'minorOrbit'
+        }
+      ]]
+    );
+  });
+
+  return retGroup;
+};
 // const drawIndustryData = (body) => {
 //   let display = ['g', tt(10, -10)];
 //
@@ -666,7 +674,7 @@ const drawStations = (stations, options, mapPan) => {
       }
 
       partStation.push(
-        icons.station(stationo)
+        icons.station(stationo, mapPan)
       );
       stationsDrawn.push(partStation);
     }
@@ -827,14 +835,14 @@ const drawRanges = (bodyArr, mapPan) => {
 
   return rangesDrawn;
 };
-// const drawMovingOrbits = (moons, mapPan) => {
-//   return ['g', {}, drawOrbits(moons, mapPan)];
-// };
+const drawMovingOrbits = (moons, mapPan) => {
+  return ['g', {}, drawOrbits(moons, mapPan)];
+};
 const drawScreenFrame = (options) => {
   let frame = ['g', {}];
 
     if (options.headerKeys) {
-      let keys = ['g', tt(20, 6)];
+      let keys = ['g', tt(6, 10)];
 
       for (let i = 0; i < lists.keys().length; i++) {
         let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
@@ -846,16 +854,16 @@ const drawScreenFrame = (options) => {
 
   frame.push( ['g', {},
     ['path',
-      { d: 'M 40, 20 L 20, 20 L 20, 40',
+      { d: 'M 40, 2 L 2, 2 L 2, 40',
       class: 'frame' }],
     ['path',
-      { d: 'M ' + (getPageWidth() - 40) + ', 20 L ' + (getPageWidth() - 20) + ', 20 L ' + (getPageWidth() - 20) + ', 40',
+      { d: 'M ' + (getPageWidth() - 40) + ', 2 L ' + (getPageWidth() - 2) + ', 2 L ' + (getPageWidth() - 2) + ', 40',
       class: 'frame' }],
     ['path',
-      { d: 'M ' + (getPageWidth() - 40) + ', ' + (getPageHeight() - 20) + ' L ' + (getPageWidth() - 20) + ', ' + (getPageHeight() - 20) + ' L ' + (getPageWidth() - 20) + ', ' + (getPageHeight() - 40) + '',
+      { d: 'M ' + (getPageWidth() - 40) + ', ' + (getPageHeight() - 2) + ' L ' + (getPageWidth() - 2) + ', ' + (getPageHeight() - 2) + ' L ' + (getPageWidth() - 2) + ', ' + (getPageHeight() - 40) + '',
       class: 'frame' }],
     ['path',
-      { d: 'M 40, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 40) + '',
+      { d: 'M 40, ' + (getPageHeight() - 2) + ' L 2, ' + (getPageHeight() - 2) + ' L 2, ' + (getPageHeight() - 40) + '',
       class: 'frame' }]
   ]);
 
@@ -865,12 +873,12 @@ const drawScreenFrame = (options) => {
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
 
-  // rendererMovingOrbits(drawMovingOrbits(moons, mapPan));
+  rendererMovingOrbits(drawMovingOrbits(moons, mapPan));
 
   return ['g', {},
     // drawHeader(clock, options),
     drawBelts(belts, mapPan),
-    // drawSimpleOrbit(stations, mapPan),
+    drawSimpleOrbit(stations, mapPan),
     drawRanges(rangeCandidates, mapPan),
     drawBodies(moons, options, mapPan),
     drawBodies(planets, options, mapPan),
@@ -911,7 +919,7 @@ exports.drawStatic = (options, stars) => {
     ],
     ['g', {id: 'map'},
       ['g', {id: 'staticOrbits'}],
-      // ['g', {id: 'movingOrbits'}],
+      ['g', {id: 'movingOrbits'}],
       ['g', {id: 'stars'}],
       ['g', {id: 'grid'}],
       ['g', {id: 'moving'}],
@@ -1094,14 +1102,14 @@ module.exports = {
     }];
   },
 
-  station: (stationo) => {
+  station: (stationo, mapPan) => {
     let retStat = ['g', {}];
 
     const icono = {
       extractor:
 'M 2,2 L 6,0 L 2,-2 L 0,-8 L -2,-2 L -6,0 L -2,2 Z M -8,-1 L -7,0 L -6,0 M 8,-1 L 7,0 L 6,0',
       small:
-'M 1,4 L 3, 0 L 1,-4 L -1,-4 L -3,0 L -1,4 Z M 0,7 L 0, 4 M 0,-10 L 0,-4'
+'M 1,4 L 3, 0 L 1,-4 L -1,-4 L -3,0 L -1,4 Z M 0,7 L 0, 4 M 0,-7 L 0,-4'
     };
 
     let iconString =
@@ -1112,7 +1120,7 @@ module.exports = {
     if (stationo.industry) {
       retStat.push(
         ['circle', {
-          r: stationo.sphereOfInfluence,
+          r: stationo.sphereOfInfluence * mapPan.zoom,
           class: 'bodyZone'
         }]
       );
@@ -1400,8 +1408,9 @@ module.exports = {
   ];},
 
   keys: () => {return [
+    "System Project V2.5",
     "RMB + Drag to pan.",
-    "Scroll to zoom"
+    "Scroll to zoom."
   ];},
 
 };
@@ -1416,26 +1425,43 @@ const hullTemps = require('./hullTemp.js');
 const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
+const PI = Math.PI;
 
 const makeStar = (staro) => {
   return staro;
 };
 const makeBody = (inBodyo) => {
-  // const bodyDat = mech.kepCalc(bodyo, 0);
   const bodyo = Object.assign(
     inBodyo,
     {
-      // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
       sphereOfInfluence: 10,
       orient: 90,
       inputsList: [],
       outputsList: [],
       owner: 'EMPIRE',
-      orbitPointsArr: []
+      orbitPointsArr: [],
+      orbitDivLine: [],
+      primaryo: majObj[inBodyo.primary]
     }
   );
   ind.initInd(bodyo);
+
+  let points = 128;
+  if (bodyo.type === 'moon') {points = 32;}
+
+  for (let i = 0; i < points; i++) {
+    let currCoord = mech.kepCalc(bodyo, undefined, 's', ((i * 2 * PI) / points));
+
+    bodyo.orbitPointsArr[i] = currCoord;
+
+    if (i === 0) {
+      bodyo.orbitDivLine[0] = currCoord;
+    } else if (Math.abs(points/2 - i) < 1) {
+      bodyo.orbitDivLine[1] = currCoord;
+    }
+  }
+
   return bodyo;
 };
 const rockNamer = () => {
@@ -1512,12 +1538,58 @@ Window.options = {
   planetData: true,
   craftData: true,
   stop: false,
-  intercepts: true
+  intercepts: true,
+  keyPanStep: 50
 };
 const options = Window.options;
+let mapPan = {
+  x: 0,
+  y: 0,
+  xLast: 0,
+  yLast: 0,
+  zoom: 1,
+  zoomLast: 1,
+  cursOriginX: 0,
+  cursOriginY: 0,
+  zoomChange: 0,
+};
+const updatePan = (mapPan) => {
+  // Update Pan here
+  if ((mapPan.x != mapPan.xLast) || (mapPan.y != mapPan.yLast)) {
+    document.getElementById('map').setAttribute(
+      'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
+    );
+    mapPan.xLast = mapPan.x;
+    mapPan.yLast = mapPan.y;
+    return true;
+  }
+  return false;
+};
+const updateMap = () => {console.log('Resized.');};
+const updateZoom = (mapPan) => {
+  // Update Zoom here
+  if (mapPan.zoom != mapPan.zoomLast) {
+
+    if (mapPan.zoom < 0.3) {
+      mapPan.zoom = 0.3;
+    } else {
+      mapPan.x -= (mapPan.cursOriginX * (mapPan.zoomChange));
+      mapPan.y -= (mapPan.cursOriginY * (mapPan.zoomChange));
+    }
+    mapPan.zoomLast = mapPan.zoom;
+
+    return true;
+  }
+  return false;
+};
+const checkKey = (e) => {
+  if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
+  else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
+  else if (e.keyCode == '37') {/* left arrow */   mapPan.x += options.keyPanStep;}
+  else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= options.keyPanStep;}
+};
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
-  console.log('V 0.1.006');
   console.log('Use \' Window.options \' to modify settings.');
 
   let stars = [];
@@ -1548,8 +1620,7 @@ const main = async () => {
     if (theObj.industry) { indSites.push(theObj); }
   });
 
-  let movBod = [];
-  movBod = movBod.concat(planets, moons, asteroids, stations);
+  let movBod = [].concat(planets, moons, asteroids, stations);
   belts.forEach(e => (movBod = movBod.concat(e.rocks)));
 
   makeManyCraft('brick', 8, craftList);
@@ -1558,35 +1629,6 @@ const main = async () => {
   makeManyCraft('barlog', 1, craftList);
 
   craftStart(craftList);
-
-  let isPaused = false;
-  function pause() { isPaused = true; console.log('|| Paused');}
-  function play() { isPaused = false; console.log('>> Unpaused');}
-
-  window.addEventListener('blur', pause);
-  window.addEventListener('focus', play);
-
-  const updateMap = () => {console.log('Resized.');};
-
-  window.addEventListener('resize', updateMap);
-
-  let simpRate = 1 / 1000;
-
-  let clockZero = performance.now();
-  let currentTime = Date.now();
-
-  let mapPan = {
-    x: document.body.clientWidth / 2,
-    y: document.body.clientHeight / 2,
-    xLast: 0,
-    yLast: 0,
-    zoom: 1,
-    zoomLast: 1,
-    cursOriginX: 0,
-    cursOriginY: 0,
-    zoomChange: 0,
-    interceptUpdated: false
-  };
 
   const renderStatic          = renderer(document.getElementById('content'));
   renderStatic(drawMap.drawStatic(options, stars));
@@ -1597,8 +1639,10 @@ const main = async () => {
   const rendererIntercept     = renderer(document.getElementById('intercept'));
   const rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
 
+  mapPan.x = document.body.clientWidth / 2;
+  mapPan.y = document.body.clientHeight / 2;
+
   const render = (options, stars, planets, mapPan) => {
-    // renderStatic(drawMap.drawStatic(options, stars));
     renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
     renderStars(drawMap.drawStars(stars, mapPan));
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
@@ -1606,50 +1650,17 @@ const main = async () => {
 
   render(options, stars, planets, mapPan);
 
-  const updatePan = (mapPan) => {
-    // Update Pan here
+  let isPaused = false;
+  function pause() { isPaused = true; console.log('|| Paused');}
+  function play() { isPaused = false; console.log('>> Unpaused');}
 
-    // if (mapPan.x > document.body.clientWidth) {mapPan.x = document.body.clientWidth;}
-    // if (mapPan.x < 0) {mapPan.x = 0;}
-    // if (mapPan.y > document.body.clientHeight) {mapPan.y = document.body.clientHeight;}
-    // if (mapPan.y < 0) {mapPan.y = 0;}
+  window.addEventListener('blur', pause);
+  window.addEventListener('focus', play);
 
-    if ((mapPan.x != mapPan.xLast) || (mapPan.y != mapPan.yLast)) {
-      document.getElementById('map').setAttribute(
-        'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
-      );
-      mapPan.xLast = mapPan.x;
-      mapPan.yLast = mapPan.y;
-    }
-  };
-
-  const updateZoom = (mapPan) => {
-    // Update Zoom here
-    if (mapPan.zoom != mapPan.zoomLast) {
-
-      if (mapPan.zoom < 0.3) {
-        mapPan.zoom = 0.3;
-      } else {
-        mapPan.x -= (mapPan.cursOriginX * (mapPan.zoomChange));
-        mapPan.y -= (mapPan.cursOriginY * (mapPan.zoomChange));
-      }
-      mapPan.zoomLast = mapPan.zoom;
-      // console.log('here');
-      return true;
-    }
-    return false;
-  };
-
-
+  window.addEventListener('resize', updateMap);
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
-  function checkKey(e) {
-    if      (e.keyCode == '38') {/* up arrow */     mapPan.y += 10;}
-    else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= 10;}
-    else if (e.keyCode == '37') {/* left arrow */   mapPan.x += 10;}
-    else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= 10;}
-  }
 
   let isPanning = false;
   let pastOffsetX = 0;
@@ -1674,25 +1685,24 @@ const main = async () => {
   });
 
   document.getElementById('content').addEventListener('wheel', function (e) {
-    const zoomStep = 0.05;
+    const zoomStep = 0.1;
     mapPan.cursOriginX = e.offsetX - mapPan.x;
     mapPan.cursOriginY = e.offsetY - mapPan.y;
     if (e.deltaY < 0) {
-      // console.log('Zooming in ... ' + e.offsetX + ' ' + e.offsetY);
       mapPan.zoom += zoomStep;
       mapPan.zoomChange = zoomStep;
     }
     if (e.deltaY > 0) {
-      // console.log('Zooming out... ' + e.offsetX + ' ' + e.offsetY);
       mapPan.zoom -= zoomStep;
       mapPan.zoomChange = -zoomStep;
     }
-    // updateZoom(mapPan);
   }, {passive: true});
 
-
-
 // <---------LOOP---------->
+  let simpRate = 1 / 1000;
+
+  let clockZero = performance.now();
+  let currentTime = Date.now();
 
   const loop = () => {
     let time = performance.now();
@@ -1710,12 +1720,10 @@ const main = async () => {
         orientOnSun(movBod[i], newData);
       }
 
-      if ((mapPan.zoom != mapPan.zoomLast) || (mapPan.interceptUpdated)) {
+      if (updateZoom(mapPan)) {
         rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
-        mapPan.interceptUpdated = false;
+        render(options, stars, planets, mapPan);
       }
-
-      if (updateZoom(mapPan)) render(options, stars, planets, mapPan);
       updatePan(mapPan);
 
       renderMoving(
@@ -1933,7 +1941,7 @@ module.exports={
 
 },{}],12:[function(require,module,exports){
 'use strict';
-const majObj = require('./majorObjects2.json');
+//The comments might all lies, don't trust them.
 
 const cos   = Math.cos;
 const sin   = Math.sin;
@@ -1943,7 +1951,7 @@ const sqrt  = Math.sqrt;
 const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   if(!bodyo){throw 'kepCalc() err: no bodyo given.';}
 
-  let primaryo = majObj[bodyo.primary];
+  let primaryo = bodyo.primaryo;
 
   let a    = bodyo.a;    // semi-major axis (a)
   let e    = bodyo.e;    // eccentricity (e)
@@ -2032,12 +2040,18 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   }
 
   return {
+    // Cooridnates with origin on star
     x: bodyCoords.x + primaryCoords.x,
     y: bodyCoords.y + primaryCoords.y,
     z: bodyCoords.z + primaryCoords.z,
+    // Coordinates of primary
     px: primaryo.x,
     py: primaryo.y,
-    pz: primaryo.z
+    pz: primaryo.z,
+    // Adjusted with origin on primary
+    ax: bodyCoords.x,
+    ay: bodyCoords.y,
+    az: bodyCoords.z,
     // focalShift: focalShift
   };
 };
@@ -2062,7 +2076,7 @@ exports.calcDist = calcDist;
 exports.calcDistSq = calcDistSq;
 exports.calcTravelTime = calcTravelTime;
 
-},{"./majorObjects2.json":11}],13:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 const stringify = require('./stringify.js');

@@ -1,4 +1,6 @@
 'use strict';
+//What are you doing here? How did you get here? Leave.
+
 // const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
@@ -6,7 +8,7 @@ const mech = require('./mechanics.js');
 const icons = require('./icons.js');
 const lists = require('./lists.js');
 
-const PI = Math.PI;
+// const PI = Math.PI;
 function getPageWidth() {
   return document.body.clientWidth;
 }
@@ -53,12 +55,24 @@ const drawGrid = (staro, mapPan) => {
         y2: x + 90 * mapPan.zoom,
         class: 'grid'}],
       ['line', {
+        x1: staro.x,
+        y1: - x - 10 * mapPan.zoom,
+        x2: staro.x,
+        y2: - x - 90 * mapPan.zoom,
+        class: 'grid'}],
+      ['line', {
         x1: x + 10 * mapPan.zoom,
         y1: staro.y,
         x2: x + 90 * mapPan.zoom,
         y2: staro.y,
         class: 'grid'}],
-    );
+      ['line', {
+        x1: - x - 10 * mapPan.zoom,
+        y1: staro.y,
+        x2: - x - 90 * mapPan.zoom,
+        y2: staro.y,
+        class: 'grid'}]
+  );
   }
 
   return grid;
@@ -67,72 +81,66 @@ exports.drawGrid = drawGrid;
 const drawOrbits = (bodies, mapPan) => {
   if (bodies.length < 1) {return ['g', {}];}
 
-  let divline1;
-  let divline2;
   let retGroup = ['g', {}];
 
   bodies.forEach(bodyo => {
+    // console.log(bodyo);
+    let partOrbit = ['g', tt(bodyo.primaryo.x * mapPan.zoom, bodyo.primaryo.y * mapPan.zoom)];
     let coords = 'M ';
-    let points = 128;
-    if (bodyo.type === 'moon') {
-      points = 32;
+
+    for (let i = 0; i < bodyo.orbitPointsArr.length; i++) {
+      let currCoord = bodyo.orbitPointsArr[i];
+      ///stopped here
+      let currX = currCoord.ax * mapPan.zoom;
+      let currY = currCoord.ay * mapPan.zoom;
+
+      coords += currX + ',' + currY;
+      (i === bodyo.orbitPointsArr.length - 1)?(coords += 'Z'):(coords += 'L');
     }
 
-    for (let i = 0; i < points; i++) {
-      let currCoord = mech.kepCalc(bodyo, undefined, 's', ((i * 2 * PI) / points));
-      currCoord.x = currCoord.x * mapPan.zoom;
-      currCoord.y = currCoord.y * mapPan.zoom;
-      if (i === 0) {
-        divline1 = currCoord;
-      } else if (Math.abs(points/2 - i) < 1) {
-        divline2 = currCoord;
-      }
-      coords += currCoord.x + ',' + currCoord.y;
-      (i === points - 1)?(coords += 'Z'):(coords += 'L');
-    }
-
-    retGroup.push(['path',
+    partOrbit.push(['path',
       { d: coords, class: 'majorOrbit' }]);
-    retGroup.push(['line',
+    partOrbit.push(['line',
       {
-        x1: divline1.x,
-        y1: divline1.y,
-        x2: divline2.x,
-        y2: divline2.y,
+        x1: bodyo.orbitDivLine[0].ax * mapPan.zoom,
+        y1: bodyo.orbitDivLine[0].ay * mapPan.zoom,
+        x2: bodyo.orbitDivLine[1].ax * mapPan.zoom,
+        y2: bodyo.orbitDivLine[1].ay * mapPan.zoom,
         class: 'orbitDivLine'
       }]);
-    retGroup.push(
-      ['g', tt(divline1.x, divline1.y),
+    partOrbit.push(
+      ['g', tt(bodyo.orbitDivLine[0].ax * mapPan.zoom, bodyo.orbitDivLine[0].ay * mapPan.zoom),
         icons.apsis('-')
       ],
-      ['g', tt(divline2.x, divline2.y),
+      ['g', tt(bodyo.orbitDivLine[1].ax * mapPan.zoom, bodyo.orbitDivLine[1].ay * mapPan.zoom),
         icons.apsis()
       ]
     );
+    retGroup.push(partOrbit);
   });
 
   return retGroup;
 };
 exports.drawOrbits = drawOrbits;
-// const drawSimpleOrbit = (stations, mapPan) => {
-//   if (stations.length < 1) {return ['g', {}];}
-//
-//   let retGroup = ['g', {}];
-//
-//   for (let i = 0; i < stations.length; i++) {
-//     retGroup.push(
-//       ['g', tt(stations[i].px, stations[i].py), [
-//         'circle',
-//         {
-//           r : stations[i].a * mapPan.zoom,
-//           class: 'minorOrbit'
-//         }
-//       ]]
-//     );
-//   }
-//
-//   return retGroup;
-// };
+const drawSimpleOrbit = (stations, mapPan) => {
+  if (stations.length < 1) {return ['g', {}];}
+
+  let retGroup = ['g', {}];
+
+  stations.forEach(e => {
+    retGroup.push(
+      ['g', tt(e.px * mapPan.zoom, e.py * mapPan.zoom), [
+        'circle',
+        {
+          r : e.a * mapPan.zoom,
+          class: 'minorOrbit'
+        }
+      ]]
+    );
+  });
+
+  return retGroup;
+};
 // const drawIndustryData = (body) => {
 //   let display = ['g', tt(10, -10)];
 //
@@ -225,7 +233,7 @@ const drawStations = (stations, options, mapPan) => {
       }
 
       partStation.push(
-        icons.station(stationo)
+        icons.station(stationo, mapPan)
       );
       stationsDrawn.push(partStation);
     }
@@ -386,14 +394,14 @@ const drawRanges = (bodyArr, mapPan) => {
 
   return rangesDrawn;
 };
-// const drawMovingOrbits = (moons, mapPan) => {
-//   return ['g', {}, drawOrbits(moons, mapPan)];
-// };
+const drawMovingOrbits = (moons, mapPan) => {
+  return ['g', {}, drawOrbits(moons, mapPan)];
+};
 const drawScreenFrame = (options) => {
   let frame = ['g', {}];
 
     if (options.headerKeys) {
-      let keys = ['g', tt(20, 6)];
+      let keys = ['g', tt(6, 10)];
 
       for (let i = 0; i < lists.keys().length; i++) {
         let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
@@ -405,16 +413,16 @@ const drawScreenFrame = (options) => {
 
   frame.push( ['g', {},
     ['path',
-      { d: 'M 40, 20 L 20, 20 L 20, 40',
+      { d: 'M 40, 2 L 2, 2 L 2, 40',
       class: 'frame' }],
     ['path',
-      { d: 'M ' + (getPageWidth() - 40) + ', 20 L ' + (getPageWidth() - 20) + ', 20 L ' + (getPageWidth() - 20) + ', 40',
+      { d: 'M ' + (getPageWidth() - 40) + ', 2 L ' + (getPageWidth() - 2) + ', 2 L ' + (getPageWidth() - 2) + ', 40',
       class: 'frame' }],
     ['path',
-      { d: 'M ' + (getPageWidth() - 40) + ', ' + (getPageHeight() - 20) + ' L ' + (getPageWidth() - 20) + ', ' + (getPageHeight() - 20) + ' L ' + (getPageWidth() - 20) + ', ' + (getPageHeight() - 40) + '',
+      { d: 'M ' + (getPageWidth() - 40) + ', ' + (getPageHeight() - 2) + ' L ' + (getPageWidth() - 2) + ', ' + (getPageHeight() - 2) + ' L ' + (getPageWidth() - 2) + ', ' + (getPageHeight() - 40) + '',
       class: 'frame' }],
     ['path',
-      { d: 'M 40, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 20) + ' L 20, ' + (getPageHeight() - 40) + '',
+      { d: 'M 40, ' + (getPageHeight() - 2) + ' L 2, ' + (getPageHeight() - 2) + ' L 2, ' + (getPageHeight() - 40) + '',
       class: 'frame' }]
   ]);
 
@@ -424,12 +432,12 @@ const drawScreenFrame = (options) => {
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
 
-  // rendererMovingOrbits(drawMovingOrbits(moons, mapPan));
+  rendererMovingOrbits(drawMovingOrbits(moons, mapPan));
 
   return ['g', {},
     // drawHeader(clock, options),
     drawBelts(belts, mapPan),
-    // drawSimpleOrbit(stations, mapPan),
+    drawSimpleOrbit(stations, mapPan),
     drawRanges(rangeCandidates, mapPan),
     drawBodies(moons, options, mapPan),
     drawBodies(planets, options, mapPan),
@@ -470,7 +478,7 @@ exports.drawStatic = (options, stars) => {
     ],
     ['g', {id: 'map'},
       ['g', {id: 'staticOrbits'}],
-      // ['g', {id: 'movingOrbits'}],
+      ['g', {id: 'movingOrbits'}],
       ['g', {id: 'stars'}],
       ['g', {id: 'grid'}],
       ['g', {id: 'moving'}],

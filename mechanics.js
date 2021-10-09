@@ -1,5 +1,5 @@
 'use strict';
-const majObj = require('./majorObjects2.json');
+//The comments might all lies, don't trust them.
 
 const cos   = Math.cos;
 const sin   = Math.sin;
@@ -9,7 +9,7 @@ const sqrt  = Math.sqrt;
 const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   if(!bodyo){throw 'kepCalc() err: no bodyo given.';}
 
-  let primaryo = majObj[bodyo.primary];
+  let primaryo = bodyo.primaryo;
 
   let a    = bodyo.a;    // semi-major axis (a)
   let e    = bodyo.e;    // eccentricity (e)
@@ -98,12 +98,18 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   }
 
   return {
+    // Cooridnates with origin on star
     x: bodyCoords.x + primaryCoords.x,
     y: bodyCoords.y + primaryCoords.y,
     z: bodyCoords.z + primaryCoords.z,
+    // Coordinates of primary
     px: primaryo.x,
     py: primaryo.y,
-    pz: primaryo.z
+    pz: primaryo.z,
+    // Adjusted with origin on primary
+    ax: bodyCoords.x,
+    ay: bodyCoords.y,
+    az: bodyCoords.z,
     // focalShift: focalShift
   };
 };

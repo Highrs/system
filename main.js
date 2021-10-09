@@ -7,26 +7,43 @@ const hullTemps = require('./hullTemp.js');
 const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
+const PI = Math.PI;
 
 const makeStar = (staro) => {
   return staro;
 };
 const makeBody = (inBodyo) => {
-  // const bodyDat = mech.kepCalc(bodyo, 0);
   const bodyo = Object.assign(
     inBodyo,
     {
-      // focalShift: bodyDat.focalShift,
       x: 0, y: 0, z: 0,
       sphereOfInfluence: 10,
       orient: 90,
       inputsList: [],
       outputsList: [],
       owner: 'EMPIRE',
-      orbitPointsArr: []
+      orbitPointsArr: [],
+      orbitDivLine: [],
+      primaryo: majObj[inBodyo.primary]
     }
   );
   ind.initInd(bodyo);
+
+  let points = 128;
+  if (bodyo.type === 'moon') {points = 32;}
+
+  for (let i = 0; i < points; i++) {
+    let currCoord = mech.kepCalc(bodyo, undefined, 's', ((i * 2 * PI) / points));
+
+    bodyo.orbitPointsArr[i] = currCoord;
+
+    if (i === 0) {
+      bodyo.orbitDivLine[0] = currCoord;
+    } else if (Math.abs(points/2 - i) < 1) {
+      bodyo.orbitDivLine[1] = currCoord;
+    }
+  }
+
   return bodyo;
 };
 const rockNamer = () => {
@@ -103,12 +120,58 @@ Window.options = {
   planetData: true,
   craftData: true,
   stop: false,
-  intercepts: true
+  intercepts: true,
+  keyPanStep: 50
 };
 const options = Window.options;
+let mapPan = {
+  x: 0,
+  y: 0,
+  xLast: 0,
+  yLast: 0,
+  zoom: 1,
+  zoomLast: 1,
+  cursOriginX: 0,
+  cursOriginY: 0,
+  zoomChange: 0,
+};
+const updatePan = (mapPan) => {
+  // Update Pan here
+  if ((mapPan.x != mapPan.xLast) || (mapPan.y != mapPan.yLast)) {
+    document.getElementById('map').setAttribute(
+      'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
+    );
+    mapPan.xLast = mapPan.x;
+    mapPan.yLast = mapPan.y;
+    return true;
+  }
+  return false;
+};
+const updateMap = () => {console.log('Resized.');};
+const updateZoom = (mapPan) => {
+  // Update Zoom here
+  if (mapPan.zoom != mapPan.zoomLast) {
+
+    if (mapPan.zoom < 0.3) {
+      mapPan.zoom = 0.3;
+    } else {
+      mapPan.x -= (mapPan.cursOriginX * (mapPan.zoomChange));
+      mapPan.y -= (mapPan.cursOriginY * (mapPan.zoomChange));
+    }
+    mapPan.zoomLast = mapPan.zoom;
+
+    return true;
+  }
+  return false;
+};
+const checkKey = (e) => {
+  if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
+  else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
+  else if (e.keyCode == '37') {/* left arrow */   mapPan.x += options.keyPanStep;}
+  else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= options.keyPanStep;}
+};
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
-  console.log('V 0.1.006');
   console.log('Use \' Window.options \' to modify settings.');
 
   let stars = [];
@@ -139,8 +202,7 @@ const main = async () => {
     if (theObj.industry) { indSites.push(theObj); }
   });
 
-  let movBod = [];
-  movBod = movBod.concat(planets, moons, asteroids, stations);
+  let movBod = [].concat(planets, moons, asteroids, stations);
   belts.forEach(e => (movBod = movBod.concat(e.rocks)));
 
   makeManyCraft('brick', 8, craftList);
@@ -149,35 +211,6 @@ const main = async () => {
   makeManyCraft('barlog', 1, craftList);
 
   craftStart(craftList);
-
-  let isPaused = false;
-  function pause() { isPaused = true; console.log('|| Paused');}
-  function play() { isPaused = false; console.log('>> Unpaused');}
-
-  window.addEventListener('blur', pause);
-  window.addEventListener('focus', play);
-
-  const updateMap = () => {console.log('Resized.');};
-
-  window.addEventListener('resize', updateMap);
-
-  let simpRate = 1 / 1000;
-
-  let clockZero = performance.now();
-  let currentTime = Date.now();
-
-  let mapPan = {
-    x: document.body.clientWidth / 2,
-    y: document.body.clientHeight / 2,
-    xLast: 0,
-    yLast: 0,
-    zoom: 1,
-    zoomLast: 1,
-    cursOriginX: 0,
-    cursOriginY: 0,
-    zoomChange: 0,
-    interceptUpdated: false
-  };
 
   const renderStatic          = renderer(document.getElementById('content'));
   renderStatic(drawMap.drawStatic(options, stars));
@@ -188,8 +221,10 @@ const main = async () => {
   const rendererIntercept     = renderer(document.getElementById('intercept'));
   const rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
 
+  mapPan.x = document.body.clientWidth / 2;
+  mapPan.y = document.body.clientHeight / 2;
+
   const render = (options, stars, planets, mapPan) => {
-    // renderStatic(drawMap.drawStatic(options, stars));
     renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
     renderStars(drawMap.drawStars(stars, mapPan));
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
@@ -197,50 +232,17 @@ const main = async () => {
 
   render(options, stars, planets, mapPan);
 
-  const updatePan = (mapPan) => {
-    // Update Pan here
+  let isPaused = false;
+  function pause() { isPaused = true; console.log('|| Paused');}
+  function play() { isPaused = false; console.log('>> Unpaused');}
 
-    // if (mapPan.x > document.body.clientWidth) {mapPan.x = document.body.clientWidth;}
-    // if (mapPan.x < 0) {mapPan.x = 0;}
-    // if (mapPan.y > document.body.clientHeight) {mapPan.y = document.body.clientHeight;}
-    // if (mapPan.y < 0) {mapPan.y = 0;}
+  window.addEventListener('blur', pause);
+  window.addEventListener('focus', play);
 
-    if ((mapPan.x != mapPan.xLast) || (mapPan.y != mapPan.yLast)) {
-      document.getElementById('map').setAttribute(
-        'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
-      );
-      mapPan.xLast = mapPan.x;
-      mapPan.yLast = mapPan.y;
-    }
-  };
-
-  const updateZoom = (mapPan) => {
-    // Update Zoom here
-    if (mapPan.zoom != mapPan.zoomLast) {
-
-      if (mapPan.zoom < 0.3) {
-        mapPan.zoom = 0.3;
-      } else {
-        mapPan.x -= (mapPan.cursOriginX * (mapPan.zoomChange));
-        mapPan.y -= (mapPan.cursOriginY * (mapPan.zoomChange));
-      }
-      mapPan.zoomLast = mapPan.zoom;
-      // console.log('here');
-      return true;
-    }
-    return false;
-  };
-
-
+  window.addEventListener('resize', updateMap);
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
-  function checkKey(e) {
-    if      (e.keyCode == '38') {/* up arrow */     mapPan.y += 10;}
-    else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= 10;}
-    else if (e.keyCode == '37') {/* left arrow */   mapPan.x += 10;}
-    else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= 10;}
-  }
 
   let isPanning = false;
   let pastOffsetX = 0;
@@ -265,25 +267,24 @@ const main = async () => {
   });
 
   document.getElementById('content').addEventListener('wheel', function (e) {
-    const zoomStep = 0.05;
+    const zoomStep = 0.1;
     mapPan.cursOriginX = e.offsetX - mapPan.x;
     mapPan.cursOriginY = e.offsetY - mapPan.y;
     if (e.deltaY < 0) {
-      // console.log('Zooming in ... ' + e.offsetX + ' ' + e.offsetY);
       mapPan.zoom += zoomStep;
       mapPan.zoomChange = zoomStep;
     }
     if (e.deltaY > 0) {
-      // console.log('Zooming out... ' + e.offsetX + ' ' + e.offsetY);
       mapPan.zoom -= zoomStep;
       mapPan.zoomChange = -zoomStep;
     }
-    // updateZoom(mapPan);
   }, {passive: true});
 
-
-
 // <---------LOOP---------->
+  let simpRate = 1 / 1000;
+
+  let clockZero = performance.now();
+  let currentTime = Date.now();
 
   const loop = () => {
     let time = performance.now();
@@ -301,12 +302,10 @@ const main = async () => {
         orientOnSun(movBod[i], newData);
       }
 
-      if ((mapPan.zoom != mapPan.zoomLast) || (mapPan.interceptUpdated)) {
+      if (updateZoom(mapPan)) {
         rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
-        mapPan.interceptUpdated = false;
+        render(options, stars, planets, mapPan);
       }
-
-      if (updateZoom(mapPan)) render(options, stars, planets, mapPan);
       updatePan(mapPan);
 
       renderMoving(

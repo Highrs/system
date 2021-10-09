@@ -52,8 +52,9 @@ module.exports = {
   ];},
 
   keys: () => {return [
+    "System Project V2.5",
     "RMB + Drag to pan.",
-    "Scroll to zoom"
+    "Scroll to zoom."
   ];},
 
 };

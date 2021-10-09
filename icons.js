@@ -109,14 +109,14 @@ module.exports = {
     }];
   },
 
-  station: (stationo) => {
+  station: (stationo, mapPan) => {
     let retStat = ['g', {}];
 
     const icono = {
       extractor:
 'M 2,2 L 6,0 L 2,-2 L 0,-8 L -2,-2 L -6,0 L -2,2 Z M -8,-1 L -7,0 L -6,0 M 8,-1 L 7,0 L 6,0',
       small:
-'M 1,4 L 3, 0 L 1,-4 L -1,-4 L -3,0 L -1,4 Z M 0,7 L 0, 4 M 0,-10 L 0,-4'
+'M 1,4 L 3, 0 L 1,-4 L -1,-4 L -3,0 L -1,4 Z M 0,7 L 0, 4 M 0,-7 L 0,-4'
     };
 
     let iconString =
@@ -127,7 +127,7 @@ module.exports = {
     if (stationo.industry) {
       retStat.push(
         ['circle', {
-          r: stationo.sphereOfInfluence,
+          r: stationo.sphereOfInfluence * mapPan.zoom,
           class: 'bodyZone'
         }]
       );
