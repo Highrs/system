@@ -151,15 +151,16 @@ const updateMap = () => {console.log('Resized.');};
 const updateZoom = (mapPan) => {
   // Update Zoom here
   if (mapPan.zoom != mapPan.zoomLast) {
-
-    if (mapPan.zoom < 0.3) {
-      mapPan.zoom = 0.3;
+    if (mapPan.zoom < 0.2) {
+      mapPan.zoom = 0.2;
+    } else if (mapPan.zoom > 5) {
+      mapPan.zoom = 5;
     } else {
-      mapPan.x -= (mapPan.cursOriginX * (mapPan.zoomChange));
-      mapPan.y -= (mapPan.cursOriginY * (mapPan.zoomChange));
+      mapPan.x -= mapPan.cursOriginX * mapPan.zoomChange;
+      mapPan.y -= mapPan.cursOriginY * mapPan.zoomChange;
     }
+    // console.log(mapPan.x);
     mapPan.zoomLast = mapPan.zoom;
-
     return true;
   }
   return false;
@@ -267,9 +268,9 @@ const main = async () => {
   });
 
   document.getElementById('content').addEventListener('wheel', function (e) {
-    const zoomStep = 0.1;
-    mapPan.cursOriginX = e.offsetX - mapPan.x;
-    mapPan.cursOriginY = e.offsetY - mapPan.y;
+    const zoomStep = 10**(0.05*mapPan.zoom)-1;
+    mapPan.cursOriginX = (e.offsetX - mapPan.x).toFixed(10);
+    mapPan.cursOriginY = (e.offsetY - mapPan.y).toFixed(10);
     if (e.deltaY < 0) {
       mapPan.zoom += zoomStep;
       mapPan.zoomChange = zoomStep;
