@@ -102,11 +102,17 @@ module.exports = {
       icono[crafto.class] :
       'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
 
-    return ['path', {
-      transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + ')',
-      d: iconString,
-      class: 'craft'
-    }];
+    return ['g', {},
+      ['circle', {
+        r: 10,
+        fill: "url(#EngineFlare)"
+      }],
+      ['path', {
+        transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + ')',
+        d: iconString,
+        class: 'craft'
+      }]
+    ];
   },
 
   station: (stationo, mapPan) => {

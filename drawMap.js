@@ -474,6 +474,12 @@ exports.drawStatic = (options, stars) => {
         ['stop', {offset: "35%", 'stop-color': stars[0].color, 'stop-opacity':  0.3 }],
         ['stop', {offset: "50%", 'stop-color': stars[0].color, 'stop-opacity':  0.1 }],
         ['stop', {offset: "100%", 'stop-color': stars[0].color, 'stop-opacity': 0 }]
+      ],
+      ['radialGradient', {id: "EngineFlare", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
+        ['stop', {offset: "25%", 'stop-color': "#ffffff", 'stop-opacity':  0.2 }],
+        // ['stop', {offset: "35%", 'stop-color': "#ffffff", 'stop-opacity':  0.3 }],
+        ['stop', {offset: "90%", 'stop-color': "#ffffff", 'stop-opacity':  0.01 }],
+        ['stop', {offset: "100%", 'stop-color': "#ffffff", 'stop-opacity': 0 }]
       ]
     ],
     ['g', {id: 'map'},

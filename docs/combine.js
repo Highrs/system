@@ -915,6 +915,12 @@ exports.drawStatic = (options, stars) => {
         ['stop', {offset: "35%", 'stop-color': stars[0].color, 'stop-opacity':  0.3 }],
         ['stop', {offset: "50%", 'stop-color': stars[0].color, 'stop-opacity':  0.1 }],
         ['stop', {offset: "100%", 'stop-color': stars[0].color, 'stop-opacity': 0 }]
+      ],
+      ['radialGradient', {id: "EngineFlare", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
+        ['stop', {offset: "25%", 'stop-color': "#ffffff", 'stop-opacity':  0.2 }],
+        // ['stop', {offset: "35%", 'stop-color': "#ffffff", 'stop-opacity':  0.3 }],
+        ['stop', {offset: "90%", 'stop-color': "#ffffff", 'stop-opacity':  0.01 }],
+        ['stop', {offset: "100%", 'stop-color': "#ffffff", 'stop-opacity': 0 }]
       ]
     ],
     ['g', {id: 'map'},
@@ -1095,11 +1101,17 @@ module.exports = {
       icono[crafto.class] :
       'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
 
-    return ['path', {
-      transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + ')',
-      d: iconString,
-      class: 'craft'
-    }];
+    return ['g', {},
+      ['circle', {
+        r: 10,
+        fill: "url(#EngineFlare)"
+      }],
+      ['path', {
+        transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + ')',
+        d: iconString,
+        class: 'craft'
+      }]
+    ];
   },
 
   station: (stationo, mapPan) => {
