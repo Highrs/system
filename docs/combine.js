@@ -1581,17 +1581,17 @@ const updatePan = (mapPan) => {
 };
 const updateMap = () => {console.log('Resized.');};
 const updateZoom = (mapPan) => {
-  // Update Zoom here
+  // Updates Zoom (WHO WHOULDA THOUGHT?)
   if (mapPan.zoomChange != 0) {
     if (mapPan.zoom + mapPan.zoomChange < 0.2) {
       mapPan.zoom = 0.2;
-    } else if (mapPan.zoom + mapPan.zoomChange  > 5) {
+    } else if (mapPan.zoom + mapPan.zoomChange > 5) {
       mapPan.zoom = 5;
     } else {
       mapPan.zoom += mapPan.zoomChange;
     }
-    mapPan.x = mapPan.mousePosX + (mapPan.x - mapPan.mousePosX) * (mapPan.zoom/mapPan.zoomLast);
-    mapPan.y = mapPan.mousePosY + (mapPan.y - mapPan.mousePosY) * (mapPan.zoom/mapPan.zoomLast);
+    mapPan.x = mapPan.mousePosX + (mapPan.x - mapPan.mousePosX) * (mapPan.zoom / mapPan.zoomLast);
+    mapPan.y = mapPan.mousePosY + (mapPan.y - mapPan.mousePosY) * (mapPan.zoom / mapPan.zoomLast);
 
     // console.log(mapPan.x);
     mapPan.zoomChange = 0;
@@ -1706,13 +1706,13 @@ const main = async () => {
 
   document.getElementById('content').addEventListener('wheel', function (e) {
     const zoomStep = 10**(0.05*mapPan.zoom)-1;
-    mapPan.cursOriginX = (e.offsetX - mapPan.x).toFixed(10);
-    mapPan.cursOriginY = (e.offsetY - mapPan.y).toFixed(10);
+    mapPan.cursOriginX = e.offsetX - mapPan.x;
+    mapPan.cursOriginY = e.offsetY - mapPan.y;
     if (e.deltaY < 0) {
       mapPan.zoomChange += zoomStep;
     }
     if (e.deltaY > 0) {
-      mapPan.zoomChange += -zoomStep;
+      mapPan.zoomChange -= zoomStep;
     }
   }, {passive: true});
 
