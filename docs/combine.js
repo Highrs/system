@@ -1551,6 +1551,8 @@ let mapPan = {
   zoomLast: 1,
   cursOriginX: 0,
   cursOriginY: 0,
+  mousePosX: 0,
+  mousePosY: 0,
   zoomChange: 0,
 };
 const updatePan = (mapPan) => {
@@ -1568,16 +1570,19 @@ const updatePan = (mapPan) => {
 const updateMap = () => {console.log('Resized.');};
 const updateZoom = (mapPan) => {
   // Update Zoom here
-  if (mapPan.zoom != mapPan.zoomLast) {
-    if (mapPan.zoom < 0.2) {
+  if (mapPan.zoomChange != 0) {
+    if (mapPan.zoom + mapPan.zoomChange < 0.2) {
       mapPan.zoom = 0.2;
-    } else if (mapPan.zoom > 5) {
+    } else if (mapPan.zoom + mapPan.zoomChange  > 5) {
       mapPan.zoom = 5;
     } else {
-      mapPan.x -= mapPan.cursOriginX * mapPan.zoomChange;
-      mapPan.y -= mapPan.cursOriginY * mapPan.zoomChange;
+      mapPan.zoom += mapPan.zoomChange;
     }
+    mapPan.x = mapPan.mousePosX + (mapPan.x - mapPan.mousePosX) * (mapPan.zoom/mapPan.zoomLast);
+    mapPan.y = mapPan.mousePosY + (mapPan.y - mapPan.mousePosY) * (mapPan.zoom/mapPan.zoomLast);
+
     // console.log(mapPan.x);
+    mapPan.zoomChange = 0;
     mapPan.zoomLast = mapPan.zoom;
     return true;
   }
@@ -1680,6 +1685,8 @@ const main = async () => {
       pastOffsetX = e.offsetX;
       pastOffsetY = e.offsetY;
     }
+    mapPan.mousePosX = e.offsetX;
+    mapPan.mousePosY = e.offsetY;
   });
   window.addEventListener('mouseup', function () {
     isPanning = false;
@@ -1690,12 +1697,10 @@ const main = async () => {
     mapPan.cursOriginX = (e.offsetX - mapPan.x).toFixed(10);
     mapPan.cursOriginY = (e.offsetY - mapPan.y).toFixed(10);
     if (e.deltaY < 0) {
-      mapPan.zoom += zoomStep;
-      mapPan.zoomChange = zoomStep;
+      mapPan.zoomChange += zoomStep;
     }
     if (e.deltaY > 0) {
-      mapPan.zoom -= zoomStep;
-      mapPan.zoomChange = -zoomStep;
+      mapPan.zoomChange += -zoomStep;
     }
   }, {passive: true});
 
@@ -1833,7 +1838,7 @@ module.exports={
     "primary": "gamma",
     "mass": 10000,
     "a":    20,
-    "e":    .5,
+    "e":    0.5,
     "t":    0,
     "t0":   0,
     "w":    2,
