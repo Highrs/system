@@ -136,6 +136,7 @@ let mapPan = {
   mousePosX: 0,
   mousePosY: 0,
   zoomChange: 0,
+  interceptUpdated: true
 };
 const updatePan = (mapPan) => {
   // Update Pan here
@@ -225,6 +226,7 @@ const main = async () => {
   const renderGrid            = renderer(document.getElementById('grid'));
   const renderMoving          = renderer(document.getElementById('moving'));
   const rendererIntercept     = renderer(document.getElementById('intercept'));
+  const interceptDraw = () => rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
   const rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
 
   mapPan.x = document.body.clientWidth / 2;
@@ -309,7 +311,7 @@ const main = async () => {
       }
 
       if (updateZoom(mapPan)) {
-        rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
+        interceptDraw();
         render(options, stars, planets, mapPan);
       }
       updatePan(mapPan);
@@ -322,6 +324,11 @@ const main = async () => {
       craftList.forEach(crafto => {
         craft.craftAI(crafto, indSites, craftList, workTime, stars[0], sysObjects, mapPan);
       });
+
+      if (mapPan.interceptUpdated) {
+        interceptDraw();
+        mapPan.interceptUpdated = false;
+      }
 
       indSites.forEach(bodyo => {
         bodyo.industry.forEach(industyo => {

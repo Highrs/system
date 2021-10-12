@@ -192,6 +192,7 @@ const tryToMakeRoute = (crafto, indSites, staro, listOfcraft, mapPan) => {
     // console.log('here');
     // rendererIntercept(drawMap.drawIntercepts(listOfcraft, mapPan));
     mapPan.interceptUpdated = true;
+    // console.log('here 2');
   }
 };
 const calcFuelNeeded = (crafto, routeArr = []) => {
