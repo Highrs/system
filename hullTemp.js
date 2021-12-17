@@ -3,6 +3,7 @@ module.exports = {
   brick: () => ({
     class: 'Brick',
     abr: 'BRK',
+    type: 'freighter',
     cargoCap: 10,
     fuelCapacity: 10,
     fuelConsumption: 0.1,
@@ -13,6 +14,7 @@ module.exports = {
   boulder: () => ({
     class: 'Boulder',
     abr: 'BLD',
+    type: 'freighter',
     cargoCap: 20,
     fuelCapacity: 20,
     fuelConsumption: 0.1,
@@ -23,6 +25,7 @@ module.exports = {
   mountain: () => ({
     class: 'Mountain',
     abr: 'MNT',
+    type: 'freighter',
     cargoCap: 30,
     fuelCapacity: 30,
     fuelConsumption: 0.1,
@@ -33,11 +36,23 @@ module.exports = {
   barlog: () => ({
     class: 'Barlog',
     abr: 'BRL',
+    type: 'freighter',
     cargoCap: 40,
     fuelCapacity: 40,
     fuelConsumption: 0.1,
     accel: 2,
     home: 'beta'
+  }),
+
+  menace: () => ({
+    class: 'Menace',
+    abr: 'MNC',
+    type: 'combat',
+    cargoCap: 2,
+    fuelCapacity: 50,
+    fuelConsumption: 0.1,
+    accel: 5,
+    home: 'astroDeltaB'
   })
 
 };

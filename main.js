@@ -7,6 +7,8 @@ const hullTemps = require('./hullTemp.js');
 const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
+// const WinBox = require('winbox');
+// console.log(WinBox);
 const PI = Math.PI;
 
 const makeStar = (staro) => {
@@ -106,14 +108,16 @@ const orientOnSun = (bodyo, newData) => {
     bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
   }
 };
-const makeManyCraft = (craftType, numberToMake, craftList) => {
+const makeManyCraft = (craftType, numberToMake, craftList, owner = undefined) => {
   for (let i = 0; i < numberToMake; i++) {
     const baseTemplate = hullTemps[craftType]();
-    craftList.push(craft.makeCraft(baseTemplate));
+    craftList.push(craft.makeCraft(baseTemplate, owner));
   }
 };
+const simRates = [0, 0.1, 0.5, 1, 2, 3, 5, 10];
 Window.options = {
-  rate: 2,
+  rate: 1,
+  rateSetting: 3,
   targetFrames: 30,
   header: false,
   headerKeys: true,
@@ -212,22 +216,43 @@ const main = async () => {
   let movBod = [].concat(planets, moons, asteroids, stations);
   belts.forEach(e => (movBod = movBod.concat(e.rocks)));
 
-  makeManyCraft('brick', 8, craftList);
+  // makeManyCraft('menace', 1, craftList, 'Pirate');
+  makeManyCraft('brick', 4, craftList);
   makeManyCraft('boulder', 4, craftList);
   makeManyCraft('mountain', 2, craftList);
   makeManyCraft('barlog', 1, craftList);
 
   craftStart(craftList);
 
-  const renderStatic          = renderer(document.getElementById('content'));
-  renderStatic(drawMap.drawStatic(options, stars));
-  const renderStaticOrbits    = renderer(document.getElementById('staticOrbits'));
-  const renderStars           = renderer(document.getElementById('stars'));
-  const renderGrid            = renderer(document.getElementById('grid'));
-  const renderMoving          = renderer(document.getElementById('moving'));
-  const rendererIntercept     = renderer(document.getElementById('intercept'));
-  const interceptDraw = () => rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
-  const rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
+  let renderStatic = undefined;
+  let renderStaticOrbits = undefined;
+  let renderStars = undefined;
+  let renderGrid = undefined;
+  let renderMoving = undefined;
+  let rendererIntercept = undefined;
+  let interceptDraw = () => {};
+  let rendererMovingOrbits = undefined;
+  let renderRateCounter = undefined;
+
+  const initRenderers = () => {
+    renderStatic          = renderer(document.getElementById('content'));
+    renderStatic(drawMap.drawStatic(options, stars));
+    renderStaticOrbits    = renderer(document.getElementById('staticOrbits'));
+    renderStars           = renderer(document.getElementById('stars'));
+    renderGrid            = renderer(document.getElementById('grid'));
+    renderMoving          = renderer(document.getElementById('moving'));
+    rendererIntercept     = renderer(document.getElementById('intercept'));
+    renderRateCounter     = renderer(document.getElementById('rateCounter'));
+    interceptDraw         = () => {
+      rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
+      mapPan.interceptUpdated = false;
+    };
+    rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
+  };
+
+  initRenderers();
+
+  const updateRateCounter = () => renderRateCounter(drawMap.drawRateCounter(options));
 
   mapPan.x = document.body.clientWidth / 2;
   mapPan.y = document.body.clientHeight / 2;
@@ -239,6 +264,19 @@ const main = async () => {
   };
 
   render(options, stars, planets, mapPan);
+  updateRateCounter();
+/* eslint-disable no-undef */
+  // new WinBox({
+  //   title: "Test123",
+  //   // background: "#363636",
+  //   class: ['windowBox2', 'no-full', 'no-min', 'no-max'],
+  //   // border: "2px",
+  //   x: "center",
+  //   y: "center",
+  //   // font: "B612 Mono"``
+  // });
+/* eslint-enable no-undef */
+
 
   let isPaused = false;
   function pause() { isPaused = true; console.log('|| Paused');}
@@ -248,6 +286,27 @@ const main = async () => {
   window.addEventListener('focus', play);
 
   window.addEventListener('resize', updateMap);
+
+  document.getElementById('buttonStop').addEventListener('click', function () {
+    options.rateSetting = 0;
+    options.rate = simRates[options.rateSetting];
+    updateRateCounter();
+  });
+  document.getElementById('buttonSlow').addEventListener('click', function () {
+    if (options.rateSetting > 0) {options.rateSetting--;}
+    options.rate = simRates[options.rateSetting];
+    updateRateCounter();
+  });
+  document.getElementById('buttonFast').addEventListener('click', function () {
+    if (options.rateSetting < simRates.length - 1) {options.rateSetting++;}
+    options.rate = simRates[options.rateSetting];
+    updateRateCounter();
+  });
+  document.getElementById('buttonMax').addEventListener('click', function () {
+    options.rateSetting = simRates.length - 1;
+    options.rate = simRates[options.rateSetting];
+    updateRateCounter();
+  });
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
@@ -311,7 +370,7 @@ const main = async () => {
       }
 
       if (updateZoom(mapPan)) {
-        interceptDraw();
+        mapPan.interceptUpdated = true;
         render(options, stars, planets, mapPan);
       }
       updatePan(mapPan);
@@ -325,10 +384,7 @@ const main = async () => {
         craft.craftAI(crafto, indSites, craftList, workTime, stars[0], sysObjects, mapPan);
       });
 
-      if (mapPan.interceptUpdated) {
-        interceptDraw();
-        mapPan.interceptUpdated = false;
-      }
+      if (mapPan.interceptUpdated) {interceptDraw();}
 
       indSites.forEach(bodyo => {
         bodyo.industry.forEach(industyo => {

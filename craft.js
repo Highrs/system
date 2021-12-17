@@ -14,7 +14,7 @@ const hullNamer = () => {
   };
 };
 const namer = hullNamer();
-const makeCraft = (crafto) => {
+const makeCraft = (crafto, owner = 'EMPIRE') => {
   const id = namer();
   const initWait = id % 10;
   let newCrafto = {};
@@ -35,7 +35,7 @@ const makeCraft = (crafto) => {
       lastStop: [],
       cargo: {},
       fuel: crafto.fuelCapacity,
-      owner: 'EMPIRE',
+      owner: owner,
       waitCycle: 0 + initWait
     }
   );

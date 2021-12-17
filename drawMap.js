@@ -400,16 +400,44 @@ const drawMovingOrbits = (moons, mapPan) => {
 const drawScreenFrame = (options) => {
   let frame = ['g', {}];
 
-    if (options.headerKeys) {
-      let keys = ['g', tt(6, 10)];
+  if (options.headerKeys) {
+    let keys = ['g', tt(4, 4)];
 
-      for (let i = 0; i < lists.keys().length; i++) {
-        let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
-        keys.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
-      }
+    keys.push(['rect', {width: 68, height: lists.keys().length * 6 + 3, class: 'standardBox'}]);
 
-      frame.push(keys);
+    for (let i = 0; i < lists.keys().length; i++) {
+      keys.push(['g', tt(2,  6 * i + 6), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
     }
+
+    frame.push(keys);
+  }
+
+  frame.push( ['g', tt(4,28),
+    ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}],
+      ['path', { d: 'M 3.5, 2 L 3.5, 8', class: 'standardLine'}],
+      icons.arrow(2, true),
+    ],
+    ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}],
+      icons.arrow(0.5, true),
+      icons.arrow(2.5, true),
+    ],
+    ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
+      ['rect', {width: 20, height: 10}],
+      ['g', {id: 'rateCounter'}]
+    ],
+    ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}],
+      icons.arrow(-0.5, false),
+      icons.arrow(-2.5, false),
+    ],
+    ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}],
+      ['path', { d: 'M 6.5, 2 L 6.5, 8', class: 'standardLine'}],
+      icons.arrow(-2, false),
+    ],
+  ]);
 
   frame.push( ['g', {},
     ['path',
@@ -428,6 +456,12 @@ const drawScreenFrame = (options) => {
 
   return frame;
 };
+
+exports.drawRateCounter = (options) => {
+  return ['text', {x: 10 - ((options.rate.toString().length / 2) * 3.25), y: 7,class: 'dataText bold'}, options.rate];
+};
+
+// exports.drawScreenFrame = drawScreenFrame;
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
@@ -490,8 +524,9 @@ exports.drawStatic = (options, stars) => {
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ],
-    ['g', {},
+    ['g', {id: 'frame'},
       drawScreenFrame(options)
     ],
+    ['g', {id: 'boxes'}],
   ]);
 };

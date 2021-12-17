@@ -95,7 +95,7 @@ const hullNamer = () => {
   };
 };
 const namer = hullNamer();
-const makeCraft = (crafto) => {
+const makeCraft = (crafto, owner = 'EMPIRE') => {
   const id = namer();
   const initWait = id % 10;
   let newCrafto = {};
@@ -116,7 +116,7 @@ const makeCraft = (crafto) => {
       lastStop: [],
       cargo: {},
       fuel: crafto.fuelCapacity,
-      owner: 'EMPIRE',
+      owner: owner,
       waitCycle: 0 + initWait
     }
   );
@@ -842,16 +842,44 @@ const drawMovingOrbits = (moons, mapPan) => {
 const drawScreenFrame = (options) => {
   let frame = ['g', {}];
 
-    if (options.headerKeys) {
-      let keys = ['g', tt(6, 10)];
+  if (options.headerKeys) {
+    let keys = ['g', tt(4, 4)];
 
-      for (let i = 0; i < lists.keys().length; i++) {
-        let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
-        keys.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
-      }
+    keys.push(['rect', {width: 68, height: lists.keys().length * 6 + 3, class: 'standardBox'}]);
 
-      frame.push(keys);
+    for (let i = 0; i < lists.keys().length; i++) {
+      keys.push(['g', tt(2,  6 * i + 6), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
     }
+
+    frame.push(keys);
+  }
+
+  frame.push( ['g', tt(4,28),
+    ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}],
+      ['path', { d: 'M 3.5, 2 L 3.5, 8', class: 'standardLine'}],
+      icons.arrow(2, true),
+    ],
+    ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}],
+      icons.arrow(0.5, true),
+      icons.arrow(2.5, true),
+    ],
+    ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
+      ['rect', {width: 20, height: 10}],
+      ['g', {id: 'rateCounter'}]
+    ],
+    ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}],
+      icons.arrow(-0.5, false),
+      icons.arrow(-2.5, false),
+    ],
+    ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}],
+      ['path', { d: 'M 6.5, 2 L 6.5, 8', class: 'standardLine'}],
+      icons.arrow(-2, false),
+    ],
+  ]);
 
   frame.push( ['g', {},
     ['path',
@@ -870,6 +898,12 @@ const drawScreenFrame = (options) => {
 
   return frame;
 };
+
+exports.drawRateCounter = (options) => {
+  return ['text', {x: 10 - ((options.rate.toString().length / 2) * 3.25), y: 7,class: 'dataText bold'}, options.rate];
+};
+
+// exports.drawScreenFrame = drawScreenFrame;
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
@@ -932,9 +966,10 @@ exports.drawStatic = (options, stars) => {
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ],
-    ['g', {},
+    ['g', {id: 'frame'},
       drawScreenFrame(options)
     ],
+    ['g', {id: 'boxes'}],
   ]);
 };
 
@@ -958,6 +993,7 @@ module.exports = {
   brick: () => ({
     class: 'Brick',
     abr: 'BRK',
+    type: 'freighter',
     cargoCap: 10,
     fuelCapacity: 10,
     fuelConsumption: 0.1,
@@ -968,6 +1004,7 @@ module.exports = {
   boulder: () => ({
     class: 'Boulder',
     abr: 'BLD',
+    type: 'freighter',
     cargoCap: 20,
     fuelCapacity: 20,
     fuelConsumption: 0.1,
@@ -978,6 +1015,7 @@ module.exports = {
   mountain: () => ({
     class: 'Mountain',
     abr: 'MNT',
+    type: 'freighter',
     cargoCap: 30,
     fuelCapacity: 30,
     fuelConsumption: 0.1,
@@ -988,11 +1026,23 @@ module.exports = {
   barlog: () => ({
     class: 'Barlog',
     abr: 'BRL',
+    type: 'freighter',
     cargoCap: 40,
     fuelCapacity: 40,
     fuelConsumption: 0.1,
     accel: 2,
     home: 'beta'
+  }),
+
+  menace: () => ({
+    class: 'Menace',
+    abr: 'MNC',
+    type: 'combat',
+    cargoCap: 2,
+    fuelCapacity: 50,
+    fuelConsumption: 0.1,
+    accel: 5,
+    home: 'astroDeltaB'
   })
 
 };
@@ -1094,7 +1144,8 @@ module.exports = {
 'M 0,-1 L 2,-3 L 3,-2 L 3,3 L 2,4 L -2,4 L -3,3 L -3,-2 L -2,-3 Z',
       Mountain:
 'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z',
-      Barlog: 'M 0,-3 L 2,-5 L 3,-5 L 4,-4 L 4,-3 L 3,-2 L 4,-1 L 4, 1 L 3,2 L 4,3 L 4,4 L 3,5 L -3,5 L -4,4 L -4,3 L -3,2 L -4,1 L -4,-1 L -3,-2 L -4,-3 L -4,-4 L -3,-5 L -2,-5 Z'
+      Barlog: 'M 0,-3 L 2,-5 L 3,-5 L 4,-4 L 4,-3 L 3,-2 L 4,-1 L 4, 1 L 3,2 L 4,3 L 4,4 L 3,5 L -3,5 L -4,4 L -4,3 L -3,2 L -4,1 L -4,-1 L -3,-2 L -4,-3 L -4,-4 L -3,-5 L -2,-5 Z',
+      Menace: 'M 0,0 L 3,-3 L 0, 5 L -3,-3 Z'
     };
 
     let iconString =
@@ -1178,6 +1229,10 @@ module.exports = {
         class: 'grid'
       }]
     ];
+  },
+
+  arrow: (hOffset = 0, mirror = false) => {
+    return ['path', tt(5 + hOffset, 5, {d: ('M 0, 3 L ' + (mirror?'-':'+') +'3, 0 L 0, -3'), class: 'standardLine'})];
   }
 };
 
@@ -1438,6 +1493,8 @@ const hullTemps = require('./hullTemp.js');
 const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
+// const WinBox = require('winbox');
+// console.log(WinBox);
 const PI = Math.PI;
 
 const makeStar = (staro) => {
@@ -1537,14 +1594,16 @@ const orientOnSun = (bodyo, newData) => {
     bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
   }
 };
-const makeManyCraft = (craftType, numberToMake, craftList) => {
+const makeManyCraft = (craftType, numberToMake, craftList, owner = undefined) => {
   for (let i = 0; i < numberToMake; i++) {
     const baseTemplate = hullTemps[craftType]();
-    craftList.push(craft.makeCraft(baseTemplate));
+    craftList.push(craft.makeCraft(baseTemplate, owner));
   }
 };
+const simRates = [0, 0.1, 0.5, 1, 2, 3, 5, 10];
 Window.options = {
-  rate: 2,
+  rate: 1,
+  rateSetting: 3,
   targetFrames: 30,
   header: false,
   headerKeys: true,
@@ -1643,22 +1702,43 @@ const main = async () => {
   let movBod = [].concat(planets, moons, asteroids, stations);
   belts.forEach(e => (movBod = movBod.concat(e.rocks)));
 
-  makeManyCraft('brick', 8, craftList);
+  // makeManyCraft('menace', 1, craftList, 'Pirate');
+  makeManyCraft('brick', 4, craftList);
   makeManyCraft('boulder', 4, craftList);
   makeManyCraft('mountain', 2, craftList);
   makeManyCraft('barlog', 1, craftList);
 
   craftStart(craftList);
 
-  const renderStatic          = renderer(document.getElementById('content'));
-  renderStatic(drawMap.drawStatic(options, stars));
-  const renderStaticOrbits    = renderer(document.getElementById('staticOrbits'));
-  const renderStars           = renderer(document.getElementById('stars'));
-  const renderGrid            = renderer(document.getElementById('grid'));
-  const renderMoving          = renderer(document.getElementById('moving'));
-  const rendererIntercept     = renderer(document.getElementById('intercept'));
-  const interceptDraw = () => rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
-  const rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
+  let renderStatic = undefined;
+  let renderStaticOrbits = undefined;
+  let renderStars = undefined;
+  let renderGrid = undefined;
+  let renderMoving = undefined;
+  let rendererIntercept = undefined;
+  let interceptDraw = () => {};
+  let rendererMovingOrbits = undefined;
+  let renderRateCounter = undefined;
+
+  const initRenderers = () => {
+    renderStatic          = renderer(document.getElementById('content'));
+    renderStatic(drawMap.drawStatic(options, stars));
+    renderStaticOrbits    = renderer(document.getElementById('staticOrbits'));
+    renderStars           = renderer(document.getElementById('stars'));
+    renderGrid            = renderer(document.getElementById('grid'));
+    renderMoving          = renderer(document.getElementById('moving'));
+    rendererIntercept     = renderer(document.getElementById('intercept'));
+    renderRateCounter     = renderer(document.getElementById('rateCounter'));
+    interceptDraw         = () => {
+      rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
+      mapPan.interceptUpdated = false;
+    };
+    rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
+  };
+
+  initRenderers();
+
+  const updateRateCounter = () => renderRateCounter(drawMap.drawRateCounter(options));
 
   mapPan.x = document.body.clientWidth / 2;
   mapPan.y = document.body.clientHeight / 2;
@@ -1670,6 +1750,19 @@ const main = async () => {
   };
 
   render(options, stars, planets, mapPan);
+  updateRateCounter();
+/* eslint-disable no-undef */
+  // new WinBox({
+  //   title: "Test123",
+  //   // background: "#363636",
+  //   class: ['windowBox2', 'no-full', 'no-min', 'no-max'],
+  //   // border: "2px",
+  //   x: "center",
+  //   y: "center",
+  //   // font: "B612 Mono"``
+  // });
+/* eslint-enable no-undef */
+
 
   let isPaused = false;
   function pause() { isPaused = true; console.log('|| Paused');}
@@ -1679,6 +1772,27 @@ const main = async () => {
   window.addEventListener('focus', play);
 
   window.addEventListener('resize', updateMap);
+
+  document.getElementById('buttonStop').addEventListener('click', function () {
+    options.rateSetting = 0;
+    options.rate = simRates[options.rateSetting];
+    updateRateCounter();
+  });
+  document.getElementById('buttonSlow').addEventListener('click', function () {
+    if (options.rateSetting > 0) {options.rateSetting--;}
+    options.rate = simRates[options.rateSetting];
+    updateRateCounter();
+  });
+  document.getElementById('buttonFast').addEventListener('click', function () {
+    if (options.rateSetting < simRates.length - 1) {options.rateSetting++;}
+    options.rate = simRates[options.rateSetting];
+    updateRateCounter();
+  });
+  document.getElementById('buttonMax').addEventListener('click', function () {
+    options.rateSetting = simRates.length - 1;
+    options.rate = simRates[options.rateSetting];
+    updateRateCounter();
+  });
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
@@ -1742,7 +1856,7 @@ const main = async () => {
       }
 
       if (updateZoom(mapPan)) {
-        interceptDraw();
+        mapPan.interceptUpdated = true;
         render(options, stars, planets, mapPan);
       }
       updatePan(mapPan);
@@ -1756,10 +1870,7 @@ const main = async () => {
         craft.craftAI(crafto, indSites, craftList, workTime, stars[0], sysObjects, mapPan);
       });
 
-      if (mapPan.interceptUpdated) {
-        interceptDraw();
-        mapPan.interceptUpdated = false;
-      }
+      if (mapPan.interceptUpdated) {interceptDraw();}
 
       indSites.forEach(bodyo => {
         bodyo.industry.forEach(industyo => {

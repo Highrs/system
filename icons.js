@@ -94,7 +94,8 @@ module.exports = {
 'M 0,-1 L 2,-3 L 3,-2 L 3,3 L 2,4 L -2,4 L -3,3 L -3,-2 L -2,-3 Z',
       Mountain:
 'M 0,-2 L 2,-4 L 3,-4 L 4,-3 L 4,-1 L 3,0 L 4,1 L 4,3 L 3,4 L -3,4 L -4,3 L -4,1 L -3,0 L -4,-1 L -4,-3 L -3,-4 L -2,-4 Z',
-      Barlog: 'M 0,-3 L 2,-5 L 3,-5 L 4,-4 L 4,-3 L 3,-2 L 4,-1 L 4, 1 L 3,2 L 4,3 L 4,4 L 3,5 L -3,5 L -4,4 L -4,3 L -3,2 L -4,1 L -4,-1 L -3,-2 L -4,-3 L -4,-4 L -3,-5 L -2,-5 Z'
+      Barlog: 'M 0,-3 L 2,-5 L 3,-5 L 4,-4 L 4,-3 L 3,-2 L 4,-1 L 4, 1 L 3,2 L 4,3 L 4,4 L 3,5 L -3,5 L -4,4 L -4,3 L -3,2 L -4,1 L -4,-1 L -3,-2 L -4,-3 L -4,-4 L -3,-5 L -2,-5 Z',
+      Menace: 'M 0,0 L 3,-3 L 0, 5 L -3,-3 Z'
     };
 
     let iconString =
@@ -178,5 +179,9 @@ module.exports = {
         class: 'grid'
       }]
     ];
+  },
+
+  arrow: (hOffset = 0, mirror = false) => {
+    return ['path', tt(5 + hOffset, 5, {d: ('M 0, 3 L ' + (mirror?'-':'+') +'3, 0 L 0, -3'), class: 'standardLine'})];
   }
 };
