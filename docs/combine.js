@@ -450,7 +450,6 @@ const mech = require('./mechanics.js');
 const icons = require('./icons.js');
 const lists = require('./lists.js');
 
-// const PI = Math.PI;
 function getPageWidth() {
   return document.body.clientWidth;
 }
@@ -458,6 +457,7 @@ function getPageHeight() {
   return document.body.clientHeight;
 }
 
+// const PI = Math.PI;
 // const drawPolarGrid = (staro) => {
 //   let polarGrid = ['g', tt(staro.x, staro.y)];
 //
@@ -526,13 +526,11 @@ const drawOrbits = (bodies, mapPan) => {
   let retGroup = ['g', {}];
 
   bodies.forEach(bodyo => {
-    // console.log(bodyo);
     let partOrbit = ['g', tt(bodyo.primaryo.x * mapPan.zoom, bodyo.primaryo.y * mapPan.zoom)];
     let coords = 'M ';
 
     for (let i = 0; i < bodyo.orbitPointsArr.length; i++) {
       let currCoord = bodyo.orbitPointsArr[i];
-      ///stopped here
       let currX = currCoord.ax * mapPan.zoom;
       let currY = currCoord.ay * mapPan.zoom;
 
@@ -645,17 +643,9 @@ const drawBodies = (bodies, options, mapPan) => {
   const bodiesDrawn = ['g', {}];
   bodies.forEach (bodyo =>{
     let partBody = ['g', tt(bodyo.x * mapPan.zoom, bodyo.y * mapPan.zoom)];
-    if (
-      options.planetData
-    ) {
-      partBody.push(
-        drawBodyData(bodyo),
-      );
-    }
+    if (options.planetData) {partBody.push(drawBodyData(bodyo));}
 
-    partBody.push(
-      icons.body(bodyo, mapPan)
-    );
+    partBody.push(icons.body(bodyo, mapPan));
     bodiesDrawn.push(partBody);
   });
   return bodiesDrawn;
@@ -666,17 +656,9 @@ const drawStations = (stations, options, mapPan) => {
   stations.forEach(stationo => {
     for (let i = 0; i < stations.length; i++) {
       let partStation = ['g', tt((stationo.x * mapPan.zoom), (stationo.y * mapPan.zoom))];
-      if (
-        options.planetData
-      ) {
-        partStation.push(
-          ['g', {}, drawBodyData(stationo),]
-        );
-      }
+      if (options.planetData) {partStation.push(['g', {}, drawBodyData(stationo),]);}
 
-      partStation.push(
-        icons.station(stationo, mapPan)
-      );
+      partStation.push(icons.station(stationo, mapPan));
       stationsDrawn.push(partStation);
     }
   });
@@ -857,13 +839,13 @@ const drawScreenFrame = (options) => {
   frame.push( ['g', tt(4,28),
     ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}],
-      ['path', { d: 'M 3.5, 2 L 3.5, 8', class: 'standardLine'}],
-      icons.arrow(2, true),
+      ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
+      ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
+      // icons.arrow(2, true),
     ],
     ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}],
-      icons.arrow(0.5, true),
-      icons.arrow(2.5, true),
+      icons.arrow(1, true)
     ],
     ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
       ['rect', {width: 20, height: 10}],
@@ -871,14 +853,20 @@ const drawScreenFrame = (options) => {
     ],
     ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}],
-      icons.arrow(-0.5, false),
-      icons.arrow(-2.5, false),
+      icons.arrow(-1, false)
     ],
     ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}],
-      ['path', { d: 'M 6.5, 2 L 6.5, 8', class: 'standardLine'}],
-      icons.arrow(-2, false),
+      icons.arrow(-0.5, false),
+      icons.arrow(-2.5, false),
     ],
+  ]);
+
+  frame.push( ['g', tt(4,40),
+    ['g', tt(0, 0, {id:'buttonSettings', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}]
+      // icons.arrow(2, true),
+    ]
   ]);
 
   frame.push( ['g', {},
@@ -902,8 +890,6 @@ const drawScreenFrame = (options) => {
 exports.drawRateCounter = (options) => {
   return ['text', {x: 10 - ((options.rate.toString().length / 2) * 3.25), y: 7,class: 'dataText bold'}, options.rate];
 };
-
-// exports.drawScreenFrame = drawScreenFrame;
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
@@ -1493,6 +1479,7 @@ const hullTemps = require('./hullTemp.js');
 const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
+const ui = require('./ui.js');
 // const WinBox = require('winbox');
 // console.log(WinBox);
 const PI = Math.PI;
@@ -1600,10 +1587,10 @@ const makeManyCraft = (craftType, numberToMake, craftList, owner = undefined) =>
     craftList.push(craft.makeCraft(baseTemplate, owner));
   }
 };
-const simRates = [0, 0.1, 0.5, 1, 2, 3, 5, 10];
 Window.options = {
   rate: 1,
   rateSetting: 3,
+  simRates: [0, 0.1, 0.5, 1, 2, 3, 5, 10],
   targetFrames: 30,
   header: false,
   headerKeys: true,
@@ -1611,7 +1598,8 @@ Window.options = {
   craftData: true,
   stop: false,
   intercepts: true,
-  keyPanStep: 50
+  keyPanStep: 50,
+  isPaused: false
 };
 const options = Window.options;
 let mapPan = {
@@ -1640,12 +1628,12 @@ const updatePan = (mapPan) => {
   }
   return false;
 };
-const updateMap = () => {console.log('Resized.');};
+
 const updateZoom = (mapPan) => {
   // Updates Zoom (WHO WHOULDA THOUGHT?)
   if (mapPan.zoomChange != 0) {
-    if (mapPan.zoom + mapPan.zoomChange < 0.2) {
-      mapPan.zoom = 0.2;
+    if (mapPan.zoom + mapPan.zoomChange < 0.5) {
+      mapPan.zoom = 0.5;
     } else if (mapPan.zoom + mapPan.zoomChange > 5) {
       mapPan.zoom = 5;
     } else {
@@ -1660,12 +1648,6 @@ const updateZoom = (mapPan) => {
     return true;
   }
   return false;
-};
-const checkKey = (e) => {
-  if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
-  else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
-  else if (e.keyCode == '37') {/* left arrow */   mapPan.x += options.keyPanStep;}
-  else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= options.keyPanStep;}
 };
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
@@ -1763,75 +1745,7 @@ const main = async () => {
   // });
 /* eslint-enable no-undef */
 
-
-  let isPaused = false;
-  function pause() { isPaused = true; console.log('|| Paused');}
-  function play() { isPaused = false; console.log('>> Unpaused');}
-
-  window.addEventListener('blur', pause);
-  window.addEventListener('focus', play);
-
-  window.addEventListener('resize', updateMap);
-
-  document.getElementById('buttonStop').addEventListener('click', function () {
-    options.rateSetting = 0;
-    options.rate = simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonSlow').addEventListener('click', function () {
-    if (options.rateSetting > 0) {options.rateSetting--;}
-    options.rate = simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonFast').addEventListener('click', function () {
-    if (options.rateSetting < simRates.length - 1) {options.rateSetting++;}
-    options.rate = simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonMax').addEventListener('click', function () {
-    options.rateSetting = simRates.length - 1;
-    options.rate = simRates[options.rateSetting];
-    updateRateCounter();
-  });
-
-  document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
-  document.onkeydown = checkKey;
-
-  let isPanning = false;
-  let pastOffsetX = 0;
-  let pastOffsetY = 0;
-  document.getElementById('content').addEventListener('mousedown', e => {
-    if (e.which === 3) {
-      pastOffsetX = e.offsetX;
-      pastOffsetY = e.offsetY;
-      isPanning = true;
-    }
-  });
-  document.getElementById('content').addEventListener('mousemove', e => {
-    if (isPanning === true) {
-      mapPan.x += e.offsetX - pastOffsetX;
-      mapPan.y += e.offsetY - pastOffsetY;
-      pastOffsetX = e.offsetX;
-      pastOffsetY = e.offsetY;
-    }
-    mapPan.mousePosX = e.offsetX;
-    mapPan.mousePosY = e.offsetY;
-  });
-  window.addEventListener('mouseup', function () {
-    isPanning = false;
-  });
-
-  document.getElementById('content').addEventListener('wheel', function (e) {
-    const zoomStep = 10**(0.05*mapPan.zoom)-1;
-    mapPan.cursOriginX = e.offsetX - mapPan.x;
-    mapPan.cursOriginY = e.offsetY - mapPan.y;
-    if (e.deltaY < 0) {
-      mapPan.zoomChange += zoomStep;
-    }
-    if (e.deltaY > 0) {
-      mapPan.zoomChange -= zoomStep;
-    }
-  }, {passive: true});
+  ui.addListeners(options, mapPan, updateRateCounter);
 
 // <---------LOOP---------->
   let simpRate = 1 / 1000;
@@ -1844,7 +1758,7 @@ const main = async () => {
     let timeDelta = time - clockZero;
     clockZero = time;
 
-    if ( !isPaused ) {
+    if ( !(options.isPaused) ) {
       let workTime = (timeDelta * options.rate * simpRate);
       currentTime += workTime;
 
@@ -1888,7 +1802,7 @@ const main = async () => {
 
 window.onload = main;
 
-},{"./constructs.json":1,"./craft.js":2,"./drawMap.js":3,"./hullTemp.js":5,"./industry.js":7,"./majorObjects2.json":11,"./mechanics.js":12,"onml/renderer.js":13}],11:[function(require,module,exports){
+},{"./constructs.json":1,"./craft.js":2,"./drawMap.js":3,"./hullTemp.js":5,"./industry.js":7,"./majorObjects2.json":11,"./mechanics.js":12,"./ui.js":16,"onml/renderer.js":13}],11:[function(require,module,exports){
 module.exports={
   "prime": {
     "name": "Prime",
@@ -2342,6 +2256,88 @@ module.exports = (x, y, obj) => {
   }
   obj = (typeof obj === 'object') ? obj : {};
   return Object.assign(objt, obj);
+};
+
+},{}],16:[function(require,module,exports){
+'use strict';
+
+const updateMap = () => {console.log('Resized.');};
+
+exports.addListeners = (options, mapPan, updateRateCounter) => {
+  const checkKey = (e) => {
+    if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
+    else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
+    else if (e.keyCode == '37') {/* left arrow */   mapPan.x += options.keyPanStep;}
+    else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= options.keyPanStep;}
+  };
+  // let isPaused = false;
+  function pause() { options.isPaused = true; console.log('|| Paused');}
+  function play() { options.isPaused = false; console.log('>> Unpaused');}
+
+  window.addEventListener('blur', pause);
+  window.addEventListener('focus', play);
+
+  window.addEventListener('resize', updateMap);
+
+  document.getElementById('buttonStop').addEventListener('click', function () {
+    options.rateSetting = 0;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter();
+  });
+  document.getElementById('buttonSlow').addEventListener('click', function () {
+    if (options.rateSetting > 0) {options.rateSetting--;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter();
+  });
+  document.getElementById('buttonFast').addEventListener('click', function () {
+    if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter();
+  });
+  document.getElementById('buttonMax').addEventListener('click', function () {
+    options.rateSetting = options.simRates.length - 1;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter();
+  });
+
+  document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
+  document.onkeydown = checkKey;
+
+  let isPanning = false;
+  let pastOffsetX = 0;
+  let pastOffsetY = 0;
+  document.getElementById('content').addEventListener('mousedown', e => {
+    if (e.which === 3) {
+      pastOffsetX = e.offsetX;
+      pastOffsetY = e.offsetY;
+      isPanning = true;
+    }
+  });
+  document.getElementById('content').addEventListener('mousemove', e => {
+    if (isPanning === true) {
+      mapPan.x += e.offsetX - pastOffsetX;
+      mapPan.y += e.offsetY - pastOffsetY;
+      pastOffsetX = e.offsetX;
+      pastOffsetY = e.offsetY;
+    }
+    mapPan.mousePosX = e.offsetX;
+    mapPan.mousePosY = e.offsetY;
+  });
+  window.addEventListener('mouseup', function () {
+    isPanning = false;
+  });
+
+  document.getElementById('content').addEventListener('wheel', function (e) {
+    const zoomStep = 10**(0.05*mapPan.zoom)-1;
+    mapPan.cursOriginX = e.offsetX - mapPan.x;
+    mapPan.cursOriginY = e.offsetY - mapPan.y;
+    if (e.deltaY < 0) {
+      mapPan.zoomChange += zoomStep;
+    }
+    if (e.deltaY > 0) {
+      mapPan.zoomChange -= zoomStep;
+    }
+  }, {passive: true});
 };
 
 },{}]},{},[10]);

@@ -8,7 +8,6 @@ const mech = require('./mechanics.js');
 const icons = require('./icons.js');
 const lists = require('./lists.js');
 
-// const PI = Math.PI;
 function getPageWidth() {
   return document.body.clientWidth;
 }
@@ -16,6 +15,7 @@ function getPageHeight() {
   return document.body.clientHeight;
 }
 
+// const PI = Math.PI;
 // const drawPolarGrid = (staro) => {
 //   let polarGrid = ['g', tt(staro.x, staro.y)];
 //
@@ -84,13 +84,11 @@ const drawOrbits = (bodies, mapPan) => {
   let retGroup = ['g', {}];
 
   bodies.forEach(bodyo => {
-    // console.log(bodyo);
     let partOrbit = ['g', tt(bodyo.primaryo.x * mapPan.zoom, bodyo.primaryo.y * mapPan.zoom)];
     let coords = 'M ';
 
     for (let i = 0; i < bodyo.orbitPointsArr.length; i++) {
       let currCoord = bodyo.orbitPointsArr[i];
-      ///stopped here
       let currX = currCoord.ax * mapPan.zoom;
       let currY = currCoord.ay * mapPan.zoom;
 
@@ -203,17 +201,9 @@ const drawBodies = (bodies, options, mapPan) => {
   const bodiesDrawn = ['g', {}];
   bodies.forEach (bodyo =>{
     let partBody = ['g', tt(bodyo.x * mapPan.zoom, bodyo.y * mapPan.zoom)];
-    if (
-      options.planetData
-    ) {
-      partBody.push(
-        drawBodyData(bodyo),
-      );
-    }
+    if (options.planetData) {partBody.push(drawBodyData(bodyo));}
 
-    partBody.push(
-      icons.body(bodyo, mapPan)
-    );
+    partBody.push(icons.body(bodyo, mapPan));
     bodiesDrawn.push(partBody);
   });
   return bodiesDrawn;
@@ -224,17 +214,9 @@ const drawStations = (stations, options, mapPan) => {
   stations.forEach(stationo => {
     for (let i = 0; i < stations.length; i++) {
       let partStation = ['g', tt((stationo.x * mapPan.zoom), (stationo.y * mapPan.zoom))];
-      if (
-        options.planetData
-      ) {
-        partStation.push(
-          ['g', {}, drawBodyData(stationo),]
-        );
-      }
+      if (options.planetData) {partStation.push(['g', {}, drawBodyData(stationo),]);}
 
-      partStation.push(
-        icons.station(stationo, mapPan)
-      );
+      partStation.push(icons.station(stationo, mapPan));
       stationsDrawn.push(partStation);
     }
   });
@@ -415,13 +397,13 @@ const drawScreenFrame = (options) => {
   frame.push( ['g', tt(4,28),
     ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}],
-      ['path', { d: 'M 3.5, 2 L 3.5, 8', class: 'standardLine'}],
-      icons.arrow(2, true),
+      ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
+      ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
+      // icons.arrow(2, true),
     ],
     ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}],
-      icons.arrow(0.5, true),
-      icons.arrow(2.5, true),
+      icons.arrow(1, true)
     ],
     ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
       ['rect', {width: 20, height: 10}],
@@ -429,14 +411,20 @@ const drawScreenFrame = (options) => {
     ],
     ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}],
-      icons.arrow(-0.5, false),
-      icons.arrow(-2.5, false),
+      icons.arrow(-1, false)
     ],
     ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}],
-      ['path', { d: 'M 6.5, 2 L 6.5, 8', class: 'standardLine'}],
-      icons.arrow(-2, false),
+      icons.arrow(-0.5, false),
+      icons.arrow(-2.5, false),
     ],
+  ]);
+
+  frame.push( ['g', tt(4,40),
+    ['g', tt(0, 0, {id:'buttonSettings', class: 'standardBoxSelectable'}),
+      ['rect', {width: 10, height: 10}]
+      // icons.arrow(2, true),
+    ]
   ]);
 
   frame.push( ['g', {},
@@ -460,8 +448,6 @@ const drawScreenFrame = (options) => {
 exports.drawRateCounter = (options) => {
   return ['text', {x: 10 - ((options.rate.toString().length / 2) * 3.25), y: 7,class: 'dataText bold'}, options.rate];
 };
-
-// exports.drawScreenFrame = drawScreenFrame;
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
   let rangeCandidates = [...planets, ...moons, ...ast];

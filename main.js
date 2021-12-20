@@ -7,6 +7,7 @@ const hullTemps = require('./hullTemp.js');
 const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
+const ui = require('./ui.js');
 // const WinBox = require('winbox');
 // console.log(WinBox);
 const PI = Math.PI;
@@ -114,10 +115,10 @@ const makeManyCraft = (craftType, numberToMake, craftList, owner = undefined) =>
     craftList.push(craft.makeCraft(baseTemplate, owner));
   }
 };
-const simRates = [0, 0.1, 0.5, 1, 2, 3, 5, 10];
 Window.options = {
   rate: 1,
   rateSetting: 3,
+  simRates: [0, 0.1, 0.5, 1, 2, 3, 5, 10],
   targetFrames: 30,
   header: false,
   headerKeys: true,
@@ -125,7 +126,8 @@ Window.options = {
   craftData: true,
   stop: false,
   intercepts: true,
-  keyPanStep: 50
+  keyPanStep: 50,
+  isPaused: false
 };
 const options = Window.options;
 let mapPan = {
@@ -154,12 +156,12 @@ const updatePan = (mapPan) => {
   }
   return false;
 };
-const updateMap = () => {console.log('Resized.');};
+
 const updateZoom = (mapPan) => {
   // Updates Zoom (WHO WHOULDA THOUGHT?)
   if (mapPan.zoomChange != 0) {
-    if (mapPan.zoom + mapPan.zoomChange < 0.2) {
-      mapPan.zoom = 0.2;
+    if (mapPan.zoom + mapPan.zoomChange < 0.5) {
+      mapPan.zoom = 0.5;
     } else if (mapPan.zoom + mapPan.zoomChange > 5) {
       mapPan.zoom = 5;
     } else {
@@ -174,12 +176,6 @@ const updateZoom = (mapPan) => {
     return true;
   }
   return false;
-};
-const checkKey = (e) => {
-  if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
-  else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
-  else if (e.keyCode == '37') {/* left arrow */   mapPan.x += options.keyPanStep;}
-  else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= options.keyPanStep;}
 };
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
@@ -277,75 +273,7 @@ const main = async () => {
   // });
 /* eslint-enable no-undef */
 
-
-  let isPaused = false;
-  function pause() { isPaused = true; console.log('|| Paused');}
-  function play() { isPaused = false; console.log('>> Unpaused');}
-
-  window.addEventListener('blur', pause);
-  window.addEventListener('focus', play);
-
-  window.addEventListener('resize', updateMap);
-
-  document.getElementById('buttonStop').addEventListener('click', function () {
-    options.rateSetting = 0;
-    options.rate = simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonSlow').addEventListener('click', function () {
-    if (options.rateSetting > 0) {options.rateSetting--;}
-    options.rate = simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonFast').addEventListener('click', function () {
-    if (options.rateSetting < simRates.length - 1) {options.rateSetting++;}
-    options.rate = simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonMax').addEventListener('click', function () {
-    options.rateSetting = simRates.length - 1;
-    options.rate = simRates[options.rateSetting];
-    updateRateCounter();
-  });
-
-  document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
-  document.onkeydown = checkKey;
-
-  let isPanning = false;
-  let pastOffsetX = 0;
-  let pastOffsetY = 0;
-  document.getElementById('content').addEventListener('mousedown', e => {
-    if (e.which === 3) {
-      pastOffsetX = e.offsetX;
-      pastOffsetY = e.offsetY;
-      isPanning = true;
-    }
-  });
-  document.getElementById('content').addEventListener('mousemove', e => {
-    if (isPanning === true) {
-      mapPan.x += e.offsetX - pastOffsetX;
-      mapPan.y += e.offsetY - pastOffsetY;
-      pastOffsetX = e.offsetX;
-      pastOffsetY = e.offsetY;
-    }
-    mapPan.mousePosX = e.offsetX;
-    mapPan.mousePosY = e.offsetY;
-  });
-  window.addEventListener('mouseup', function () {
-    isPanning = false;
-  });
-
-  document.getElementById('content').addEventListener('wheel', function (e) {
-    const zoomStep = 10**(0.05*mapPan.zoom)-1;
-    mapPan.cursOriginX = e.offsetX - mapPan.x;
-    mapPan.cursOriginY = e.offsetY - mapPan.y;
-    if (e.deltaY < 0) {
-      mapPan.zoomChange += zoomStep;
-    }
-    if (e.deltaY > 0) {
-      mapPan.zoomChange -= zoomStep;
-    }
-  }, {passive: true});
+  ui.addListeners(options, mapPan, updateRateCounter);
 
 // <---------LOOP---------->
   let simpRate = 1 / 1000;
@@ -358,7 +286,7 @@ const main = async () => {
     let timeDelta = time - clockZero;
     clockZero = time;
 
-    if ( !isPaused ) {
+    if ( !(options.isPaused) ) {
       let workTime = (timeDelta * options.rate * simpRate);
       currentTime += workTime;
 
