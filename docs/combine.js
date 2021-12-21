@@ -1480,8 +1480,6 @@ const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
 const ui = require('./ui.js');
-// const WinBox = require('winbox');
-// console.log(WinBox);
 const PI = Math.PI;
 
 const makeStar = (staro) => {
@@ -1599,7 +1597,8 @@ Window.options = {
   stop: false,
   intercepts: true,
   keyPanStep: 50,
-  isPaused: false
+  isPaused: false,
+  settingsWindow: false
 };
 const options = Window.options;
 let mapPan = {
@@ -1733,17 +1732,6 @@ const main = async () => {
 
   render(options, stars, planets, mapPan);
   updateRateCounter();
-/* eslint-disable no-undef */
-  // new WinBox({
-  //   title: "Test123",
-  //   // background: "#363636",
-  //   class: ['windowBox2', 'no-full', 'no-min', 'no-max'],
-  //   // border: "2px",
-  //   x: "center",
-  //   y: "center",
-  //   // font: "B612 Mono"``
-  // });
-/* eslint-enable no-undef */
 
   ui.addListeners(options, mapPan, updateRateCounter);
 
@@ -2260,8 +2248,26 @@ module.exports = (x, y, obj) => {
 
 },{}],16:[function(require,module,exports){
 'use strict';
+// const WinBox = require('winbox');
+// console.log(WinBox);
 
 const updateMap = () => {console.log('Resized.');};
+const makeSettingsWindow = (options) => {
+  /* eslint-disable no-undef */
+    return WinBox({
+      title: "Test123",
+      // background: "#363636",
+      class: ['windowBox2', 'no-full', 'no-min', 'no-max'],
+      // border: "2px",
+      x: "center",
+      y: "center",
+      onclose: function(){
+        options.settingsWindow = false;
+      }
+      // font: "B612 Mono"``
+    });
+  /* eslint-enable no-undef */
+};
 
 exports.addListeners = (options, mapPan, updateRateCounter) => {
   const checkKey = (e) => {
@@ -2298,6 +2304,17 @@ exports.addListeners = (options, mapPan, updateRateCounter) => {
     options.rateSetting = options.simRates.length - 1;
     options.rate = options.simRates[options.rateSetting];
     updateRateCounter();
+  });
+
+
+  let settingsWindow = {};
+  document.getElementById('buttonSettings').addEventListener('click', function () {
+    if (options.settingsWindow === false) {
+      settingsWindow = makeSettingsWindow(options);
+      options.settingsWindow = true;
+    } else {
+      settingsWindow.close(true);//Find the thing, and close it
+    }
   });
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
