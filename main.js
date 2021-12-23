@@ -227,7 +227,6 @@ const main = async () => {
   let rendererIntercept = undefined;
   let interceptDraw = () => {};
   let rendererMovingOrbits = undefined;
-  let renderRateCounter = undefined;
 
   const initRenderers = () => {
     renderStatic          = renderer(document.getElementById('content'));
@@ -237,7 +236,6 @@ const main = async () => {
     renderGrid            = renderer(document.getElementById('grid'));
     renderMoving          = renderer(document.getElementById('moving'));
     rendererIntercept     = renderer(document.getElementById('intercept'));
-    renderRateCounter     = renderer(document.getElementById('rateCounter'));
     interceptDraw         = () => {
       rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
       mapPan.interceptUpdated = false;
@@ -247,7 +245,6 @@ const main = async () => {
 
   initRenderers();
 
-  const updateRateCounter = () => renderRateCounter(drawMap.drawRateCounter(options));
 
   mapPan.x = document.body.clientWidth / 2;
   mapPan.y = document.body.clientHeight / 2;
@@ -259,9 +256,8 @@ const main = async () => {
   };
 
   render(options, stars, planets, mapPan);
-  updateRateCounter();
 
-  ui.addListeners(options, mapPan, updateRateCounter);
+  ui.addListeners(options, mapPan);
 
 // <---------LOOP---------->
   let simpRate = 1 / 1000;

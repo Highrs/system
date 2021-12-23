@@ -836,32 +836,6 @@ const drawScreenFrame = (options) => {
     frame.push(keys);
   }
 
-  frame.push( ['g', tt(4,28),
-    ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
-      ['rect', {width: 10, height: 10}],
-      ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
-      ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
-      // icons.arrow(2, true),
-    ],
-    ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
-      ['rect', {width: 10, height: 10}],
-      icons.arrow(1, true)
-    ],
-    ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
-      ['rect', {width: 20, height: 10}],
-      ['g', {id: 'rateCounter'}]
-    ],
-    ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
-      ['rect', {width: 10, height: 10}],
-      icons.arrow(-1, false)
-    ],
-    ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
-      ['rect', {width: 10, height: 10}],
-      icons.arrow(-0.5, false),
-      icons.arrow(-2.5, false),
-    ],
-  ]);
-
   frame.push( ['g', tt(4,40),
     ['g', tt(0, 0, {id:'buttonSettings', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}]
@@ -954,8 +928,39 @@ exports.drawStatic = (options, stars) => {
     ],
     ['g', {id: 'frame'},
       drawScreenFrame(options)
-    ],
-    ['g', {id: 'boxes'}],
+    ]
+  ]);
+};
+exports.drawSettingsWindow = () => {
+  return getSvg({w:107, h:86}).concat([
+    ['g', {id: 'settingsGuts'},
+      // ['rect', {width: 10, height: 2, class: 'standardBox'}],
+      ['g', tt(5,5),
+        ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
+          ['rect', {width: 10, height: 10}],
+          ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
+          ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
+          // icons.arrow(2, true),
+        ],
+        ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
+          ['rect', {width: 10, height: 10}],
+          icons.arrow(1, true)
+        ],
+        ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
+          ['rect', {width: 20, height: 10}],
+          ['g', {id: 'rateCounter'}]
+        ],
+        ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
+          ['rect', {width: 10, height: 10}],
+          icons.arrow(-1, false)
+        ],
+        ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
+          ['rect', {width: 10, height: 10}],
+          icons.arrow(-0.5, false),
+          icons.arrow(-2.5, false),
+        ]
+      ]
+    ]
   ]);
 };
 
@@ -1699,7 +1704,6 @@ const main = async () => {
   let rendererIntercept = undefined;
   let interceptDraw = () => {};
   let rendererMovingOrbits = undefined;
-  let renderRateCounter = undefined;
 
   const initRenderers = () => {
     renderStatic          = renderer(document.getElementById('content'));
@@ -1709,7 +1713,6 @@ const main = async () => {
     renderGrid            = renderer(document.getElementById('grid'));
     renderMoving          = renderer(document.getElementById('moving'));
     rendererIntercept     = renderer(document.getElementById('intercept'));
-    renderRateCounter     = renderer(document.getElementById('rateCounter'));
     interceptDraw         = () => {
       rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
       mapPan.interceptUpdated = false;
@@ -1719,7 +1722,6 @@ const main = async () => {
 
   initRenderers();
 
-  const updateRateCounter = () => renderRateCounter(drawMap.drawRateCounter(options));
 
   mapPan.x = document.body.clientWidth / 2;
   mapPan.y = document.body.clientHeight / 2;
@@ -1731,9 +1733,8 @@ const main = async () => {
   };
 
   render(options, stars, planets, mapPan);
-  updateRateCounter();
 
-  ui.addListeners(options, mapPan, updateRateCounter);
+  ui.addListeners(options, mapPan);
 
 // <---------LOOP---------->
   let simpRate = 1 / 1000;
@@ -2248,28 +2249,78 @@ module.exports = (x, y, obj) => {
 
 },{}],16:[function(require,module,exports){
 'use strict';
-// const WinBox = require('winbox');
-// console.log(WinBox);
+const drawMap = require('./drawMap.js');
+const renderer = require('onml/renderer.js');
 
 const updateMap = () => {console.log('Resized.');};
+let renderSettingsWindow = undefined;
+let renderRateCounter = undefined;
+const genSettingsWindow = (options) => {
+  renderSettingsWindow  = renderer(document.getElementById('winBoxes'));
+  renderSettingsWindow(drawMap.drawSettingsWindow());
+  renderRateCounter     = renderer(document.getElementById('rateCounter'));
+  updateRateCounter(options);
+};
+const updateRateCounter = (options) => {
+  renderRateCounter(drawMap.drawRateCounter(options));
+};
 const makeSettingsWindow = (options) => {
   /* eslint-disable no-undef */
     return WinBox({
       title: "Test123",
-      // background: "#363636",
-      class: ['windowBox2', 'no-full', 'no-min', 'no-max'],
-      // border: "2px",
+      root: document.winBoxes,
+      mount: document.getElementById('winBoxes'),
+      class: ['windowBox2', 'no-full', 'no-min', 'no-max', 'no-resize'],
+      border: "1px",
       x: "center",
       y: "center",
+      width: 110,
+      height: 100,
       onclose: function(){
         options.settingsWindow = false;
-      }
-      // font: "B612 Mono"``
+      },
     });
   /* eslint-enable no-undef */
 };
 
-exports.addListeners = (options, mapPan, updateRateCounter) => {
+
+
+const addRateListeners = (options) => {
+  // console.log(document.getElementById('buttonStop'));
+  document.getElementById('buttonStop').addEventListener('click', function () {
+    options.rateSetting = 0;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonSlow').addEventListener('click', function () {
+    if (options.rateSetting > 0) {options.rateSetting--;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonFast').addEventListener('click', function () {
+    if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonMax').addEventListener('click', function () {
+    options.rateSetting = options.simRates.length - 1;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+};
+
+exports.addListeners = (options, mapPan) => {
+  let settingsWindow = {};
+  document.getElementById('buttonSettings').addEventListener('click', function () {
+    if (options.settingsWindow === false) {
+      settingsWindow = makeSettingsWindow(options);
+      genSettingsWindow(options);
+      addRateListeners(options);
+      options.settingsWindow = true;
+    } else {
+      settingsWindow.close();//Find the thing, and close it
+    }
+  });
   const checkKey = (e) => {
     if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
     else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
@@ -2284,38 +2335,6 @@ exports.addListeners = (options, mapPan, updateRateCounter) => {
   window.addEventListener('focus', play);
 
   window.addEventListener('resize', updateMap);
-
-  document.getElementById('buttonStop').addEventListener('click', function () {
-    options.rateSetting = 0;
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonSlow').addEventListener('click', function () {
-    if (options.rateSetting > 0) {options.rateSetting--;}
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonFast').addEventListener('click', function () {
-    if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonMax').addEventListener('click', function () {
-    options.rateSetting = options.simRates.length - 1;
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter();
-  });
-
-
-  let settingsWindow = {};
-  document.getElementById('buttonSettings').addEventListener('click', function () {
-    if (options.settingsWindow === false) {
-      settingsWindow = makeSettingsWindow(options);
-      options.settingsWindow = true;
-    } else {
-      settingsWindow.close(true);//Find the thing, and close it
-    }
-  });
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
@@ -2357,4 +2376,4 @@ exports.addListeners = (options, mapPan, updateRateCounter) => {
   }, {passive: true});
 };
 
-},{}]},{},[10]);
+},{"./drawMap.js":3,"onml/renderer.js":13}]},{},[10]);

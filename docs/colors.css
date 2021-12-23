@@ -3,11 +3,11 @@ html, body {
   height: 100%;
   margin:0;
   overflow: hidden;
+  cursor: crosshair;
 }
 #content {
   height: 100%;
   margin: 0;
-  cursor: crosshair;
 }
 .panel {
   display: block;
@@ -170,19 +170,21 @@ html, body {
   /* stroke: #00ff66ff; */
 }
 .wb-title {
-  font: 10px B612 Mono;
-  color: #363636;
+  font: 5px B612 Mono;
+  font-weight: bold;
+  color: #ffffff;
   position: relative;
-  top: 6px;
+  top: 3px;
 
   /* stroke: #464646; */
 }
 
 .wb-body {
-  top: 24px;
+  top: 12px;
   margin: 3px;
 }
 .wb-close {
   position: relative;
-  top: -5px;
+  transform: scale(0.5);
+  top: -11px;
 }

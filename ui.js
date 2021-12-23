@@ -1,26 +1,76 @@
 'use strict';
-// const WinBox = require('winbox');
-// console.log(WinBox);
+const drawMap = require('./drawMap.js');
+const renderer = require('onml/renderer.js');
 
 const updateMap = () => {console.log('Resized.');};
+let renderSettingsWindow = undefined;
+let renderRateCounter = undefined;
+const genSettingsWindow = (options) => {
+  renderSettingsWindow  = renderer(document.getElementById('winBoxes'));
+  renderSettingsWindow(drawMap.drawSettingsWindow());
+  renderRateCounter     = renderer(document.getElementById('rateCounter'));
+  updateRateCounter(options);
+};
+const updateRateCounter = (options) => {
+  renderRateCounter(drawMap.drawRateCounter(options));
+};
 const makeSettingsWindow = (options) => {
   /* eslint-disable no-undef */
     return WinBox({
       title: "Test123",
-      // background: "#363636",
-      class: ['windowBox2', 'no-full', 'no-min', 'no-max'],
-      // border: "2px",
+      root: document.winBoxes,
+      mount: document.getElementById('winBoxes'),
+      class: ['windowBox2', 'no-full', 'no-min', 'no-max', 'no-resize'],
+      border: "1px",
       x: "center",
       y: "center",
+      width: 110,
+      height: 100,
       onclose: function(){
         options.settingsWindow = false;
-      }
-      // font: "B612 Mono"``
+      },
     });
   /* eslint-enable no-undef */
 };
 
-exports.addListeners = (options, mapPan, updateRateCounter) => {
+
+
+const addRateListeners = (options) => {
+  // console.log(document.getElementById('buttonStop'));
+  document.getElementById('buttonStop').addEventListener('click', function () {
+    options.rateSetting = 0;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonSlow').addEventListener('click', function () {
+    if (options.rateSetting > 0) {options.rateSetting--;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonFast').addEventListener('click', function () {
+    if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonMax').addEventListener('click', function () {
+    options.rateSetting = options.simRates.length - 1;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+};
+
+exports.addListeners = (options, mapPan) => {
+  let settingsWindow = {};
+  document.getElementById('buttonSettings').addEventListener('click', function () {
+    if (options.settingsWindow === false) {
+      settingsWindow = makeSettingsWindow(options);
+      genSettingsWindow(options);
+      addRateListeners(options);
+      options.settingsWindow = true;
+    } else {
+      settingsWindow.close();//Find the thing, and close it
+    }
+  });
   const checkKey = (e) => {
     if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
     else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
@@ -35,38 +85,6 @@ exports.addListeners = (options, mapPan, updateRateCounter) => {
   window.addEventListener('focus', play);
 
   window.addEventListener('resize', updateMap);
-
-  document.getElementById('buttonStop').addEventListener('click', function () {
-    options.rateSetting = 0;
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonSlow').addEventListener('click', function () {
-    if (options.rateSetting > 0) {options.rateSetting--;}
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonFast').addEventListener('click', function () {
-    if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter();
-  });
-  document.getElementById('buttonMax').addEventListener('click', function () {
-    options.rateSetting = options.simRates.length - 1;
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter();
-  });
-
-
-  let settingsWindow = {};
-  document.getElementById('buttonSettings').addEventListener('click', function () {
-    if (options.settingsWindow === false) {
-      settingsWindow = makeSettingsWindow(options);
-      options.settingsWindow = true;
-    } else {
-      settingsWindow.close(true);//Find the thing, and close it
-    }
-  });
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;

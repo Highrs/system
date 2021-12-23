@@ -394,32 +394,6 @@ const drawScreenFrame = (options) => {
     frame.push(keys);
   }
 
-  frame.push( ['g', tt(4,28),
-    ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
-      ['rect', {width: 10, height: 10}],
-      ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
-      ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
-      // icons.arrow(2, true),
-    ],
-    ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
-      ['rect', {width: 10, height: 10}],
-      icons.arrow(1, true)
-    ],
-    ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
-      ['rect', {width: 20, height: 10}],
-      ['g', {id: 'rateCounter'}]
-    ],
-    ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
-      ['rect', {width: 10, height: 10}],
-      icons.arrow(-1, false)
-    ],
-    ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
-      ['rect', {width: 10, height: 10}],
-      icons.arrow(-0.5, false),
-      icons.arrow(-2.5, false),
-    ],
-  ]);
-
   frame.push( ['g', tt(4,40),
     ['g', tt(0, 0, {id:'buttonSettings', class: 'standardBoxSelectable'}),
       ['rect', {width: 10, height: 10}]
@@ -512,7 +486,38 @@ exports.drawStatic = (options, stars) => {
     ],
     ['g', {id: 'frame'},
       drawScreenFrame(options)
-    ],
-    ['g', {id: 'boxes'}],
+    ]
+  ]);
+};
+exports.drawSettingsWindow = () => {
+  return getSvg({w:107, h:86}).concat([
+    ['g', {id: 'settingsGuts'},
+      // ['rect', {width: 10, height: 2, class: 'standardBox'}],
+      ['g', tt(5,5),
+        ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
+          ['rect', {width: 10, height: 10}],
+          ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
+          ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
+          // icons.arrow(2, true),
+        ],
+        ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
+          ['rect', {width: 10, height: 10}],
+          icons.arrow(1, true)
+        ],
+        ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
+          ['rect', {width: 20, height: 10}],
+          ['g', {id: 'rateCounter'}]
+        ],
+        ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
+          ['rect', {width: 10, height: 10}],
+          icons.arrow(-1, false)
+        ],
+        ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
+          ['rect', {width: 10, height: 10}],
+          icons.arrow(-0.5, false),
+          icons.arrow(-2.5, false),
+        ]
+      ]
+    ]
   ]);
 };
