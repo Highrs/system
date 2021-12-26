@@ -228,6 +228,7 @@ const main = async () => {
   let rendererMovingOrbits = undefined;
 
   let renderRateCounter = undefined;
+  let renderScreenFrame = undefined;
 
   const initRateRenderer = () => {
     renderRateCounter     = renderer(document.getElementById('rateCounter'));
@@ -245,6 +246,7 @@ const main = async () => {
       mapPan.interceptUpdated = false;
     };
     rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
+    renderScreenFrame   = renderer(document.getElementById('screenFrame'));
   };
 
 
@@ -267,17 +269,12 @@ const main = async () => {
   updateRateCounter(options);
 
   const reRenderAll = () => {
-    // console.log(document.getElementById('allTheStuff').height);
-    // [0, 0, cfg.w + 1, cfg.h + 1].join(' ')
-    document.getElementById('allTheStuff').width = document.body.clientWidth;
-    document.getElementById('allTheStuff').height = document.body.clientHeight;
-    // document.getElementById('content').h
-    // initRenderers();
-    // initRateRenderer();
-    // updateZoom(mapPan);
-    // renderAllMoving(options, stars, planets, mapPan);
-    // updatePan(mapPan);
-    // updateRateCounter(options);
+    document.getElementById('allTheStuff').setAttribute('width', document.body.clientWidth);
+    document.getElementById('allTheStuff').setAttribute('height', document.body.clientHeight);
+    document.getElementById('allTheStuff').setAttribute('viewBox',
+      [0, 0, document.body.clientWidth + 1, document.body.clientHeight + 1].join(' ')
+    );
+    renderScreenFrame(drawMap.drawScreenFrame(options));
   };
 
   ui.addListeners(options, mapPan, reRenderAll);

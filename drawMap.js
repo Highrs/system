@@ -420,6 +420,7 @@ const drawScreenFrame = (options) => {
 
   return frame;
 };
+exports.drawScreenFrame = drawScreenFrame;
 const drawSimRateModule = () => {
   return ['g', {id: 'simRateModule'},
     // ['rect', {width: 10, height: 2, class: 'standardBox'}],
@@ -516,7 +517,7 @@ exports.drawStatic = (options, stars) => {
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ],
-    ['g', {id: 'frame'},
+    ['g', {id: 'screenFrame'},
       drawScreenFrame(options)
     ]
   ]);
