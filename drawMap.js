@@ -401,6 +401,8 @@ const drawScreenFrame = (options) => {
     ]
   ]);
 
+  frame.push(drawSimRateModule());
+
   frame.push( ['g', {},
     ['path',
       { d: 'M 40, 2 L 2, 2 L 2, 40',
@@ -418,7 +420,37 @@ const drawScreenFrame = (options) => {
 
   return frame;
 };
-
+const drawSimRateModule = () => {
+  return ['g', {id: 'simRateModule'},
+    // ['rect', {width: 10, height: 2, class: 'standardBox'}],
+    ['g', tt(4,28),
+      ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
+        ['rect', {width: 10, height: 10}],
+        ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
+        ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
+        // icons.arrow(2, true),
+      ],
+      ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
+        ['rect', {width: 10, height: 10}],
+        icons.arrow(1, true)
+      ],
+      ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
+        ['rect', {width: 20, height: 10}],
+        ['g', {id: 'rateCounter'}]
+      ],
+      ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
+        ['rect', {width: 10, height: 10}],
+        icons.arrow(-1, false)
+      ],
+      ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
+        ['rect', {width: 10, height: 10}],
+        icons.arrow(-0.5, false),
+        icons.arrow(-2.5, false),
+      ]
+    ]
+  ];
+};
+exports.drawSimRateModule = drawSimRateModule;
 exports.drawRateCounter = (options) => {
   return ['text', {x: 10 - ((options.rate.toString().length / 2) * 3.25), y: 7,class: 'dataText bold'}, options.rate];
 };
@@ -452,7 +484,7 @@ exports.drawIntercepts = (listOfcraft, mapPan) => {
   return intercepts;
 };
 exports.drawStatic = (options, stars) => {
-  return getSvg({w:getPageWidth(), h:getPageHeight()}).concat([
+  return getSvg({w:getPageWidth(), h:getPageHeight(), i:'allTheStuff'}).concat([
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
         ['stop', {offset: "0%", 'stop-color': stars[0].color, 'stop-opacity': 0.5 }],
@@ -486,38 +518,6 @@ exports.drawStatic = (options, stars) => {
     ],
     ['g', {id: 'frame'},
       drawScreenFrame(options)
-    ]
-  ]);
-};
-exports.drawSettingsWindow = () => {
-  return getSvg({w:107, h:86}).concat([
-    ['g', {id: 'settingsGuts'},
-      // ['rect', {width: 10, height: 2, class: 'standardBox'}],
-      ['g', tt(5,5),
-        ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
-          ['rect', {width: 10, height: 10}],
-          ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
-          ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
-          // icons.arrow(2, true),
-        ],
-        ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
-          ['rect', {width: 10, height: 10}],
-          icons.arrow(1, true)
-        ],
-        ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
-          ['rect', {width: 20, height: 10}],
-          ['g', {id: 'rateCounter'}]
-        ],
-        ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
-          ['rect', {width: 10, height: 10}],
-          icons.arrow(-1, false)
-        ],
-        ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
-          ['rect', {width: 10, height: 10}],
-          icons.arrow(-0.5, false),
-          icons.arrow(-2.5, false),
-        ]
-      ]
     ]
   ]);
 };

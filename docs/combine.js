@@ -843,6 +843,8 @@ const drawScreenFrame = (options) => {
     ]
   ]);
 
+  frame.push(drawSimRateModule());
+
   frame.push( ['g', {},
     ['path',
       { d: 'M 40, 2 L 2, 2 L 2, 40',
@@ -860,7 +862,37 @@ const drawScreenFrame = (options) => {
 
   return frame;
 };
-
+const drawSimRateModule = () => {
+  return ['g', {id: 'simRateModule'},
+    // ['rect', {width: 10, height: 2, class: 'standardBox'}],
+    ['g', tt(4,28),
+      ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
+        ['rect', {width: 10, height: 10}],
+        ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
+        ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
+        // icons.arrow(2, true),
+      ],
+      ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
+        ['rect', {width: 10, height: 10}],
+        icons.arrow(1, true)
+      ],
+      ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
+        ['rect', {width: 20, height: 10}],
+        ['g', {id: 'rateCounter'}]
+      ],
+      ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
+        ['rect', {width: 10, height: 10}],
+        icons.arrow(-1, false)
+      ],
+      ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
+        ['rect', {width: 10, height: 10}],
+        icons.arrow(-0.5, false),
+        icons.arrow(-2.5, false),
+      ]
+    ]
+  ];
+};
+exports.drawSimRateModule = drawSimRateModule;
 exports.drawRateCounter = (options) => {
   return ['text', {x: 10 - ((options.rate.toString().length / 2) * 3.25), y: 7,class: 'dataText bold'}, options.rate];
 };
@@ -894,7 +926,7 @@ exports.drawIntercepts = (listOfcraft, mapPan) => {
   return intercepts;
 };
 exports.drawStatic = (options, stars) => {
-  return getSvg({w:getPageWidth(), h:getPageHeight()}).concat([
+  return getSvg({w:getPageWidth(), h:getPageHeight(), i:'allTheStuff'}).concat([
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
         ['stop', {offset: "0%", 'stop-color': stars[0].color, 'stop-opacity': 0.5 }],
@@ -931,52 +963,22 @@ exports.drawStatic = (options, stars) => {
     ]
   ]);
 };
-exports.drawSettingsWindow = () => {
-  return getSvg({w:107, h:86}).concat([
-    ['g', {id: 'settingsGuts'},
-      // ['rect', {width: 10, height: 2, class: 'standardBox'}],
-      ['g', tt(5,5),
-        ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
-          ['rect', {width: 10, height: 10}],
-          ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
-          ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
-          // icons.arrow(2, true),
-        ],
-        ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
-          ['rect', {width: 10, height: 10}],
-          icons.arrow(1, true)
-        ],
-        ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
-          ['rect', {width: 20, height: 10}],
-          ['g', {id: 'rateCounter'}]
-        ],
-        ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
-          ['rect', {width: 10, height: 10}],
-          icons.arrow(-1, false)
-        ],
-        ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
-          ['rect', {width: 10, height: 10}],
-          icons.arrow(-0.5, false),
-          icons.arrow(-2.5, false),
-        ]
-      ]
-    ]
-  ]);
-};
 
 },{"./get-svg.js":4,"./icons.js":6,"./lists.js":9,"./mechanics.js":12,"onml/tt.js":15}],4:[function(require,module,exports){
 module.exports = cfg => {
   cfg = cfg || {};
   cfg.w = cfg.w || 880;
   cfg.h = cfg.h || 256;
+  cfg.i = cfg.i || 'sveg';
   return ['svg', {
    xmlns: 'http://www.w3.org/2000/svg',
     width: cfg.w + 1,
     height: cfg.h + 1,
+    id: cfg.i,
     viewBox: [0, 0, cfg.w + 1, cfg.h + 1].join(' '),
     class: 'panel'
   }];
-}
+};
 
 },{}],5:[function(require,module,exports){
 module.exports = {
@@ -1632,7 +1634,6 @@ const updatePan = (mapPan) => {
   }
   return false;
 };
-
 const updateZoom = (mapPan) => {
   // Updates Zoom (WHO WHOULDA THOUGHT?)
   if (mapPan.zoomChange != 0) {
@@ -1705,6 +1706,11 @@ const main = async () => {
   let interceptDraw = () => {};
   let rendererMovingOrbits = undefined;
 
+  let renderRateCounter = undefined;
+
+  const initRateRenderer = () => {
+    renderRateCounter     = renderer(document.getElementById('rateCounter'));
+  };
   const initRenderers = () => {
     renderStatic          = renderer(document.getElementById('content'));
     renderStatic(drawMap.drawStatic(options, stars));
@@ -1720,21 +1726,41 @@ const main = async () => {
     rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
   };
 
-  initRenderers();
 
 
   mapPan.x = document.body.clientWidth / 2;
   mapPan.y = document.body.clientHeight / 2;
 
-  const render = (options, stars, planets, mapPan) => {
+  const renderAllMoving = (options, stars, planets, mapPan) => {
     renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
     renderStars(drawMap.drawStars(stars, mapPan));
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
   };
+  const updateRateCounter = (options) => {
+    renderRateCounter(drawMap.drawRateCounter(options));
+  };
 
-  render(options, stars, planets, mapPan);
+  initRenderers();
+  initRateRenderer();
+  renderAllMoving(options, stars, planets, mapPan);
+  updateRateCounter(options);
 
-  ui.addListeners(options, mapPan);
+  const reRenderAll = () => {
+    // console.log(document.getElementById('allTheStuff').height);
+    // [0, 0, cfg.w + 1, cfg.h + 1].join(' ')
+    document.getElementById('allTheStuff').width = document.body.clientWidth;
+    document.getElementById('allTheStuff').height = document.body.clientHeight;
+    // document.getElementById('content').h
+    // initRenderers();
+    // initRateRenderer();
+    // updateZoom(mapPan);
+    // renderAllMoving(options, stars, planets, mapPan);
+    // updatePan(mapPan);
+    // updateRateCounter(options);
+  };
+
+  ui.addListeners(options, mapPan, reRenderAll);
+  ui.addRateListeners(options, updateRateCounter);
 
 // <---------LOOP---------->
   let simpRate = 1 / 1000;
@@ -1760,7 +1786,7 @@ const main = async () => {
 
       if (updateZoom(mapPan)) {
         mapPan.interceptUpdated = true;
-        render(options, stars, planets, mapPan);
+        renderAllMoving(options, stars, planets, mapPan);
       }
       updatePan(mapPan);
 
@@ -2249,43 +2275,13 @@ module.exports = (x, y, obj) => {
 
 },{}],16:[function(require,module,exports){
 'use strict';
-const drawMap = require('./drawMap.js');
-const renderer = require('onml/renderer.js');
+// const drawMap = require('./drawMap.js');
+// const renderer = require('onml/renderer.js');
 
-const updateMap = () => {console.log('Resized.');};
-let renderSettingsWindow = undefined;
-let renderRateCounter = undefined;
-const genSettingsWindow = (options) => {
-  renderSettingsWindow  = renderer(document.getElementById('winBoxes'));
-  renderSettingsWindow(drawMap.drawSettingsWindow());
-  renderRateCounter     = renderer(document.getElementById('rateCounter'));
-  updateRateCounter(options);
-};
-const updateRateCounter = (options) => {
-  renderRateCounter(drawMap.drawRateCounter(options));
-};
-const makeSettingsWindow = (options) => {
-  /* eslint-disable no-undef */
-    return WinBox({
-      title: "Test123",
-      root: document.winBoxes,
-      mount: document.getElementById('winBoxes'),
-      class: ['windowBox2', 'no-full', 'no-min', 'no-max', 'no-resize'],
-      border: "1px",
-      x: "center",
-      y: "center",
-      width: 110,
-      height: 100,
-      onclose: function(){
-        options.settingsWindow = false;
-      },
-    });
-  /* eslint-enable no-undef */
-};
+// };
 
 
-
-const addRateListeners = (options) => {
+const addRateListeners = (options, updateRateCounter) => {
   // console.log(document.getElementById('buttonStop'));
   document.getElementById('buttonStop').addEventListener('click', function () {
     options.rateSetting = 0;
@@ -2308,19 +2304,20 @@ const addRateListeners = (options) => {
     updateRateCounter(options);
   });
 };
+exports.addRateListeners = addRateListeners;
 
-exports.addListeners = (options, mapPan) => {
-  let settingsWindow = {};
-  document.getElementById('buttonSettings').addEventListener('click', function () {
-    if (options.settingsWindow === false) {
-      settingsWindow = makeSettingsWindow(options);
-      genSettingsWindow(options);
-      addRateListeners(options);
-      options.settingsWindow = true;
-    } else {
-      settingsWindow.close();//Find the thing, and close it
-    }
-  });
+exports.addListeners = (options, mapPan, reRenderAll) => {
+  // let settingsWindow = {};
+  // document.getElementById('buttonSettings').addEventListener('click', function () {
+  //   if (options.settingsWindow === false) {
+  //     settingsWindow = makeSettingsWindow(options);
+  //     genSettingsWindow(options);
+  //     addRateListeners(options);
+  //     options.settingsWindow = true;
+  //   } else {
+  //     settingsWindow.close();//Find the thing, and close it
+  //   }
+  // });
   const checkKey = (e) => {
     if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
     else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
@@ -2334,7 +2331,9 @@ exports.addListeners = (options, mapPan) => {
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
 
-  window.addEventListener('resize', updateMap);
+  window.addEventListener('resize', function() {
+    reRenderAll();
+  });
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
@@ -2376,4 +2375,4 @@ exports.addListeners = (options, mapPan) => {
   }, {passive: true});
 };
 
-},{"./drawMap.js":3,"onml/renderer.js":13}]},{},[10]);
+},{}]},{},[10]);

@@ -1,41 +1,11 @@
 'use strict';
-const drawMap = require('./drawMap.js');
-const renderer = require('onml/renderer.js');
+// const drawMap = require('./drawMap.js');
+// const renderer = require('onml/renderer.js');
 
-const updateMap = () => {console.log('Resized.');};
-let renderSettingsWindow = undefined;
-let renderRateCounter = undefined;
-const genSettingsWindow = (options) => {
-  renderSettingsWindow  = renderer(document.getElementById('winBoxes'));
-  renderSettingsWindow(drawMap.drawSettingsWindow());
-  renderRateCounter     = renderer(document.getElementById('rateCounter'));
-  updateRateCounter(options);
-};
-const updateRateCounter = (options) => {
-  renderRateCounter(drawMap.drawRateCounter(options));
-};
-const makeSettingsWindow = (options) => {
-  /* eslint-disable no-undef */
-    return WinBox({
-      title: "Test123",
-      root: document.winBoxes,
-      mount: document.getElementById('winBoxes'),
-      class: ['windowBox2', 'no-full', 'no-min', 'no-max', 'no-resize'],
-      border: "1px",
-      x: "center",
-      y: "center",
-      width: 110,
-      height: 100,
-      onclose: function(){
-        options.settingsWindow = false;
-      },
-    });
-  /* eslint-enable no-undef */
-};
+// };
 
 
-
-const addRateListeners = (options) => {
+const addRateListeners = (options, updateRateCounter) => {
   // console.log(document.getElementById('buttonStop'));
   document.getElementById('buttonStop').addEventListener('click', function () {
     options.rateSetting = 0;
@@ -58,19 +28,20 @@ const addRateListeners = (options) => {
     updateRateCounter(options);
   });
 };
+exports.addRateListeners = addRateListeners;
 
-exports.addListeners = (options, mapPan) => {
-  let settingsWindow = {};
-  document.getElementById('buttonSettings').addEventListener('click', function () {
-    if (options.settingsWindow === false) {
-      settingsWindow = makeSettingsWindow(options);
-      genSettingsWindow(options);
-      addRateListeners(options);
-      options.settingsWindow = true;
-    } else {
-      settingsWindow.close();//Find the thing, and close it
-    }
-  });
+exports.addListeners = (options, mapPan, reRenderAll) => {
+  // let settingsWindow = {};
+  // document.getElementById('buttonSettings').addEventListener('click', function () {
+  //   if (options.settingsWindow === false) {
+  //     settingsWindow = makeSettingsWindow(options);
+  //     genSettingsWindow(options);
+  //     addRateListeners(options);
+  //     options.settingsWindow = true;
+  //   } else {
+  //     settingsWindow.close();//Find the thing, and close it
+  //   }
+  // });
   const checkKey = (e) => {
     if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
     else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
@@ -84,7 +55,9 @@ exports.addListeners = (options, mapPan) => {
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
 
-  window.addEventListener('resize', updateMap);
+  window.addEventListener('resize', function() {
+    reRenderAll();
+  });
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;

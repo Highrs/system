@@ -161,30 +161,3 @@ html, body {
   stroke-width: 0.5px;
   stroke: #ffffffff;
 }
-
-.windowBox2 {
-  background: #6f6f6f;
-  /* font-size: 20px; */
-  /* border-radius: 20px 20px 0 0; */
-  /* stroke-width: 1px; */
-  /* stroke: #00ff66ff; */
-}
-.wb-title {
-  font: 5px B612 Mono;
-  font-weight: bold;
-  color: #ffffff;
-  position: relative;
-  top: 3px;
-
-  /* stroke: #464646; */
-}
-
-.wb-body {
-  top: 12px;
-  margin: 3px;
-}
-.wb-close {
-  position: relative;
-  transform: scale(0.5);
-  top: -11px;
-}

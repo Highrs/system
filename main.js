@@ -155,7 +155,6 @@ const updatePan = (mapPan) => {
   }
   return false;
 };
-
 const updateZoom = (mapPan) => {
   // Updates Zoom (WHO WHOULDA THOUGHT?)
   if (mapPan.zoomChange != 0) {
@@ -228,6 +227,11 @@ const main = async () => {
   let interceptDraw = () => {};
   let rendererMovingOrbits = undefined;
 
+  let renderRateCounter = undefined;
+
+  const initRateRenderer = () => {
+    renderRateCounter     = renderer(document.getElementById('rateCounter'));
+  };
   const initRenderers = () => {
     renderStatic          = renderer(document.getElementById('content'));
     renderStatic(drawMap.drawStatic(options, stars));
@@ -243,21 +247,41 @@ const main = async () => {
     rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
   };
 
-  initRenderers();
 
 
   mapPan.x = document.body.clientWidth / 2;
   mapPan.y = document.body.clientHeight / 2;
 
-  const render = (options, stars, planets, mapPan) => {
+  const renderAllMoving = (options, stars, planets, mapPan) => {
     renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
     renderStars(drawMap.drawStars(stars, mapPan));
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
   };
+  const updateRateCounter = (options) => {
+    renderRateCounter(drawMap.drawRateCounter(options));
+  };
 
-  render(options, stars, planets, mapPan);
+  initRenderers();
+  initRateRenderer();
+  renderAllMoving(options, stars, planets, mapPan);
+  updateRateCounter(options);
 
-  ui.addListeners(options, mapPan);
+  const reRenderAll = () => {
+    // console.log(document.getElementById('allTheStuff').height);
+    // [0, 0, cfg.w + 1, cfg.h + 1].join(' ')
+    document.getElementById('allTheStuff').width = document.body.clientWidth;
+    document.getElementById('allTheStuff').height = document.body.clientHeight;
+    // document.getElementById('content').h
+    // initRenderers();
+    // initRateRenderer();
+    // updateZoom(mapPan);
+    // renderAllMoving(options, stars, planets, mapPan);
+    // updatePan(mapPan);
+    // updateRateCounter(options);
+  };
+
+  ui.addListeners(options, mapPan, reRenderAll);
+  ui.addRateListeners(options, updateRateCounter);
 
 // <---------LOOP---------->
   let simpRate = 1 / 1000;
@@ -283,7 +307,7 @@ const main = async () => {
 
       if (updateZoom(mapPan)) {
         mapPan.interceptUpdated = true;
-        render(options, stars, planets, mapPan);
+        renderAllMoving(options, stars, planets, mapPan);
       }
       updatePan(mapPan);
 
