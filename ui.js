@@ -30,7 +30,7 @@ const addRateListeners = (options, updateRateCounter) => {
 };
 exports.addRateListeners = addRateListeners;
 
-exports.addListeners = (options, mapPan, reRenderAll) => {
+exports.addListeners = (options, mapPan, resizeWindow) => {
   // let settingsWindow = {};
   // document.getElementById('buttonSettings').addEventListener('click', function () {
   //   if (options.settingsWindow === false) {
@@ -56,7 +56,7 @@ exports.addListeners = (options, mapPan, reRenderAll) => {
   window.addEventListener('focus', play);
 
   window.addEventListener('resize', function() {
-    reRenderAll();
+    resizeWindow();
   });
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});

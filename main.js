@@ -259,25 +259,32 @@ const main = async () => {
     renderStars(drawMap.drawStars(stars, mapPan));
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
   };
+  // const resizeFrame = () => {
+  //   renderScreenFrame(drawMap.drawScreenFrame(options));
+  // };
   const updateRateCounter = (options) => {
     renderRateCounter(drawMap.drawRateCounter(options));
   };
 
   initRenderers();
+  renderScreenFrame(drawMap.drawScreenFrame(options));
   initRateRenderer();
   renderAllMoving(options, stars, planets, mapPan);
   updateRateCounter(options);
 
-  const reRenderAll = () => {
+  const resizeWindow = () => {
     document.getElementById('allTheStuff').setAttribute('width', document.body.clientWidth);
     document.getElementById('allTheStuff').setAttribute('height', document.body.clientHeight);
     document.getElementById('allTheStuff').setAttribute('viewBox',
       [0, 0, document.body.clientWidth + 1, document.body.clientHeight + 1].join(' ')
     );
     renderScreenFrame(drawMap.drawScreenFrame(options));
+    initRateRenderer();
+    updateRateCounter(options);
+    ui.addRateListeners(options, updateRateCounter);
   };
 
-  ui.addListeners(options, mapPan, reRenderAll);
+  ui.addListeners(options, mapPan, resizeWindow);
   ui.addRateListeners(options, updateRateCounter);
 
 // <---------LOOP---------->

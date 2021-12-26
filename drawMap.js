@@ -379,7 +379,7 @@ const drawRanges = (bodyArr, mapPan) => {
 const drawMovingOrbits = (moons, mapPan) => {
   return ['g', {}, drawOrbits(moons, mapPan)];
 };
-const drawScreenFrame = (options) => {
+exports.drawScreenFrame = (options) => {
   let frame = ['g', {}];
 
   if (options.headerKeys) {
@@ -420,7 +420,6 @@ const drawScreenFrame = (options) => {
 
   return frame;
 };
-exports.drawScreenFrame = drawScreenFrame;
 const drawSimRateModule = () => {
   return ['g', {id: 'simRateModule'},
     // ['rect', {width: 10, height: 2, class: 'standardBox'}],
@@ -517,8 +516,6 @@ exports.drawStatic = (options, stars) => {
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ],
-    ['g', {id: 'screenFrame'},
-      drawScreenFrame(options)
-    ]
+    ['g', {id: 'screenFrame'}]
   ]);
 };

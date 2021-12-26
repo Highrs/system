@@ -821,7 +821,7 @@ const drawRanges = (bodyArr, mapPan) => {
 const drawMovingOrbits = (moons, mapPan) => {
   return ['g', {}, drawOrbits(moons, mapPan)];
 };
-const drawScreenFrame = (options) => {
+exports.drawScreenFrame = (options) => {
   let frame = ['g', {}];
 
   if (options.headerKeys) {
@@ -862,7 +862,6 @@ const drawScreenFrame = (options) => {
 
   return frame;
 };
-exports.drawScreenFrame = drawScreenFrame;
 const drawSimRateModule = () => {
   return ['g', {id: 'simRateModule'},
     // ['rect', {width: 10, height: 2, class: 'standardBox'}],
@@ -959,9 +958,7 @@ exports.drawStatic = (options, stars) => {
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ],
-    ['g', {id: 'screenFrame'},
-      drawScreenFrame(options)
-    ]
+    ['g', {id: 'screenFrame'}]
   ]);
 };
 
@@ -1739,25 +1736,32 @@ const main = async () => {
     renderStars(drawMap.drawStars(stars, mapPan));
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
   };
+  // const resizeFrame = () => {
+  //   renderScreenFrame(drawMap.drawScreenFrame(options));
+  // };
   const updateRateCounter = (options) => {
     renderRateCounter(drawMap.drawRateCounter(options));
   };
 
   initRenderers();
+  renderScreenFrame(drawMap.drawScreenFrame(options));
   initRateRenderer();
   renderAllMoving(options, stars, planets, mapPan);
   updateRateCounter(options);
 
-  const reRenderAll = () => {
+  const resizeWindow = () => {
     document.getElementById('allTheStuff').setAttribute('width', document.body.clientWidth);
     document.getElementById('allTheStuff').setAttribute('height', document.body.clientHeight);
     document.getElementById('allTheStuff').setAttribute('viewBox',
       [0, 0, document.body.clientWidth + 1, document.body.clientHeight + 1].join(' ')
     );
     renderScreenFrame(drawMap.drawScreenFrame(options));
+    initRateRenderer();
+    updateRateCounter(options);
+    ui.addRateListeners(options, updateRateCounter);
   };
 
-  ui.addListeners(options, mapPan, reRenderAll);
+  ui.addListeners(options, mapPan, resizeWindow);
   ui.addRateListeners(options, updateRateCounter);
 
 // <---------LOOP---------->
@@ -2304,7 +2308,7 @@ const addRateListeners = (options, updateRateCounter) => {
 };
 exports.addRateListeners = addRateListeners;
 
-exports.addListeners = (options, mapPan, reRenderAll) => {
+exports.addListeners = (options, mapPan, resizeWindow) => {
   // let settingsWindow = {};
   // document.getElementById('buttonSettings').addEventListener('click', function () {
   //   if (options.settingsWindow === false) {
@@ -2330,7 +2334,7 @@ exports.addListeners = (options, mapPan, reRenderAll) => {
   window.addEventListener('focus', play);
 
   window.addEventListener('resize', function() {
-    reRenderAll();
+    resizeWindow();
   });
 
   document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
