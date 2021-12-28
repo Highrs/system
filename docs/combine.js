@@ -443,7 +443,6 @@ exports.craftAI = craftAI;
 'use strict';
 //What are you doing here? How did you get here? Leave.
 
-// const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
 const mech = require('./mechanics.js');
@@ -456,24 +455,6 @@ function getPageWidth() {
 function getPageHeight() {
   return document.body.clientHeight;
 }
-
-// const PI = Math.PI;
-// const drawPolarGrid = (staro) => {
-//   let polarGrid = ['g', tt(staro.x, staro.y)];
-//
-//   for (let i = 1; i < 5; i++) {
-//     polarGrid.push(['circle', {r: 150 * i, class: 'grid'}]);
-//     for (let j = 0; j < 16; j++) {
-//       polarGrid.push(['line', {
-//         transform: 'rotate(' + ((360 / 16) * j) +')',
-//         x1: 150 * i + 15,
-//         x2: 150 * i - 5,
-//         class: 'grid'}]);
-//     }
-//   }
-//   return polarGrid;
-// };
-
 const drawGrid = (staro, mapPan) => {
   let grid = ['g', {}];
   let crossSize = 5 * mapPan.zoom;
@@ -581,46 +562,6 @@ const drawSimpleOrbit = (stations, mapPan) => {
 
   return retGroup;
 };
-// const drawIndustryData = (body) => {
-//   let display = ['g', tt(10, -10)];
-//
-//   display.push(
-//     ['text', {
-//       x: 0,
-//       y: 6,
-//       class: 'dataText'
-//     }, 'IND:'],
-//     ['text', {
-//       x: 0,
-//       y: (body.industry.length + 2) * 6,
-//       class: 'dataText'
-//     }, 'STORE:']
-//   );
-//
-//   body.industry.forEach((e, idx) => {
-//     display.push(
-//       ['g', tt(0, 6),
-//         ['text', {
-//           x: 2,
-//           y: (idx + 1) * 6,
-//           class: 'dataText'
-//         }, e.abr +":" + e.status]
-//       ]
-//     );
-//   });
-//   Object.keys(body.store).forEach((e, idx) => {
-//     display.push(
-//       ['g', tt(0, 6),
-//         ['text', {x: 2,
-//           y: (body.industry.length + idx + 2) * 6,
-//           class: 'dataText'}, e.toUpperCase() + ':' + body.store[e].toFixed(0)
-//         ]
-//       ]
-//     );
-//   });
-//
-//   return display;
-// };
 const drawBodyData = (bodyo) => {
   let dataDisp = ['g', {}];
 
@@ -679,30 +620,6 @@ const drawBelts = (belts, mapPan) => {
 
   return rocksDrawn;
 };
-// const drawHeader = (clock, options) => {
-//   if (options.header) {
-//     let header = ['g', tt(10, 20)];
-//
-//     for (let i = 0; i < lists.toDo().length; i++) {
-//       let hShift = lists.toDo()[i][0] === '-' ? 10 : 0;
-//       header.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.toDo(clock)[i] ]],);
-//     }
-//
-//     return header;
-//   }
-//   if (options.headerKeys) {
-//     let keys = ['g', tt(10, 20)];
-//
-//     for (let i = 0; i < lists.keys().length; i++) {
-//       let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
-//       keys.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.keys(clock)[i] ]],);
-//     }
-//
-//     return keys;
-//   }
-//   return;
-//
-// };
 const drawStars = (stars, mapPan) =>{
   let drawnStars = ['g', {}];
   stars.forEach((staro) => {
@@ -896,6 +813,19 @@ exports.drawSimRateModule = drawSimRateModule;
 exports.drawRateCounter = (options) => {
   return ['text', {x: 10 - ((options.rate.toString().length / 2) * 3.25), y: 7,class: 'dataText bold'}, options.rate];
 };
+exports.drawBoxSettings = () => {
+  let box = ['g', {}];
+
+  box.push(['rect', {height: 80, width: 160, class:'standardBox'}]);
+  box.push(['rect', {height: 10, width: 150, class:'standardBoxSelectable', id:'boxSettingsDragger'}]);
+  box.push(['g', tt(150, 0, {id: 'boxSettingsCloser', class:'standardBoxSelectable'}),
+    ['rect', {height: 10, width: 10}],
+    ['path', {d: 'M 2, 2 L 8, 8', class: 'standardLine'}],
+    ['path', {d: 'M 2, 8 L 8, 2', class: 'standardLine'}]
+  ]);
+
+  return box;
+};
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
@@ -958,7 +888,10 @@ exports.drawStatic = (options, stars) => {
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ],
-    ['g', {id: 'screenFrame'}]
+    ['g', {id: 'screenFrame'}],
+    ['g', {id: 'boxes'},
+      ['g', {id: 'boxMainSettings'}]
+    ]
   ]);
 };
 
@@ -1603,7 +1536,7 @@ Window.options = {
   intercepts: true,
   keyPanStep: 50,
   isPaused: false,
-  settingsWindow: false
+  boxSettings: false
 };
 const options = Window.options;
 let mapPan = {
@@ -1706,6 +1639,7 @@ const main = async () => {
 
   let renderRateCounter = undefined;
   let renderScreenFrame = undefined;
+  let renderBoxSettings = undefined;
 
   const initRateRenderer = () => {
     renderRateCounter     = renderer(document.getElementById('rateCounter'));
@@ -1723,7 +1657,8 @@ const main = async () => {
       mapPan.interceptUpdated = false;
     };
     rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
-    renderScreenFrame   = renderer(document.getElementById('screenFrame'));
+    renderScreenFrame     = renderer(document.getElementById('screenFrame'));
+    renderBoxSettings     = renderer(document.getElementById('boxMainSettings'));
   };
 
 
@@ -1736,9 +1671,6 @@ const main = async () => {
     renderStars(drawMap.drawStars(stars, mapPan));
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
   };
-  // const resizeFrame = () => {
-  //   renderScreenFrame(drawMap.drawScreenFrame(options));
-  // };
   const updateRateCounter = (options) => {
     renderRateCounter(drawMap.drawRateCounter(options));
   };
@@ -1760,8 +1692,21 @@ const main = async () => {
     updateRateCounter(options);
     ui.addRateListeners(options, updateRateCounter);
   };
+  const placecheckBoxSettings = () => {
+    if (options.boxSettings) {
+      renderBoxSettings(drawMap.drawBoxSettings());
+      ui.addBoxSettingsListeners(options, renderBoxSettings);
+    }
+    else {
+      renderBoxSettings([]);
+    }
+  };
+  let renderers = {
+    resizeWindow: resizeWindow,
+    boxSettings: placecheckBoxSettings
+  };
 
-  ui.addListeners(options, mapPan, resizeWindow);
+  ui.addListeners(options, mapPan, renderers);
   ui.addRateListeners(options, updateRateCounter);
 
 // <---------LOOP---------->
@@ -2277,11 +2222,6 @@ module.exports = (x, y, obj) => {
 
 },{}],16:[function(require,module,exports){
 'use strict';
-// const drawMap = require('./drawMap.js');
-// const renderer = require('onml/renderer.js');
-
-// };
-
 
 const addRateListeners = (options, updateRateCounter) => {
   // console.log(document.getElementById('buttonStop'));
@@ -2307,39 +2247,71 @@ const addRateListeners = (options, updateRateCounter) => {
   });
 };
 exports.addRateListeners = addRateListeners;
-
-exports.addListeners = (options, mapPan, resizeWindow) => {
-  // let settingsWindow = {};
-  // document.getElementById('buttonSettings').addEventListener('click', function () {
-  //   if (options.settingsWindow === false) {
-  //     settingsWindow = makeSettingsWindow(options);
-  //     genSettingsWindow(options);
-  //     addRateListeners(options);
-  //     options.settingsWindow = true;
-  //   } else {
-  //     settingsWindow.close();//Find the thing, and close it
-  //   }
-  // });
+exports.addBoxSettingsListeners = (options, renderBoxSettings) => {
+  let boxSettingsSettings = {
+    isDragging: false,
+    xTransform: 10,
+    yTransform: 100,
+    xTransformPast: 0,
+    yTransformPast: 0,
+  };
+  document.getElementById('boxMainSettings').setAttribute(
+    'transform', 'translate(' + boxSettingsSettings.xTransform + ', ' + boxSettingsSettings.yTransform + ')'
+  );
+  document.getElementById('boxSettingsDragger').addEventListener('mousedown', e => {
+    if (e.which === 1 || e.which === 3) {
+      boxSettingsSettings.xTransformPast = e.offsetX;
+      boxSettingsSettings.yTransformPast = e.offsetY;
+      boxSettingsSettings.isDragging = true;
+    }
+  });
+  document.getElementById('content').addEventListener('mousemove', e => {
+    if (boxSettingsSettings.isDragging) {
+      boxSettingsSettings.xTransform += e.offsetX - boxSettingsSettings.xTransformPast;
+      boxSettingsSettings.yTransform += e.offsetY - boxSettingsSettings.yTransformPast;
+      if (boxSettingsSettings.xTransform > document.body.clientWidth - 160) {boxSettingsSettings.xTransform = document.body.clientWidth - 160;}
+      if (boxSettingsSettings.yTransform > document.body.clientHeight - 80) {boxSettingsSettings.yTransform = document.body.clientHeight - 80;}
+      if (boxSettingsSettings.xTransform < 0) {boxSettingsSettings.xTransform = 0;}
+      if (boxSettingsSettings.yTransform < 0) {boxSettingsSettings.yTransform = 0;}
+      boxSettingsSettings.xTransformPast = e.offsetX;
+      boxSettingsSettings.yTransformPast = e.offsetY;
+      document.getElementById('boxMainSettings').setAttribute(
+        'transform', 'translate(' + boxSettingsSettings.xTransform + ', ' + boxSettingsSettings.yTransform + ')'
+      );
+    }
+  });
+  window.addEventListener('mouseup', function () {
+    boxSettingsSettings.isDragging = false;
+  });
+  document.getElementById('boxSettingsCloser').addEventListener('click', function () {
+    options.boxSettings = false;
+    renderBoxSettings([]);
+  });
+};
+exports.addListeners = (options, mapPan, renderers) => {
+  document.getElementById('buttonSettings').addEventListener('click', function () {
+    if (options.boxSettings === false) {
+      options.boxSettings = true;
+      renderers.boxSettings();
+    } else {
+      options.boxSettings = false;
+      renderers.boxSettings();
+    }
+  });
   const checkKey = (e) => {
     if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
     else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
     else if (e.keyCode == '37') {/* left arrow */   mapPan.x += options.keyPanStep;}
     else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= options.keyPanStep;}
   };
-  // let isPaused = false;
   function pause() { options.isPaused = true; console.log('|| Paused');}
   function play() { options.isPaused = false; console.log('>> Unpaused');}
 
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
-
-  window.addEventListener('resize', function() {
-    resizeWindow();
-  });
-
-  document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
+  window.addEventListener('resize', function() {renderers.resizeWindow();});
+  // document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
-
   let isPanning = false;
   let pastOffsetX = 0;
   let pastOffsetY = 0;
@@ -2351,7 +2323,7 @@ exports.addListeners = (options, mapPan, resizeWindow) => {
     }
   });
   document.getElementById('content').addEventListener('mousemove', e => {
-    if (isPanning === true) {
+    if (isPanning) {
       mapPan.x += e.offsetX - pastOffsetX;
       mapPan.y += e.offsetY - pastOffsetY;
       pastOffsetX = e.offsetX;
@@ -2363,7 +2335,6 @@ exports.addListeners = (options, mapPan, resizeWindow) => {
   window.addEventListener('mouseup', function () {
     isPanning = false;
   });
-
   document.getElementById('content').addEventListener('wheel', function (e) {
     const zoomStep = 10**(0.05*mapPan.zoom)-1;
     mapPan.cursOriginX = e.offsetX - mapPan.x;
@@ -2375,6 +2346,7 @@ exports.addListeners = (options, mapPan, resizeWindow) => {
       mapPan.zoomChange -= zoomStep;
     }
   }, {passive: true});
+  // document.
 };
 
 },{}]},{},[10]);

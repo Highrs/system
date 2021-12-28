@@ -1,9 +1,4 @@
 'use strict';
-// const drawMap = require('./drawMap.js');
-// const renderer = require('onml/renderer.js');
-
-// };
-
 
 const addRateListeners = (options, updateRateCounter) => {
   // console.log(document.getElementById('buttonStop'));
@@ -29,39 +24,71 @@ const addRateListeners = (options, updateRateCounter) => {
   });
 };
 exports.addRateListeners = addRateListeners;
-
-exports.addListeners = (options, mapPan, resizeWindow) => {
-  // let settingsWindow = {};
-  // document.getElementById('buttonSettings').addEventListener('click', function () {
-  //   if (options.settingsWindow === false) {
-  //     settingsWindow = makeSettingsWindow(options);
-  //     genSettingsWindow(options);
-  //     addRateListeners(options);
-  //     options.settingsWindow = true;
-  //   } else {
-  //     settingsWindow.close();//Find the thing, and close it
-  //   }
-  // });
+exports.addBoxSettingsListeners = (options, renderBoxSettings) => {
+  let boxSettingsSettings = {
+    isDragging: false,
+    xTransform: 10,
+    yTransform: 100,
+    xTransformPast: 0,
+    yTransformPast: 0,
+  };
+  document.getElementById('boxMainSettings').setAttribute(
+    'transform', 'translate(' + boxSettingsSettings.xTransform + ', ' + boxSettingsSettings.yTransform + ')'
+  );
+  document.getElementById('boxSettingsDragger').addEventListener('mousedown', e => {
+    if (e.which === 1 || e.which === 3) {
+      boxSettingsSettings.xTransformPast = e.offsetX;
+      boxSettingsSettings.yTransformPast = e.offsetY;
+      boxSettingsSettings.isDragging = true;
+    }
+  });
+  document.getElementById('content').addEventListener('mousemove', e => {
+    if (boxSettingsSettings.isDragging) {
+      boxSettingsSettings.xTransform += e.offsetX - boxSettingsSettings.xTransformPast;
+      boxSettingsSettings.yTransform += e.offsetY - boxSettingsSettings.yTransformPast;
+      if (boxSettingsSettings.xTransform > document.body.clientWidth - 160) {boxSettingsSettings.xTransform = document.body.clientWidth - 160;}
+      if (boxSettingsSettings.yTransform > document.body.clientHeight - 80) {boxSettingsSettings.yTransform = document.body.clientHeight - 80;}
+      if (boxSettingsSettings.xTransform < 0) {boxSettingsSettings.xTransform = 0;}
+      if (boxSettingsSettings.yTransform < 0) {boxSettingsSettings.yTransform = 0;}
+      boxSettingsSettings.xTransformPast = e.offsetX;
+      boxSettingsSettings.yTransformPast = e.offsetY;
+      document.getElementById('boxMainSettings').setAttribute(
+        'transform', 'translate(' + boxSettingsSettings.xTransform + ', ' + boxSettingsSettings.yTransform + ')'
+      );
+    }
+  });
+  window.addEventListener('mouseup', function () {
+    boxSettingsSettings.isDragging = false;
+  });
+  document.getElementById('boxSettingsCloser').addEventListener('click', function () {
+    options.boxSettings = false;
+    renderBoxSettings([]);
+  });
+};
+exports.addListeners = (options, mapPan, renderers) => {
+  document.getElementById('buttonSettings').addEventListener('click', function () {
+    if (options.boxSettings === false) {
+      options.boxSettings = true;
+      renderers.boxSettings();
+    } else {
+      options.boxSettings = false;
+      renderers.boxSettings();
+    }
+  });
   const checkKey = (e) => {
     if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
     else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}
     else if (e.keyCode == '37') {/* left arrow */   mapPan.x += options.keyPanStep;}
     else if (e.keyCode == '39') {/* right arrow */  mapPan.x -= options.keyPanStep;}
   };
-  // let isPaused = false;
   function pause() { options.isPaused = true; console.log('|| Paused');}
   function play() { options.isPaused = false; console.log('>> Unpaused');}
 
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
-
-  window.addEventListener('resize', function() {
-    resizeWindow();
-  });
-
-  document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
+  window.addEventListener('resize', function() {renderers.resizeWindow();});
+  // document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
   document.onkeydown = checkKey;
-
   let isPanning = false;
   let pastOffsetX = 0;
   let pastOffsetY = 0;
@@ -73,7 +100,7 @@ exports.addListeners = (options, mapPan, resizeWindow) => {
     }
   });
   document.getElementById('content').addEventListener('mousemove', e => {
-    if (isPanning === true) {
+    if (isPanning) {
       mapPan.x += e.offsetX - pastOffsetX;
       mapPan.y += e.offsetY - pastOffsetY;
       pastOffsetX = e.offsetX;
@@ -85,7 +112,6 @@ exports.addListeners = (options, mapPan, resizeWindow) => {
   window.addEventListener('mouseup', function () {
     isPanning = false;
   });
-
   document.getElementById('content').addEventListener('wheel', function (e) {
     const zoomStep = 10**(0.05*mapPan.zoom)-1;
     mapPan.cursOriginX = e.offsetX - mapPan.x;
@@ -97,4 +123,5 @@ exports.addListeners = (options, mapPan, resizeWindow) => {
       mapPan.zoomChange -= zoomStep;
     }
   }, {passive: true});
+  // document.
 };

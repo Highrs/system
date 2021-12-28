@@ -1,0 +1,82 @@
+// const PI = Math.PI;
+// const drawPolarGrid = (staro) => {
+//   let polarGrid = ['g', tt(staro.x, staro.y)];
+//
+//   for (let i = 1; i < 5; i++) {
+//     polarGrid.push(['circle', {r: 150 * i, class: 'grid'}]);
+//     for (let j = 0; j < 16; j++) {
+//       polarGrid.push(['line', {
+//         transform: 'rotate(' + ((360 / 16) * j) +')',
+//         x1: 150 * i + 15,
+//         x2: 150 * i - 5,
+//         class: 'grid'}]);
+//     }
+//   }
+//   return polarGrid;
+// };
+
+// const drawIndustryData = (body) => {
+//   let display = ['g', tt(10, -10)];
+//
+//   display.push(
+//     ['text', {
+//       x: 0,
+//       y: 6,
+//       class: 'dataText'
+//     }, 'IND:'],
+//     ['text', {
+//       x: 0,
+//       y: (body.industry.length + 2) * 6,
+//       class: 'dataText'
+//     }, 'STORE:']
+//   );
+//
+//   body.industry.forEach((e, idx) => {
+//     display.push(
+//       ['g', tt(0, 6),
+//         ['text', {
+//           x: 2,
+//           y: (idx + 1) * 6,
+//           class: 'dataText'
+//         }, e.abr +":" + e.status]
+//       ]
+//     );
+//   });
+//   Object.keys(body.store).forEach((e, idx) => {
+//     display.push(
+//       ['g', tt(0, 6),
+//         ['text', {x: 2,
+//           y: (body.industry.length + idx + 2) * 6,
+//           class: 'dataText'}, e.toUpperCase() + ':' + body.store[e].toFixed(0)
+//         ]
+//       ]
+//     );
+//   });
+//
+//   return display;
+// };
+
+// const drawHeader = (clock, options) => {
+//   if (options.header) {
+//     let header = ['g', tt(10, 20)];
+//
+//     for (let i = 0; i < lists.toDo().length; i++) {
+//       let hShift = lists.toDo()[i][0] === '-' ? 10 : 0;
+//       header.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.toDo(clock)[i] ]],);
+//     }
+//
+//     return header;
+//   }
+//   if (options.headerKeys) {
+//     let keys = ['g', tt(10, 20)];
+//
+//     for (let i = 0; i < lists.keys().length; i++) {
+//       let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
+//       keys.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.keys(clock)[i] ]],);
+//     }
+//
+//     return keys;
+//   }
+//   return;
+//
+// };

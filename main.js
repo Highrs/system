@@ -126,7 +126,7 @@ Window.options = {
   intercepts: true,
   keyPanStep: 50,
   isPaused: false,
-  settingsWindow: false
+  boxSettings: false
 };
 const options = Window.options;
 let mapPan = {
@@ -229,6 +229,7 @@ const main = async () => {
 
   let renderRateCounter = undefined;
   let renderScreenFrame = undefined;
+  let renderBoxSettings = undefined;
 
   const initRateRenderer = () => {
     renderRateCounter     = renderer(document.getElementById('rateCounter'));
@@ -246,7 +247,8 @@ const main = async () => {
       mapPan.interceptUpdated = false;
     };
     rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
-    renderScreenFrame   = renderer(document.getElementById('screenFrame'));
+    renderScreenFrame     = renderer(document.getElementById('screenFrame'));
+    renderBoxSettings     = renderer(document.getElementById('boxMainSettings'));
   };
 
 
@@ -259,9 +261,6 @@ const main = async () => {
     renderStars(drawMap.drawStars(stars, mapPan));
     renderGrid(drawMap.drawGrid(stars[0], mapPan));
   };
-  // const resizeFrame = () => {
-  //   renderScreenFrame(drawMap.drawScreenFrame(options));
-  // };
   const updateRateCounter = (options) => {
     renderRateCounter(drawMap.drawRateCounter(options));
   };
@@ -283,8 +282,21 @@ const main = async () => {
     updateRateCounter(options);
     ui.addRateListeners(options, updateRateCounter);
   };
+  const placecheckBoxSettings = () => {
+    if (options.boxSettings) {
+      renderBoxSettings(drawMap.drawBoxSettings());
+      ui.addBoxSettingsListeners(options, renderBoxSettings);
+    }
+    else {
+      renderBoxSettings([]);
+    }
+  };
+  let renderers = {
+    resizeWindow: resizeWindow,
+    boxSettings: placecheckBoxSettings
+  };
 
-  ui.addListeners(options, mapPan, resizeWindow);
+  ui.addListeners(options, mapPan, renderers);
   ui.addRateListeners(options, updateRateCounter);
 
 // <---------LOOP---------->

@@ -1,7 +1,6 @@
 'use strict';
 //What are you doing here? How did you get here? Leave.
 
-// const majObj = require('./majorObjects2.json');
 const getSvg = require('./get-svg.js');
 const tt = require('onml/tt.js');
 const mech = require('./mechanics.js');
@@ -14,24 +13,6 @@ function getPageWidth() {
 function getPageHeight() {
   return document.body.clientHeight;
 }
-
-// const PI = Math.PI;
-// const drawPolarGrid = (staro) => {
-//   let polarGrid = ['g', tt(staro.x, staro.y)];
-//
-//   for (let i = 1; i < 5; i++) {
-//     polarGrid.push(['circle', {r: 150 * i, class: 'grid'}]);
-//     for (let j = 0; j < 16; j++) {
-//       polarGrid.push(['line', {
-//         transform: 'rotate(' + ((360 / 16) * j) +')',
-//         x1: 150 * i + 15,
-//         x2: 150 * i - 5,
-//         class: 'grid'}]);
-//     }
-//   }
-//   return polarGrid;
-// };
-
 const drawGrid = (staro, mapPan) => {
   let grid = ['g', {}];
   let crossSize = 5 * mapPan.zoom;
@@ -139,46 +120,6 @@ const drawSimpleOrbit = (stations, mapPan) => {
 
   return retGroup;
 };
-// const drawIndustryData = (body) => {
-//   let display = ['g', tt(10, -10)];
-//
-//   display.push(
-//     ['text', {
-//       x: 0,
-//       y: 6,
-//       class: 'dataText'
-//     }, 'IND:'],
-//     ['text', {
-//       x: 0,
-//       y: (body.industry.length + 2) * 6,
-//       class: 'dataText'
-//     }, 'STORE:']
-//   );
-//
-//   body.industry.forEach((e, idx) => {
-//     display.push(
-//       ['g', tt(0, 6),
-//         ['text', {
-//           x: 2,
-//           y: (idx + 1) * 6,
-//           class: 'dataText'
-//         }, e.abr +":" + e.status]
-//       ]
-//     );
-//   });
-//   Object.keys(body.store).forEach((e, idx) => {
-//     display.push(
-//       ['g', tt(0, 6),
-//         ['text', {x: 2,
-//           y: (body.industry.length + idx + 2) * 6,
-//           class: 'dataText'}, e.toUpperCase() + ':' + body.store[e].toFixed(0)
-//         ]
-//       ]
-//     );
-//   });
-//
-//   return display;
-// };
 const drawBodyData = (bodyo) => {
   let dataDisp = ['g', {}];
 
@@ -237,30 +178,6 @@ const drawBelts = (belts, mapPan) => {
 
   return rocksDrawn;
 };
-// const drawHeader = (clock, options) => {
-//   if (options.header) {
-//     let header = ['g', tt(10, 20)];
-//
-//     for (let i = 0; i < lists.toDo().length; i++) {
-//       let hShift = lists.toDo()[i][0] === '-' ? 10 : 0;
-//       header.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.toDo(clock)[i] ]],);
-//     }
-//
-//     return header;
-//   }
-//   if (options.headerKeys) {
-//     let keys = ['g', tt(10, 20)];
-//
-//     for (let i = 0; i < lists.keys().length; i++) {
-//       let hShift = lists.keys()[i][0] === '-' ? 10 : 0;
-//       keys.push(['g', tt( hShift,  10 * i), [ 'text', {class: 'dataText'}, lists.keys(clock)[i] ]],);
-//     }
-//
-//     return keys;
-//   }
-//   return;
-//
-// };
 const drawStars = (stars, mapPan) =>{
   let drawnStars = ['g', {}];
   stars.forEach((staro) => {
@@ -454,6 +371,19 @@ exports.drawSimRateModule = drawSimRateModule;
 exports.drawRateCounter = (options) => {
   return ['text', {x: 10 - ((options.rate.toString().length / 2) * 3.25), y: 7,class: 'dataText bold'}, options.rate];
 };
+exports.drawBoxSettings = () => {
+  let box = ['g', {}];
+
+  box.push(['rect', {height: 80, width: 160, class:'standardBox'}]);
+  box.push(['rect', {height: 10, width: 150, class:'standardBoxSelectable', id:'boxSettingsDragger'}]);
+  box.push(['g', tt(150, 0, {id: 'boxSettingsCloser', class:'standardBoxSelectable'}),
+    ['rect', {height: 10, width: 10}],
+    ['path', {d: 'M 2, 2 L 8, 8', class: 'standardLine'}],
+    ['path', {d: 'M 2, 8 L 8, 2', class: 'standardLine'}]
+  ]);
+
+  return box;
+};
 
 exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
   let rangeCandidates = [...planets, ...moons, ...ast];
@@ -516,6 +446,9 @@ exports.drawStatic = (options, stars) => {
       ['g', {id: 'moving'}],
       ['g', {id: 'intercept'}]
     ],
-    ['g', {id: 'screenFrame'}]
+    ['g', {id: 'screenFrame'}],
+    ['g', {id: 'boxes'},
+      ['g', {id: 'boxMainSettings'}]
+    ]
   ]);
 };
