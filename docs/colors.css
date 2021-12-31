@@ -5,6 +5,7 @@ html, body {
   overflow: hidden;
   cursor: crosshair;
 }
+/* document { font-size:14px; } */
 #content {
   height: 100%;
   margin: 0;
@@ -46,12 +47,12 @@ html, body {
 }
 .symbolLine {
   fill: none;
-  stroke-width: 1px;
+  stroke-width: 2px;
   stroke: #a3a3a3ff;
   fill: #363636;
 }
 .grid {
-  stroke-width: 0.2px;
+  stroke-width: 0.5px;
   stroke: #a3a3a3ff;
   fill: none;
 }
@@ -66,12 +67,12 @@ html, body {
   fill: #363636;
 }
 .dataLine {
-  stroke-width: 0.5px;
+  stroke-width: 2px;
   stroke: #c3c3c3ff;
   fill: none;
 }
 .dataText {
-  font: 5px B612 Mono;
+  font: 1rem B612 Mono;
   stroke: none;
   fill: #ffffffff;
   user-select: none;
@@ -85,7 +86,7 @@ html, body {
   fill: #363636;
 }
 .rangeText {
-  font: 5px B612 Mono;
+  font: 1rem B612 Mono;
   fill: #a3a3a3ff;
   user-select: none;
   /* width: auto; */
@@ -109,7 +110,7 @@ html, body {
   stroke: #00ff66ff;
 }
 .craftDataText {
-  font: 5px B612 Mono;
+  font: 1rem B612 Mono;
   stroke: none;
   fill: #ffffffff;
   user-select: none;
@@ -139,7 +140,7 @@ html, body {
 }
 .frame {
   fill: none;
-  stroke-width: 0.25px;
+  stroke-width: 1px;
   stroke: #ffffffff;
 }
 .standardBox{
@@ -159,5 +160,15 @@ html, body {
 .standardLine {
   fill: none;
   stroke-width: 0.5px;
+  stroke: #ffffffff;
+}
+.scaleEmpty {
+  fill: #363636;
+  stroke-width: 1px;
+  stroke: #ffffffff;
+}
+.scaleFull {
+  fill: #ffffffff;
+  stroke-width: 1px;
   stroke: #ffffffff;
 }

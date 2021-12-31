@@ -119,6 +119,9 @@ Window.options = {
   simRates: [0, 0.1, 0.5, 1, 2, 3, 5, 10],
   targetFrames: 30,
   header: false,
+  grid: true,
+  gridStep: 10,
+  gridCrossSize: 5,
   headerKeys: true,
   planetData: true,
   craftData: true,
@@ -126,7 +129,7 @@ Window.options = {
   intercepts: true,
   keyPanStep: 50,
   isPaused: false,
-  boxSettings: false
+  boxSettings: false,
 };
 const options = Window.options;
 let mapPan = {
@@ -158,10 +161,10 @@ const updatePan = (mapPan) => {
 const updateZoom = (mapPan) => {
   // Updates Zoom (WHO WHOULDA THOUGHT?)
   if (mapPan.zoomChange != 0) {
-    if (mapPan.zoom + mapPan.zoomChange < 0.5) {
-      mapPan.zoom = 0.5;
-    } else if (mapPan.zoom + mapPan.zoomChange > 5) {
-      mapPan.zoom = 5;
+    if (mapPan.zoom + mapPan.zoomChange < 1) {
+      mapPan.zoom = 1;
+    } else if (mapPan.zoom + mapPan.zoomChange > 20) {
+      mapPan.zoom = 20;
     } else {
       mapPan.zoom += mapPan.zoomChange;
     }
@@ -218,18 +221,18 @@ const main = async () => {
 
   craftStart(craftList);
 
-  let renderStatic = undefined;
-  let renderStaticOrbits = undefined;
-  let renderStars = undefined;
-  let renderGrid = undefined;
-  let renderMoving = undefined;
-  let rendererIntercept = undefined;
-  let interceptDraw = () => {};
-  let rendererMovingOrbits = undefined;
+  let renderStatic          = undefined;
+  let renderStaticOrbits    = undefined;
+  let renderStars           = undefined;
+  let renderGrid            = undefined;
+  let renderMoving          = undefined;
+  let rendererIntercept     = undefined;
+  let rendererMovingOrbits  = undefined;
 
-  let renderRateCounter = undefined;
-  let renderScreenFrame = undefined;
-  let renderBoxSettings = undefined;
+  let renderRateCounter     = undefined;
+  let renderScreenFrame     = undefined;
+  let renderBoxSettings     = undefined;
+  let renderGridScaleBar    = undefined;
 
   const initRateRenderer = () => {
     renderRateCounter     = renderer(document.getElementById('rateCounter'));
@@ -241,14 +244,13 @@ const main = async () => {
     renderStars           = renderer(document.getElementById('stars'));
     renderGrid            = renderer(document.getElementById('grid'));
     renderMoving          = renderer(document.getElementById('moving'));
+
     rendererIntercept     = renderer(document.getElementById('intercept'));
-    interceptDraw         = () => {
-      rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
-      mapPan.interceptUpdated = false;
-    };
+
     rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
     renderScreenFrame     = renderer(document.getElementById('screenFrame'));
     renderBoxSettings     = renderer(document.getElementById('boxMainSettings'));
+    renderGridScaleBar    = renderer(document.getElementById('gridScaleBar'));
   };
 
 
@@ -256,19 +258,26 @@ const main = async () => {
   mapPan.x = document.body.clientWidth / 2;
   mapPan.y = document.body.clientHeight / 2;
 
-  const renderAllMoving = (options, stars, planets, mapPan) => {
+  function reReRenderScaleBar(options, mapPan) {
+    renderGridScaleBar(drawMap.drawGridScaleBar(options, mapPan));
+  }
+  const renderAllResizedStatics = (options, stars, planets, mapPan) => {
     renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
     renderStars(drawMap.drawStars(stars, mapPan));
-    renderGrid(drawMap.drawGrid(stars[0], mapPan));
+    renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
   };
   const updateRateCounter = (options) => {
     renderRateCounter(drawMap.drawRateCounter(options));
+  };
+  const interceptDraw = () => {
+    rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
+    mapPan.interceptUpdated = false;
   };
 
   initRenderers();
   renderScreenFrame(drawMap.drawScreenFrame(options));
   initRateRenderer();
-  renderAllMoving(options, stars, planets, mapPan);
+  renderAllResizedStatics(options, stars, planets, mapPan);
   updateRateCounter(options);
 
   const resizeWindow = () => {
@@ -323,9 +332,11 @@ const main = async () => {
 
       if (updateZoom(mapPan)) {
         mapPan.interceptUpdated = true;
-        renderAllMoving(options, stars, planets, mapPan);
+        renderAllResizedStatics(options, stars, planets, mapPan);
       }
-      updatePan(mapPan);
+      if (updatePan(mapPan)) {
+        renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
+      }
 
       renderMoving(
         drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,

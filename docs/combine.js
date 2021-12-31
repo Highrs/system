@@ -449,58 +449,77 @@ const mech = require('./mechanics.js');
 const icons = require('./icons.js');
 const lists = require('./lists.js');
 
-function getPageWidth() {
-  return document.body.clientWidth;
-}
-function getPageHeight() {
-  return document.body.clientHeight;
-}
-const drawGrid = (staro, mapPan) => {
+function getPageWidth() {return document.body.clientWidth;}
+function getPageHeight() {return document.body.clientHeight;}
+const drawGrid = (mapPan, options, reReRenderScaleBar) => {
   let grid = ['g', {}];
-  let crossSize = 5 * mapPan.zoom;
-  if (crossSize < 1) {crossSize = 1;}
+  let actualGridStep = options.gridStep * mapPan.zoom;
+  if (actualGridStep < 100) {actualGridStep *= 10;}
 
-  for (let x = 0 + staro.x%100; ((x <= getPageWidth()) && (x <= 1000 * mapPan.zoom)); x += 100 * mapPan.zoom) {
-    for (let y = 0 + staro.y%100; ((y <= getPageHeight()) && (y <= 1000 * mapPan.zoom) ); y += 100 * mapPan.zoom) {
+  let gridRectStartX = - mapPan.x + (mapPan.x) % (actualGridStep) - actualGridStep;
+  let gridRectStartY = - mapPan.y + (mapPan.y) % (actualGridStep) - actualGridStep;
+  let gridRectEndX = gridRectStartX + getPageWidth() + actualGridStep * 2;
+  let gridRectEndY = gridRectStartY + getPageHeight() + actualGridStep * 2;
+
+  for (let x = gridRectStartX; x < (gridRectEndX); x += actualGridStep) {
+    for (let y = gridRectStartY; y < (gridRectEndY); y += actualGridStep) {
       grid.push(
-        icons.gridCross(crossSize,  x,  y),
-        icons.gridCross(crossSize, -x,  y),
-        icons.gridCross(crossSize,  x, -y),
-        icons.gridCross(crossSize, -x, -y)
+        icons.gridCross(options.gridCrossSize,  x,  y)
       );
     }
-
-    grid.push(
-      ['line', {
-        x1: staro.x,
-        y1: x + 10 * mapPan.zoom,
-        x2: staro.x,
-        y2: x + 90 * mapPan.zoom,
-        class: 'grid'}],
-      ['line', {
-        x1: staro.x,
-        y1: - x - 10 * mapPan.zoom,
-        x2: staro.x,
-        y2: - x - 90 * mapPan.zoom,
-        class: 'grid'}],
-      ['line', {
-        x1: x + 10 * mapPan.zoom,
-        y1: staro.y,
-        x2: x + 90 * mapPan.zoom,
-        y2: staro.y,
-        class: 'grid'}],
-      ['line', {
-        x1: - x - 10 * mapPan.zoom,
-        y1: staro.y,
-        x2: - x - 90 * mapPan.zoom,
-        y2: staro.y,
-        class: 'grid'}]
-  );
   }
+
+  reReRenderScaleBar(options, mapPan);
+
+
 
   return grid;
 };
 exports.drawGrid = drawGrid;
+exports.drawGridScaleBar = (options, mapPan) => {
+  let actualGridStep = options.gridStep * mapPan.zoom;
+  let gridStep = actualGridStep;
+  let label = "10";
+  if (actualGridStep < 100) {
+    gridStep = actualGridStep *= 10;
+    label = "100";
+  }
+  let stepTenth = gridStep / 10;
+  let bar = ['g', tt(10, (getPageHeight()-30-10))];
+
+  bar.push(['rect', {y: 10, height: 20, width: gridStep + 10, class:'standardBox'}]);
+
+
+  for (let i = 0; i < 10; i+= 2) {
+    bar.push(['g', tt(i * (stepTenth) + 5, 15),
+      ['path', {
+        d: 'M 0,0 L '+ (stepTenth) + ', 0 L '+ (stepTenth) + ', 7 L 0, 7 Z',
+        class:'scaleEmpty',
+      }]
+    ]);
+    bar.push(['g', tt((i + 1) * (stepTenth) + 5, 20),
+      ['path', {
+        d: 'M 0,-2 L '+ (stepTenth) + ', -2 L '+ (stepTenth) + ', 5 L 0, 5 Z',
+        class:'scaleFull',
+      }]
+    ]);
+  }
+
+  bar.push(['g', tt(0,-10),
+    ['rect', {height: 20, width: 20, class:'standardBox'}],
+    ['text', {y: 15.5, x: 4.5, class:'craftDataText'}, "0"]
+  ]);
+  bar.push(['g', tt(20,-10),
+    ['rect', {height: 20, width: 40, class:'standardBox'}],
+    ['text', {y: 15.5, x: 4.5, class:'craftDataText'}, "Mkm"]
+  ]);
+  bar.push(['g', tt(gridStep - 30, -10),
+    ['rect', {height: 20, width: 40, class:'standardBox'}],
+    ['text', {y: 15.5, x: 4.5, class:'craftDataText'}, label]
+  ]);
+
+  return bar;
+};
 const drawOrbits = (bodies, mapPan) => {
   if (bodies.length < 1) {return ['g', {}];}
 
@@ -889,6 +908,7 @@ exports.drawStatic = (options, stars) => {
       ['g', {id: 'intercept'}]
     ],
     ['g', {id: 'screenFrame'}],
+    ['g', {id: 'gridScaleBar'}],
     ['g', {id: 'boxes'},
       ['g', {id: 'boxMainSettings'}]
     ]
@@ -1529,6 +1549,9 @@ Window.options = {
   simRates: [0, 0.1, 0.5, 1, 2, 3, 5, 10],
   targetFrames: 30,
   header: false,
+  grid: true,
+  gridStep: 10,
+  gridCrossSize: 5,
   headerKeys: true,
   planetData: true,
   craftData: true,
@@ -1536,7 +1559,7 @@ Window.options = {
   intercepts: true,
   keyPanStep: 50,
   isPaused: false,
-  boxSettings: false
+  boxSettings: false,
 };
 const options = Window.options;
 let mapPan = {
@@ -1568,10 +1591,10 @@ const updatePan = (mapPan) => {
 const updateZoom = (mapPan) => {
   // Updates Zoom (WHO WHOULDA THOUGHT?)
   if (mapPan.zoomChange != 0) {
-    if (mapPan.zoom + mapPan.zoomChange < 0.5) {
-      mapPan.zoom = 0.5;
-    } else if (mapPan.zoom + mapPan.zoomChange > 5) {
-      mapPan.zoom = 5;
+    if (mapPan.zoom + mapPan.zoomChange < 1) {
+      mapPan.zoom = 1;
+    } else if (mapPan.zoom + mapPan.zoomChange > 20) {
+      mapPan.zoom = 20;
     } else {
       mapPan.zoom += mapPan.zoomChange;
     }
@@ -1628,18 +1651,18 @@ const main = async () => {
 
   craftStart(craftList);
 
-  let renderStatic = undefined;
-  let renderStaticOrbits = undefined;
-  let renderStars = undefined;
-  let renderGrid = undefined;
-  let renderMoving = undefined;
-  let rendererIntercept = undefined;
-  let interceptDraw = () => {};
-  let rendererMovingOrbits = undefined;
+  let renderStatic          = undefined;
+  let renderStaticOrbits    = undefined;
+  let renderStars           = undefined;
+  let renderGrid            = undefined;
+  let renderMoving          = undefined;
+  let rendererIntercept     = undefined;
+  let rendererMovingOrbits  = undefined;
 
-  let renderRateCounter = undefined;
-  let renderScreenFrame = undefined;
-  let renderBoxSettings = undefined;
+  let renderRateCounter     = undefined;
+  let renderScreenFrame     = undefined;
+  let renderBoxSettings     = undefined;
+  let renderGridScaleBar    = undefined;
 
   const initRateRenderer = () => {
     renderRateCounter     = renderer(document.getElementById('rateCounter'));
@@ -1651,14 +1674,13 @@ const main = async () => {
     renderStars           = renderer(document.getElementById('stars'));
     renderGrid            = renderer(document.getElementById('grid'));
     renderMoving          = renderer(document.getElementById('moving'));
+
     rendererIntercept     = renderer(document.getElementById('intercept'));
-    interceptDraw         = () => {
-      rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
-      mapPan.interceptUpdated = false;
-    };
+
     rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
     renderScreenFrame     = renderer(document.getElementById('screenFrame'));
     renderBoxSettings     = renderer(document.getElementById('boxMainSettings'));
+    renderGridScaleBar    = renderer(document.getElementById('gridScaleBar'));
   };
 
 
@@ -1666,19 +1688,26 @@ const main = async () => {
   mapPan.x = document.body.clientWidth / 2;
   mapPan.y = document.body.clientHeight / 2;
 
-  const renderAllMoving = (options, stars, planets, mapPan) => {
+  function reReRenderScaleBar(options, mapPan) {
+    renderGridScaleBar(drawMap.drawGridScaleBar(options, mapPan));
+  }
+  const renderAllResizedStatics = (options, stars, planets, mapPan) => {
     renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
     renderStars(drawMap.drawStars(stars, mapPan));
-    renderGrid(drawMap.drawGrid(stars[0], mapPan));
+    renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
   };
   const updateRateCounter = (options) => {
     renderRateCounter(drawMap.drawRateCounter(options));
+  };
+  const interceptDraw = () => {
+    rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
+    mapPan.interceptUpdated = false;
   };
 
   initRenderers();
   renderScreenFrame(drawMap.drawScreenFrame(options));
   initRateRenderer();
-  renderAllMoving(options, stars, planets, mapPan);
+  renderAllResizedStatics(options, stars, planets, mapPan);
   updateRateCounter(options);
 
   const resizeWindow = () => {
@@ -1733,9 +1762,11 @@ const main = async () => {
 
       if (updateZoom(mapPan)) {
         mapPan.interceptUpdated = true;
-        renderAllMoving(options, stars, planets, mapPan);
+        renderAllResizedStatics(options, stars, planets, mapPan);
       }
-      updatePan(mapPan);
+      if (updatePan(mapPan)) {
+        renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
+      }
 
       renderMoving(
         drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
