@@ -451,6 +451,19 @@ const lists = require('./lists.js');
 
 function getPageWidth() {return document.body.clientWidth;}
 function getPageHeight() {return document.body.clientHeight;}
+const boundsCheck = (x, y, margin = 10) => {
+  if (
+    x + margin > 0 &&
+    x - margin < getPageWidth() &&
+    y + margin > 0 &&
+    y - margin < getPageHeight()
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
 const drawGrid = (mapPan, options, reReRenderScaleBar) => {
   let grid = ['g', {}];
   let actualGridStep = options.gridStep * mapPan.zoom;
@@ -471,8 +484,6 @@ const drawGrid = (mapPan, options, reReRenderScaleBar) => {
 
   reReRenderScaleBar(options, mapPan);
 
-
-
   return grid;
 };
 exports.drawGrid = drawGrid;
@@ -485,7 +496,7 @@ exports.drawGridScaleBar = (options, mapPan) => {
     label = "100";
   }
   let stepTenth = gridStep / 10;
-  let bar = ['g', tt(10, (getPageHeight()-30-10))];
+  let bar = ['g', tt(5, (getPageHeight()-30-5))];
 
   bar.push(['rect', {y: 10, height: 20, width: gridStep + 10, class:'standardBox'}]);
 
@@ -524,35 +535,35 @@ const drawOrbits = (bodies, mapPan) => {
   if (bodies.length < 1) {return ['g', {}];}
 
   let retGroup = ['g', {}];
+  const zoom = mapPan.zoom;
 
   bodies.forEach(bodyo => {
-    let partOrbit = ['g', tt(bodyo.primaryo.x * mapPan.zoom, bodyo.primaryo.y * mapPan.zoom)];
+    let partOrbit = ['g', tt(bodyo.primaryo.x * zoom, bodyo.primaryo.y * zoom)];
     let coords = 'M ';
 
     for (let i = 0; i < bodyo.orbitPointsArr.length; i++) {
       let currCoord = bodyo.orbitPointsArr[i];
-      let currX = currCoord.ax * mapPan.zoom;
-      let currY = currCoord.ay * mapPan.zoom;
+      let currX = currCoord.ax * zoom;
+      let currY = currCoord.ay * zoom;
 
       coords += currX + ',' + currY;
       (i === bodyo.orbitPointsArr.length - 1)?(coords += 'Z'):(coords += 'L');
     }
 
-    partOrbit.push(['path',
-      { d: coords, class: 'majorOrbit' }]);
+    partOrbit.push(['path', { d: coords, class: 'majorOrbit' }]);
     partOrbit.push(['line',
       {
-        x1: bodyo.orbitDivLine[0].ax * mapPan.zoom,
-        y1: bodyo.orbitDivLine[0].ay * mapPan.zoom,
-        x2: bodyo.orbitDivLine[1].ax * mapPan.zoom,
-        y2: bodyo.orbitDivLine[1].ay * mapPan.zoom,
+        x1: bodyo.orbitDivLine[0].ax * zoom,
+        y1: bodyo.orbitDivLine[0].ay * zoom,
+        x2: bodyo.orbitDivLine[1].ax * zoom,
+        y2: bodyo.orbitDivLine[1].ay * zoom,
         class: 'orbitDivLine'
       }]);
     partOrbit.push(
-      ['g', tt(bodyo.orbitDivLine[0].ax * mapPan.zoom, bodyo.orbitDivLine[0].ay * mapPan.zoom),
+      ['g', tt(bodyo.orbitDivLine[0].ax * zoom, bodyo.orbitDivLine[0].ay * zoom),
         icons.apsis('-')
       ],
-      ['g', tt(bodyo.orbitDivLine[1].ax * mapPan.zoom, bodyo.orbitDivLine[1].ay * mapPan.zoom),
+      ['g', tt(bodyo.orbitDivLine[1].ax * zoom, bodyo.orbitDivLine[1].ay * zoom),
         icons.apsis()
       ]
     );
@@ -569,13 +580,9 @@ const drawSimpleOrbit = (stations, mapPan) => {
 
   stations.forEach(e => {
     retGroup.push(
-      ['g', tt(e.px * mapPan.zoom, e.py * mapPan.zoom), [
-        'circle',
-        {
-          r : e.a * mapPan.zoom,
-          class: 'minorOrbit'
-        }
-      ]]
+      ['g', tt(e.px * mapPan.zoom, e.py * mapPan.zoom),
+        ['circle', {r : e.a * mapPan.zoom, class: 'minorOrbit'}]
+      ]
     );
   });
 
@@ -585,16 +592,14 @@ const drawBodyData = (bodyo) => {
   let dataDisp = ['g', {}];
 
   dataDisp.push(
-    ['path', {d: 'M 0,0 L 10, -10 L 25, -10', class: 'dataLine'}],
-    ['text', {x: 10, y: -11, class: 'dataText'}, bodyo.name]
-    // ['text', {x: 10, y: 2, class: 'dataText'},
-    //   (bodyo.x).toFixed(0) + ',' +
-    //   (bodyo.y).toFixed(0) + ',' +
-    //   (bodyo.z).toFixed(0)
-    // ]
+    ['path', {d: 'M 0,0 L 20, -20 L 80, -20', class: 'dataLine'}],
+    ['text', {x: 20, y: -22, class: 'dataText'}, bodyo.name],
+    ['text', {x: 20, y: -10, class: 'rangeText'},
+      (bodyo.x).toFixed(0) + ',' +
+      (bodyo.y).toFixed(0) + ',' +
+      (bodyo.z).toFixed(0)
+    ]
   );
-
-  // if (bodyo.industry) { dataDisp.push(drawIndustryData(bodyo)); }
 
   return dataDisp;
 };
@@ -602,11 +607,15 @@ const drawBodies = (bodies, options, mapPan) => {
   if (bodies.length < 1) {return ['g', {}];}
   const bodiesDrawn = ['g', {}];
   bodies.forEach (bodyo =>{
-    let partBody = ['g', tt(bodyo.x * mapPan.zoom, bodyo.y * mapPan.zoom)];
-    if (options.planetData) {partBody.push(drawBodyData(bodyo));}
+    if (boundsCheck(bodyo.x * mapPan.zoom + mapPan.x, bodyo.y * mapPan.zoom + mapPan.y, bodyo.objectRadius * 3)) {
+      let partBody = ['g', tt(bodyo.x * mapPan.zoom, bodyo.y * mapPan.zoom)];
+      if (options.planetData) {
+        partBody.push(drawBodyData(bodyo));
+      }
 
-    partBody.push(icons.body(bodyo, mapPan));
-    bodiesDrawn.push(partBody);
+      partBody.push(icons.body(bodyo, mapPan));
+      bodiesDrawn.push(partBody);
+    }
   });
   return bodiesDrawn;
 };
@@ -614,12 +623,14 @@ const drawStations = (stations, options, mapPan) => {
   if (stations.length < 1) {return ['g', {}];}
   const stationsDrawn = ['g', {}];
   stations.forEach(stationo => {
-    for (let i = 0; i < stations.length; i++) {
-      let partStation = ['g', tt((stationo.x * mapPan.zoom), (stationo.y * mapPan.zoom))];
-      if (options.planetData) {partStation.push(['g', {}, drawBodyData(stationo),]);}
+    if (boundsCheck(stationo.x * mapPan.zoom + mapPan.x, stationo.y * mapPan.zoom + mapPan.y, 30)) {
+      for (let i = 0; i < stations.length; i++) {
+        let partStation = ['g', tt((stationo.x * mapPan.zoom), (stationo.y * mapPan.zoom))];
+        if (options.planetData) {partStation.push(['g', {}, drawBodyData(stationo),]);}
 
-      partStation.push(icons.station(stationo, mapPan));
-      stationsDrawn.push(partStation);
+        partStation.push(icons.station(stationo, mapPan));
+        stationsDrawn.push(partStation);
+      }
     }
   });
 
@@ -631,9 +642,11 @@ const drawBelts = (belts, mapPan) => {
 
   belts.forEach(e => {
     e.rocks.forEach(rocko => {
-      rocksDrawn.push(
-        ['g', tt(rocko.x * mapPan.zoom, rocko.y * mapPan.zoom), icons.body(rocko, mapPan)]
-      );
+      if (boundsCheck(rocko.x * mapPan.zoom + mapPan.x, rocko.y * mapPan.zoom + mapPan.y, rocko.objectRadius * 3)) {
+        rocksDrawn.push(
+          ['g', tt(rocko.x * mapPan.zoom, rocko.y * mapPan.zoom), icons.body(rocko, mapPan)]
+        );
+      }
     });
   });
 
@@ -674,41 +687,43 @@ const drawCraft = (listOfCraft, options, mapPan) => {
 
   listOfCraft.forEach(crafto => {
     if (crafto.status === 'traveling' || crafto.status === 'drifting') {
-      let partCraft = ['g', tt((crafto.x * mapPan.zoom), (crafto.y * mapPan.zoom))];
+      if (boundsCheck(crafto.x * mapPan.zoom + mapPan.x, crafto.y * mapPan.zoom + mapPan.y, 30)) {
+        let partCraft = ['g', tt((crafto.x * mapPan.zoom), (crafto.y * mapPan.zoom))];
 
-      // Accel Indicator
-      partCraft.push(
-        icons.thrustVector(crafto)
-      );
+        // Accel Indicator
+        partCraft.push(
+          icons.thrustVector(crafto)
+        );
 
-      // Vector Line
-      partCraft.push(
-        ['line', {
-          x1: 0,
-          y1: 0,
-          x2: crafto.vx,
-          y2: crafto.vy,
-          class: 'vector'
-        }],
-        ['g', tt(crafto.vx, crafto.vy), [
-          'circle',
-          {r : 1, class: 'vector'}
-        ]]
-      );
+        // Vector Line
+        partCraft.push(
+          ['line', {
+            x1: 0,
+            y1: 0,
+            x2: crafto.vx,
+            y2: crafto.vy,
+            class: 'vector'
+          }],
+          ['g', tt(crafto.vx, crafto.vy), [
+            'circle',
+            {r : 2, class: 'vector'}
+          ]]
+        );
 
-      // Data Display
-      if (options.craftData) { partCraft.push(drawCraftData(crafto)); }
+        // Data Display
+        if (options.craftData) { partCraft.push(drawCraftData(crafto)); }
 
-      // Craft Icon Itself
-      partCraft.push(
-        ['g', {},
-          ['g', {transform: 'rotate(' + crafto.course + ')'},
-            icons.craft(crafto)
+        // Craft Icon Itself
+        partCraft.push(
+          ['g', {},
+            ['g', {transform: 'rotate(' + crafto.course + ')'},
+              icons.craft(crafto)
+            ]
           ]
-        ]
-      );
+        );
 
-      drawnCraft.push(partCraft);
+        drawnCraft.push(partCraft);
+      }
     }
   });
 
@@ -734,16 +749,17 @@ const drawRanges = (bodyArr, mapPan) => {
           let dist = mech.calcDist(bodyArr[i], bodyArr[j]);
 
           windowsDrawn.push(['g',
-          tt((((bodyArr[j].x) + (bodyArr[i].x)) / 2 - 11) * mapPan.zoom,
-            (((bodyArr[j].y) + (bodyArr[i].y)) / 2 - 2.25) * mapPan.zoom),
+          tt((((bodyArr[j].x) + (bodyArr[i].x)) / 2) * mapPan.zoom,
+            (((bodyArr[j].y) + (bodyArr[i].y)) / 2) * mapPan.zoom),
+            ['circle', {r: 2, class: 'rangeWindow'}],
             ['rect', {
-              width: 22,
-              height: 6.5,
+              width: 42,
+              height: 10,
               class: 'rangeWindow'
             }],
             ['text', {
-              x: 1,
-              y: 5,
+              x: 2,
+              y: 8.5,
               class: 'rangeText'}, (dist).toFixed(2)]
           ]);
         }
@@ -760,26 +776,29 @@ const drawMovingOrbits = (moons, mapPan) => {
 exports.drawScreenFrame = (options) => {
   let frame = ['g', {}];
 
-  if (options.headerKeys) {
-    let keys = ['g', tt(4, 4)];
+  // if (options.headerKeys) {
+  //   let keys = ['g', tt(4, 4)];
+  //
+  //   keys.push(['rect', {width: 170, height: lists.keys().length * 15 + 4, class: 'standardBox'}]);
+  //
+  //   for (let i = 0; i < lists.keys().length; i++) {
+  //     keys.push(['g', tt(2,  16 * i + 14), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
+  //   }
+  //
+  //   frame.push(keys);
+  // }
 
-    keys.push(['rect', {width: 68, height: lists.keys().length * 6 + 3, class: 'standardBox'}]);
-
-    for (let i = 0; i < lists.keys().length; i++) {
-      keys.push(['g', tt(2,  6 * i + 6), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
-    }
-
-    frame.push(keys);
-  }
-
-  frame.push( ['g', tt(4,40),
+  frame.push( ['g', tt(4,4),
     ['g', tt(0, 0, {id:'buttonSettings', class: 'standardBoxSelectable'}),
-      ['rect', {width: 10, height: 10}]
-      // icons.arrow(2, true),
+      ['rect', {width: 30, height: 30}],
+      ['g', tt(15,15),
+        ['path', {d:'M 8 -9 A 12 12 0 1 1 -8 -9', class:'UIcon'}],
+        ['path', {d:'M 0, 0 L 0, -13', class:'UIcon'}]
+      ]
     ]
   ]);
 
-  frame.push(drawSimRateModule());
+  // frame.push(drawSimRateModule(4, 80));
 
   frame.push( ['g', {},
     ['path',
@@ -798,39 +817,42 @@ exports.drawScreenFrame = (options) => {
 
   return frame;
 };
-const drawSimRateModule = () => {
+const drawSimRateModule = (x, y) => {
+  let btSz = 30;
+  let mrgn = 3;
   return ['g', {id: 'simRateModule'},
     // ['rect', {width: 10, height: 2, class: 'standardBox'}],
-    ['g', tt(4,28),
+    ['g', tt(x,y),
       ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
-        ['rect', {width: 10, height: 10}],
-        ['path', { d: 'M 4, 2 L 4, 8', class: 'standardLine'}],
-        ['path', { d: 'M 6, 2 L 6, 8', class: 'standardLine'}],
+        ['rect', {width: btSz, height: btSz}],
+        ['path', { d: 'M 6, 4 L 6, 16', class: 'standardLine'}],
+        ['path', { d: 'M 12, 4 L 12, 16', class: 'standardLine'}],
         // icons.arrow(2, true),
       ],
-      ['g', tt(12,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
-        ['rect', {width: 10, height: 10}],
-        icons.arrow(1, true)
+      ['g', tt(btSz+mrgn,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
+        ['rect', {width: btSz, height: btSz}],
+        icons.arrow(2, true)
       ],
-      ['g', tt(24,0, {id:'simRateDisplay', class: 'standardBox'}),
-        ['rect', {width: 20, height: 10}],
+      ['g', tt((btSz+mrgn)*2,0, {id:'simRateDisplay', class: 'standardBox'}),
+        ['rect', {width: btSz, height: btSz}],
         ['g', {id: 'rateCounter'}]
       ],
-      ['g', tt(46,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
-        ['rect', {width: 10, height: 10}],
-        icons.arrow(-1, false)
+      ['g', tt((btSz+mrgn)*3,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
+        ['rect', {width: btSz, height: btSz}],
+        icons.arrow(-2, false)
       ],
-      ['g', tt(58,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
-        ['rect', {width: 10, height: 10}],
-        icons.arrow(-0.5, false),
-        icons.arrow(-2.5, false),
+      ['g', tt((btSz+mrgn)*4,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
+        ['rect', {width: btSz, height: btSz}],
+        icons.arrow(0, false),
+        icons.arrow(-5, false),
       ]
     ]
   ];
 };
 exports.drawSimRateModule = drawSimRateModule;
 exports.drawRateCounter = (options) => {
-  return ['text', {x: 10 - ((options.rate.toString().length / 2) * 3.25), y: 7,class: 'dataText bold'}, options.rate];
+  return ['text', {x: 11, y: 15,class: 'dataText bold'}, options.rate];
+  //options.rate.toString().length
 };
 exports.drawBoxSettings = () => {
   let box = ['g', {}];
@@ -1010,15 +1032,13 @@ module.exports = {
 
     tempBod.push(
       ['circle', {
-        r: bodyo.objectRadius * 4,
+        r: bodyo.objectRadius * 8,
         fill: "url(#RadialGradient2)"
       }],
-      ['g', {},
-        ['circle', {
-          r: bodyo.objectRadius,
-          class: bodyo.industry?'majorObject':'minorObject'
-        }]
-      ]
+      ['circle', {
+        r: bodyo.objectRadius * 2,
+        class: bodyo.industry?'majorObject':'minorObject'
+      }]
     );
 
     return tempBod;
@@ -1074,7 +1094,11 @@ module.exports = {
   apsis: (m = '') => (
     ['g', {},
       ['path', {
-        d: 'M -2,'+m+'5 L 0,0 L 2,'+m+'5 Z',
+        d: 'M -3,'+m+'10 L 0,0 L 3,'+m+'10 Z',
+        class: 'symbolLine'
+      }],
+      ['circle', {
+        r:2.5,
         class: 'symbolLine'
       }]
     ]
@@ -1099,11 +1123,11 @@ module.exports = {
 
     return ['g', {},
       ['circle', {
-        r: 10,
+        r: 20,
         fill: "url(#EngineFlare)"
       }],
       ['path', {
-        transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + ')',
+        transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + '), scale(2, 2)',
         d: iconString,
         class: 'craft'
       }]
@@ -1136,7 +1160,7 @@ module.exports = {
 
     retStat.push(
       ['path', {
-        transform: 'rotate(' + stationo.orient + ')',
+        transform: 'rotate(' + stationo.orient + '), scale(2, 2)',
         d: iconString,
         class: 'station'
       }]
@@ -1152,7 +1176,7 @@ module.exports = {
 
     drawnVector.push(
       ['path', {
-        d: 'M 0,0 L -1, '+(-crafto.accel*4)+' L 1, '+(-crafto.accel*4)+' Z',
+        d: 'M 0,0 L -2, '+(-crafto.accel*8)+' L 2, '+(-crafto.accel*8)+' Z',
         class: 'vector'
       }],
     );
@@ -1176,7 +1200,7 @@ module.exports = {
   },
 
   arrow: (hOffset = 0, mirror = false) => {
-    return ['path', tt(5 + hOffset, 5, {d: ('M 0, 3 L ' + (mirror?'-':'+') +'3, 0 L 0, -3'), class: 'standardLine'})];
+    return ['path', tt(10 + hOffset, 10, {d: ('M 0, 6 L ' + (mirror?'-':'+') +'6, 0 L 0, -6'), class: 'standardLine'})];
   }
 };
 
@@ -1420,7 +1444,7 @@ module.exports = {
   ];},
 
   keys: () => {return [
-    "System Project V2.5",
+    "System Project V2.6a",
     "RMB + Drag to pan.",
     "Scroll to zoom."
   ];},
@@ -2256,33 +2280,33 @@ module.exports = (x, y, obj) => {
 
 const addRateListeners = (options, updateRateCounter) => {
   // console.log(document.getElementById('buttonStop'));
-  document.getElementById('buttonStop').addEventListener('click', function () {
-    options.rateSetting = 0;
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter(options);
-  });
-  document.getElementById('buttonSlow').addEventListener('click', function () {
-    if (options.rateSetting > 0) {options.rateSetting--;}
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter(options);
-  });
-  document.getElementById('buttonFast').addEventListener('click', function () {
-    if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter(options);
-  });
-  document.getElementById('buttonMax').addEventListener('click', function () {
-    options.rateSetting = options.simRates.length - 1;
-    options.rate = options.simRates[options.rateSetting];
-    updateRateCounter(options);
-  });
+  // document.getElementById('buttonStop').addEventListener('click', function () {
+  //   options.rateSetting = 0;
+  //   options.rate = options.simRates[options.rateSetting];
+  //   updateRateCounter(options);
+  // });
+  // document.getElementById('buttonSlow').addEventListener('click', function () {
+  //   if (options.rateSetting > 0) {options.rateSetting--;}
+  //   options.rate = options.simRates[options.rateSetting];
+  //   updateRateCounter(options);
+  // });
+  // document.getElementById('buttonFast').addEventListener('click', function () {
+  //   if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
+  //   options.rate = options.simRates[options.rateSetting];
+  //   updateRateCounter(options);
+  // });
+  // document.getElementById('buttonMax').addEventListener('click', function () {
+  //   options.rateSetting = options.simRates.length - 1;
+  //   options.rate = options.simRates[options.rateSetting];
+  //   updateRateCounter(options);
+  // });
 };
 exports.addRateListeners = addRateListeners;
 exports.addBoxSettingsListeners = (options, renderBoxSettings) => {
   let boxSettingsSettings = {
     isDragging: false,
-    xTransform: 10,
-    yTransform: 100,
+    xTransform: 100,
+    yTransform: 200,
     xTransformPast: 0,
     yTransformPast: 0,
   };

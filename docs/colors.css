@@ -28,14 +28,14 @@ html, body {
 }
 .majorOrbit {
   fill: none;
-  stroke-width: 0.8px;
-  stroke: #c3c3c3ff;
+  stroke-width: 1px;
+  stroke: #afafaf;
   stroke-dasharray: 20 5;
   fill: #363636;
 }
 .minorOrbit {
   fill: none;
-  stroke-width: 0.2px;
+  stroke-width: 0.4px;
   stroke: #c3c3c3ff;
   stroke-dasharray: 5 10;
 }
@@ -67,12 +67,12 @@ html, body {
   fill: #363636;
 }
 .dataLine {
-  stroke-width: 2px;
+  stroke-width: 1px;
   stroke: #c3c3c3ff;
   fill: none;
 }
 .dataText {
-  font: 1rem B612 Mono;
+  font: 0.8rem B612 Mono;
   stroke: none;
   fill: #ffffffff;
   user-select: none;
@@ -86,7 +86,7 @@ html, body {
   fill: #363636;
 }
 .rangeText {
-  font: 1rem B612 Mono;
+  font: 0.6rem B612 Mono;
   fill: #a3a3a3ff;
   user-select: none;
   /* width: auto; */
@@ -94,13 +94,13 @@ html, body {
 }
 .rangeLine {
   fill: none;
-  stroke-width: 0.5px;
+  stroke-width: 1px;
   stroke: #a3a3a3ff;
   stroke-dasharray: 1 9;
 }
 .vector {
   fill: none;
-  stroke-width: 0.5px;
+  stroke-width: 1px;
   stroke: #ffffffff;
   fill: none;
 }
@@ -145,21 +145,21 @@ html, body {
 }
 .standardBox{
   fill: #363636;
-  stroke-width: 0.5px;
+  stroke-width: 1px;
   stroke: #ffffffff;
 }
 .standardBoxSelectable {
   fill: #363636;
-  stroke-width: 0.5px;
+  stroke-width: 1px;
   stroke: #ffffffff;
 }
 .standardBoxSelectable:hover {
   stroke: #ffb500;
-  stroke-width: 1px;
+  stroke-width: 2px;
 }
 .standardLine {
   fill: none;
-  stroke-width: 0.5px;
+  stroke-width: 1px;
   stroke: #ffffffff;
 }
 .scaleEmpty {
@@ -170,5 +170,10 @@ html, body {
 .scaleFull {
   fill: #ffffffff;
   stroke-width: 1px;
+  stroke: #ffffffff;
+}
+.UIcon{
+  fill: #363636;
+  stroke-width: 3px;
   stroke: #ffffffff;
 }

@@ -16,15 +16,13 @@ module.exports = {
 
     tempBod.push(
       ['circle', {
-        r: bodyo.objectRadius * 4,
+        r: bodyo.objectRadius * 8,
         fill: "url(#RadialGradient2)"
       }],
-      ['g', {},
-        ['circle', {
-          r: bodyo.objectRadius,
-          class: bodyo.industry?'majorObject':'minorObject'
-        }]
-      ]
+      ['circle', {
+        r: bodyo.objectRadius * 2,
+        class: bodyo.industry?'majorObject':'minorObject'
+      }]
     );
 
     return tempBod;
@@ -80,7 +78,11 @@ module.exports = {
   apsis: (m = '') => (
     ['g', {},
       ['path', {
-        d: 'M -2,'+m+'5 L 0,0 L 2,'+m+'5 Z',
+        d: 'M -3,'+m+'10 L 0,0 L 3,'+m+'10 Z',
+        class: 'symbolLine'
+      }],
+      ['circle', {
+        r:2.5,
         class: 'symbolLine'
       }]
     ]
@@ -105,11 +107,11 @@ module.exports = {
 
     return ['g', {},
       ['circle', {
-        r: 10,
+        r: 20,
         fill: "url(#EngineFlare)"
       }],
       ['path', {
-        transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + ')',
+        transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + '), scale(2, 2)',
         d: iconString,
         class: 'craft'
       }]
@@ -142,7 +144,7 @@ module.exports = {
 
     retStat.push(
       ['path', {
-        transform: 'rotate(' + stationo.orient + ')',
+        transform: 'rotate(' + stationo.orient + '), scale(2, 2)',
         d: iconString,
         class: 'station'
       }]
@@ -158,7 +160,7 @@ module.exports = {
 
     drawnVector.push(
       ['path', {
-        d: 'M 0,0 L -1, '+(-crafto.accel*4)+' L 1, '+(-crafto.accel*4)+' Z',
+        d: 'M 0,0 L -2, '+(-crafto.accel*8)+' L 2, '+(-crafto.accel*8)+' Z',
         class: 'vector'
       }],
     );
@@ -182,6 +184,6 @@ module.exports = {
   },
 
   arrow: (hOffset = 0, mirror = false) => {
-    return ['path', tt(5 + hOffset, 5, {d: ('M 0, 3 L ' + (mirror?'-':'+') +'3, 0 L 0, -3'), class: 'standardLine'})];
+    return ['path', tt(10 + hOffset, 10, {d: ('M 0, 6 L ' + (mirror?'-':'+') +'6, 0 L 0, -6'), class: 'standardLine'})];
   }
 };
