@@ -773,20 +773,8 @@ const drawRanges = (bodyArr, mapPan) => {
 const drawMovingOrbits = (moons, mapPan) => {
   return ['g', {}, drawOrbits(moons, mapPan)];
 };
-exports.drawScreenFrame = (options) => {
+exports.drawScreenFrame = () => {
   let frame = ['g', {}];
-
-  // if (options.headerKeys) {
-  //   let keys = ['g', tt(4, 4)];
-  //
-  //   keys.push(['rect', {width: 170, height: lists.keys().length * 15 + 4, class: 'standardBox'}]);
-  //
-  //   for (let i = 0; i < lists.keys().length; i++) {
-  //     keys.push(['g', tt(2,  16 * i + 14), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
-  //   }
-  //
-  //   frame.push(keys);
-  // }
 
   frame.push( ['g', tt(4,4),
     ['g', tt(0, 0, {id:'buttonSettings', class: 'standardBoxSelectable'}),
@@ -797,8 +785,6 @@ exports.drawScreenFrame = (options) => {
       ]
     ]
   ]);
-
-  // frame.push(drawSimRateModule(4, 80));
 
   frame.push( ['g', {},
     ['path',
@@ -823,47 +809,62 @@ const drawSimRateModule = (x, y) => {
   return ['g', {id: 'simRateModule'},
     // ['rect', {width: 10, height: 2, class: 'standardBox'}],
     ['g', tt(x,y),
+      ['rect', {width: btSz*6+mrgn*4+8, height: btSz+24, class: 'standardBox'}],
+      ['text', {class: 'dataText', x: 4, y:15}, 'Simulation rate:']
+    ],
+    ['g', tt(x+4,y+20),
       ['g', tt(0, 0, {id:'buttonStop', class: 'standardBoxSelectable'}),
         ['rect', {width: btSz, height: btSz}],
-        ['path', { d: 'M 6, 4 L 6, 16', class: 'standardLine'}],
-        ['path', { d: 'M 12, 4 L 12, 16', class: 'standardLine'}],
+        ['path', { d: 'M 11, 4 L 11, 26', class: 'UIcon'}],
+        ['path', { d: 'M 19, 4 L 19, 26', class: 'UIcon'}],
         // icons.arrow(2, true),
       ],
       ['g', tt(btSz+mrgn,0, {id:'buttonSlow', class: 'standardBoxSelectable'}),
         ['rect', {width: btSz, height: btSz}],
-        icons.arrow(2, true)
+        icons.arrow(0, true)
       ],
       ['g', tt((btSz+mrgn)*2,0, {id:'simRateDisplay', class: 'standardBox'}),
-        ['rect', {width: btSz, height: btSz}],
+        ['rect', {width: btSz*2, height: btSz}],
         ['g', {id: 'rateCounter'}]
       ],
-      ['g', tt((btSz+mrgn)*3,0, {id:'buttonFast', class: 'standardBoxSelectable'}),
+      ['g', tt((btSz*4)+(mrgn*3),0, {id:'buttonFast', class: 'standardBoxSelectable'}),
         ['rect', {width: btSz, height: btSz}],
-        icons.arrow(-2, false)
+        icons.arrow(0, false)
       ],
-      ['g', tt((btSz+mrgn)*4,0, {id:'buttonMax', class: 'standardBoxSelectable'}),
+      ['g', tt((btSz*5)+(mrgn*4),0, {id:'buttonMax', class: 'standardBoxSelectable'}),
         ['rect', {width: btSz, height: btSz}],
-        icons.arrow(0, false),
-        icons.arrow(-5, false),
+        icons.arrow(4, false),
+        icons.arrow(-4, false),
       ]
     ]
   ];
 };
 exports.drawSimRateModule = drawSimRateModule;
 exports.drawRateCounter = (options) => {
-  return ['text', {x: 11, y: 15,class: 'dataText bold'}, options.rate];
+  return ['text', {x: 4, y: 19,class: 'dataText bold'}, 'X ' + options.rate];
   //options.rate.toString().length
 };
 exports.drawBoxSettings = () => {
   let box = ['g', {}];
 
-  box.push(['rect', {height: 80, width: 160, class:'standardBox'}]);
-  box.push(['rect', {height: 10, width: 150, class:'standardBoxSelectable', id:'boxSettingsDragger'}]);
-  box.push(['g', tt(150, 0, {id: 'boxSettingsCloser', class:'standardBoxSelectable'}),
-    ['rect', {height: 10, width: 10}],
-    ['path', {d: 'M 2, 2 L 8, 8', class: 'standardLine'}],
-    ['path', {d: 'M 2, 8 L 8, 2', class: 'standardLine'}]
+  box.push(['rect', {height: 160, width: 238, class:'standardBox'}]);
+  box.push(['rect', {height: 20, width: 208, class:'standardBoxSelectable', id:'boxSettingsDragger'}]);
+  box.push(['g', tt(208, 0, {id: 'boxSettingsCloser', class:'standardBoxSelectable'}),
+    ['rect', {height: 30, width: 30}],
+    ['path', {d: 'M 4, 4 L 26, 26', class: 'UIcon'}],
+    ['path', {d: 'M 4, 26 L 26, 4', class: 'UIcon'}]
   ]);
+  // box.push(['g', tt(208, 0, {id: 'boxSettingsCloser', class:'standardBoxSelectable'})]);
+
+  let keys = ['g', tt(4, 24)];
+  let keysHeight = lists.keys().length * 15 + 4;
+  keys.push(['rect', {width: 30*6+3*4+8, height: keysHeight, class: 'standardBox'}]);
+  for (let i = 0; i < lists.keys().length; i++) {
+    keys.push(['g', tt(2,  16 * i + 14), [ 'text', {class: 'dataText'}, lists.keys()[i] ]],);
+  }
+  box.push(keys);
+
+  box.push(drawSimRateModule(4, 24 + keysHeight + 4));
 
   return box;
 };
@@ -1200,7 +1201,7 @@ module.exports = {
   },
 
   arrow: (hOffset = 0, mirror = false) => {
-    return ['path', tt(10 + hOffset, 10, {d: ('M 0, 6 L ' + (mirror?'-':'+') +'6, 0 L 0, -6'), class: 'standardLine'})];
+    return ['path', tt(15 + hOffset, 15, {d: ('M '+(mirror?'+':'-')+'5, 10 L '+(mirror?'-':'+')+'5, 0 L '+(mirror?'+':'-')+'5, -10'), class: 'UIcon'})];
   }
 };
 
@@ -1729,10 +1730,10 @@ const main = async () => {
   };
 
   initRenderers();
-  renderScreenFrame(drawMap.drawScreenFrame(options));
-  initRateRenderer();
+  renderScreenFrame(drawMap.drawScreenFrame());
+  // initRateRenderer();
   renderAllResizedStatics(options, stars, planets, mapPan);
-  updateRateCounter(options);
+  // updateRateCounter(options);
 
   const resizeWindow = () => {
     document.getElementById('allTheStuff').setAttribute('width', document.body.clientWidth);
@@ -1740,15 +1741,17 @@ const main = async () => {
     document.getElementById('allTheStuff').setAttribute('viewBox',
       [0, 0, document.body.clientWidth + 1, document.body.clientHeight + 1].join(' ')
     );
-    renderScreenFrame(drawMap.drawScreenFrame(options));
-    initRateRenderer();
-    updateRateCounter(options);
-    ui.addRateListeners(options, updateRateCounter);
+    renderScreenFrame(drawMap.drawScreenFrame());
+    // updateRateCounter(options);
+    // ui.addRateListeners(options, updateRateCounter);
   };
   const placecheckBoxSettings = () => {
     if (options.boxSettings) {
       renderBoxSettings(drawMap.drawBoxSettings());
       ui.addBoxSettingsListeners(options, renderBoxSettings);
+      ui.addRateListeners(options, updateRateCounter);
+      initRateRenderer();
+      updateRateCounter(options);
     }
     else {
       renderBoxSettings([]);
@@ -1760,7 +1763,7 @@ const main = async () => {
   };
 
   ui.addListeners(options, mapPan, renderers);
-  ui.addRateListeners(options, updateRateCounter);
+  // ui.addRateListeners(options, updateRateCounter);
 
 // <---------LOOP---------->
   let simpRate = 1 / 1000;
@@ -2280,33 +2283,33 @@ module.exports = (x, y, obj) => {
 
 const addRateListeners = (options, updateRateCounter) => {
   // console.log(document.getElementById('buttonStop'));
-  // document.getElementById('buttonStop').addEventListener('click', function () {
-  //   options.rateSetting = 0;
-  //   options.rate = options.simRates[options.rateSetting];
-  //   updateRateCounter(options);
-  // });
-  // document.getElementById('buttonSlow').addEventListener('click', function () {
-  //   if (options.rateSetting > 0) {options.rateSetting--;}
-  //   options.rate = options.simRates[options.rateSetting];
-  //   updateRateCounter(options);
-  // });
-  // document.getElementById('buttonFast').addEventListener('click', function () {
-  //   if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
-  //   options.rate = options.simRates[options.rateSetting];
-  //   updateRateCounter(options);
-  // });
-  // document.getElementById('buttonMax').addEventListener('click', function () {
-  //   options.rateSetting = options.simRates.length - 1;
-  //   options.rate = options.simRates[options.rateSetting];
-  //   updateRateCounter(options);
-  // });
+  document.getElementById('buttonStop').addEventListener('click', function () {
+    options.rateSetting = 0;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonSlow').addEventListener('click', function () {
+    if (options.rateSetting > 0) {options.rateSetting--;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonFast').addEventListener('click', function () {
+    if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonMax').addEventListener('click', function () {
+    options.rateSetting = options.simRates.length - 1;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
 };
 exports.addRateListeners = addRateListeners;
 exports.addBoxSettingsListeners = (options, renderBoxSettings) => {
   let boxSettingsSettings = {
     isDragging: false,
-    xTransform: 100,
-    yTransform: 200,
+    xTransform: 40,
+    yTransform: 10,
     xTransformPast: 0,
     yTransformPast: 0,
   };

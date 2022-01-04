@@ -184,6 +184,6 @@ module.exports = {
   },
 
   arrow: (hOffset = 0, mirror = false) => {
-    return ['path', tt(10 + hOffset, 10, {d: ('M 0, 6 L ' + (mirror?'-':'+') +'6, 0 L 0, -6'), class: 'standardLine'})];
+    return ['path', tt(15 + hOffset, 15, {d: ('M '+(mirror?'+':'-')+'5, 10 L '+(mirror?'-':'+')+'5, 0 L '+(mirror?'+':'-')+'5, -10'), class: 'UIcon'})];
   }
 };

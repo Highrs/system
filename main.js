@@ -275,10 +275,10 @@ const main = async () => {
   };
 
   initRenderers();
-  renderScreenFrame(drawMap.drawScreenFrame(options));
-  initRateRenderer();
+  renderScreenFrame(drawMap.drawScreenFrame());
+  // initRateRenderer();
   renderAllResizedStatics(options, stars, planets, mapPan);
-  updateRateCounter(options);
+  // updateRateCounter(options);
 
   const resizeWindow = () => {
     document.getElementById('allTheStuff').setAttribute('width', document.body.clientWidth);
@@ -286,15 +286,17 @@ const main = async () => {
     document.getElementById('allTheStuff').setAttribute('viewBox',
       [0, 0, document.body.clientWidth + 1, document.body.clientHeight + 1].join(' ')
     );
-    renderScreenFrame(drawMap.drawScreenFrame(options));
-    initRateRenderer();
-    updateRateCounter(options);
-    ui.addRateListeners(options, updateRateCounter);
+    renderScreenFrame(drawMap.drawScreenFrame());
+    // updateRateCounter(options);
+    // ui.addRateListeners(options, updateRateCounter);
   };
   const placecheckBoxSettings = () => {
     if (options.boxSettings) {
       renderBoxSettings(drawMap.drawBoxSettings());
       ui.addBoxSettingsListeners(options, renderBoxSettings);
+      ui.addRateListeners(options, updateRateCounter);
+      initRateRenderer();
+      updateRateCounter(options);
     }
     else {
       renderBoxSettings([]);
@@ -306,7 +308,7 @@ const main = async () => {
   };
 
   ui.addListeners(options, mapPan, renderers);
-  ui.addRateListeners(options, updateRateCounter);
+  // ui.addRateListeners(options, updateRateCounter);
 
 // <---------LOOP---------->
   let simpRate = 1 / 1000;

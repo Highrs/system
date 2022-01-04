@@ -2,33 +2,33 @@
 
 const addRateListeners = (options, updateRateCounter) => {
   // console.log(document.getElementById('buttonStop'));
-  // document.getElementById('buttonStop').addEventListener('click', function () {
-  //   options.rateSetting = 0;
-  //   options.rate = options.simRates[options.rateSetting];
-  //   updateRateCounter(options);
-  // });
-  // document.getElementById('buttonSlow').addEventListener('click', function () {
-  //   if (options.rateSetting > 0) {options.rateSetting--;}
-  //   options.rate = options.simRates[options.rateSetting];
-  //   updateRateCounter(options);
-  // });
-  // document.getElementById('buttonFast').addEventListener('click', function () {
-  //   if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
-  //   options.rate = options.simRates[options.rateSetting];
-  //   updateRateCounter(options);
-  // });
-  // document.getElementById('buttonMax').addEventListener('click', function () {
-  //   options.rateSetting = options.simRates.length - 1;
-  //   options.rate = options.simRates[options.rateSetting];
-  //   updateRateCounter(options);
-  // });
+  document.getElementById('buttonStop').addEventListener('click', function () {
+    options.rateSetting = 0;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonSlow').addEventListener('click', function () {
+    if (options.rateSetting > 0) {options.rateSetting--;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonFast').addEventListener('click', function () {
+    if (options.rateSetting < options.simRates.length - 1) {options.rateSetting++;}
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
+  document.getElementById('buttonMax').addEventListener('click', function () {
+    options.rateSetting = options.simRates.length - 1;
+    options.rate = options.simRates[options.rateSetting];
+    updateRateCounter(options);
+  });
 };
 exports.addRateListeners = addRateListeners;
 exports.addBoxSettingsListeners = (options, renderBoxSettings) => {
   let boxSettingsSettings = {
     isDragging: false,
-    xTransform: 100,
-    yTransform: 200,
+    xTransform: 40,
+    yTransform: 10,
     xTransformPast: 0,
     yTransformPast: 0,
   };
