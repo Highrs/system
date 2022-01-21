@@ -2,7 +2,7 @@ const tt = require('onml/tt.js');
 
 module.exports = {
 
-  body: (bodyo, mapPan) => {
+  body:         (bodyo, mapPan) => {
     let tempBod = ['g', {}];
 
     if (bodyo.industry) {
@@ -27,8 +27,7 @@ module.exports = {
 
     return tempBod;
   },
-
-  star: (staro, mapPan) => {
+  star:         (staro, mapPan) => {
     let drawnStar = ['g', tt(staro.x * mapPan.zoom, staro.y * mapPan.zoom)];
 
     drawnStar.push(
@@ -55,8 +54,7 @@ module.exports = {
 
     return drawnStar;
   },
-
-  intercept: (x, y) => (
+  intercept:    (x, y) => (
     ['g', tt(x, y),
       ['path', {d: 'M  5, 3 L  2, 2 L  3, 5 L  5, 5 Z', class: 'gridBold'}],
       ['path', {d: 'M  5,-3 L  2,-2 L  3,-5 L  5,-5 Z', class: 'gridBold'}],
@@ -64,8 +62,7 @@ module.exports = {
       ['path', {d: 'M -5,-3 L -2,-2 L -3,-5 L -5,-5 Z', class: 'gridBold'}]
     ]
   ),
-
-  marker: () => (
+  marker:       () => (
     ['g', {},
       ['path', {d: 'M  3, 3 L  1, 1', class: 'gridBold'}],
       ['path', {d: 'M  3,-3 L  1,-1', class: 'gridBold'}],
@@ -74,8 +71,7 @@ module.exports = {
       ['circle',{r: 1, class: 'gridBold'}]
     ]
   ),
-
-  apsis: (m = '') => (
+  apsis:        (m = '') => (
     ['g', {},
       ['path', {
         d: 'M -3,'+m+'10 L 0,0 L 3,'+m+'10 Z',
@@ -87,8 +83,7 @@ module.exports = {
       }]
     ]
   ),
-
-  craft: (crafto) => {
+  craft:        (crafto) => {
     const icono = {
       Brick:
 'M 0,0 L 2,-2 L 2,2 L 1,3 L -1,3 L -2,2 L -2,-2 Z',
@@ -106,6 +101,7 @@ module.exports = {
       'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
 
     return ['g', {},
+
       ['circle', {
         r: 20,
         fill: "url(#EngineFlare)"
@@ -117,8 +113,7 @@ module.exports = {
       }]
     ];
   },
-
-  station: (stationo, mapPan) => {
+  station:      (stationo, mapPan) => {
     let retStat = ['g', {}];
 
     const icono = {
@@ -152,7 +147,6 @@ module.exports = {
 
     return retStat;
   },
-
   thrustVector: (crafto) => {
     let drawnVector = ['g', {
       transform: 'rotate(' + (crafto.accelStat === 1 ? crafto.course : crafto.course + 180) + ')'
@@ -167,8 +161,7 @@ module.exports = {
 
     return drawnVector;
   },
-
-  gridCross: (crossSize, x, y) => {
+  gridCross:    (crossSize, x, y) => {
     return ['g', {},
       ['line', {
         x1: x - crossSize, y1: y,
@@ -182,8 +175,24 @@ module.exports = {
       }]
     ];
   },
-
-  arrow: (hOffset = 0, mirror = false) => {
+  arrow:        (hOffset = 0, mirror = false) => {
     return ['path', tt(15 + hOffset, 15, {d: ('M '+(mirror?'+':'-')+'5, 10 L '+(mirror?'-':'+')+'5, 0 L '+(mirror?'+':'-')+'5, -10'), class: 'UIcon'})];
+  },
+  brackets:     (iD, margin = 0, offsetY = 0) => {
+    let corner = 10 + margin;
+    let sides = corner - 5;
+    return ['g', tt(0, offsetY, {class: 'standardSelector', id:iD}),
+      ['rect', {
+        x:-corner,
+        y:-corner,
+        height: corner*2,
+        width: corner*2,
+        class: 'invisibleBox'
+      }],
+      ['path', {d: 'M  '+corner+',  '+sides+' L  '+corner+',  '+corner+' L  '+sides+',  '+corner}],
+      ['path', {d: 'M -'+corner+', -'+sides+' L -'+corner+', -'+corner+' L -'+sides+', -'+corner}],
+      ['path', {d: 'M  '+corner+', -'+sides+' L  '+corner+', -'+corner+' L  '+sides+', -'+corner}],
+      ['path', {d: 'M -'+corner+',  '+sides+' L -'+corner+',  '+corner+' L -'+sides+',  '+corner}]
+    ];
   }
 };

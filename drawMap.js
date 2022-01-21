@@ -172,6 +172,7 @@ const drawBodies = (bodies, options, mapPan) => {
       }
 
       partBody.push(icons.body(bodyo, mapPan));
+      partBody.push(icons.brackets(bodyo.id, bodyo.objectRadius));
       bodiesDrawn.push(partBody);
     }
   });
@@ -187,6 +188,7 @@ const drawStations = (stations, options, mapPan) => {
         if (options.planetData) {partStation.push(['g', {}, drawBodyData(stationo),]);}
 
         partStation.push(icons.station(stationo, mapPan));
+        partStation.push(icons.brackets(stationo.id, 5));
         stationsDrawn.push(partStation);
       }
     }
@@ -276,7 +278,8 @@ const drawCraft = (listOfCraft, options, mapPan) => {
           ['g', {},
             ['g', {transform: 'rotate(' + crafto.course + ')'},
               icons.craft(crafto)
-            ]
+            ],
+            icons.brackets(crafto.id)
           ]
         );
 
@@ -341,6 +344,16 @@ exports.drawScreenFrame = () => {
         ['path', {d:'M 8 -9 A 12 12 0 1 1 -8 -9', class:'UIcon'}],
         ['path', {d:'M 0, 0 L 0, -13', class:'UIcon'}]
       ]
+    ]
+  ]);
+  frame.push( ['g', tt(4,38),
+    ['g', tt(0, 0, {id:'button', class: 'standardBoxSelectable'}),
+      ['rect', {width: 30, height: 30}],
+    ]
+  ]);
+  frame.push( ['g', tt(4,72),
+    ['g', tt(0, 0, {id:'button', class: 'standardBoxSelectable'}),
+      ['rect', {width: 30, height: 30}],
     ]
   ]);
 

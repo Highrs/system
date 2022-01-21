@@ -10,10 +10,51 @@ const majObj = require('./majorObjects2.json');
 const ui = require('./ui.js');
 const PI = Math.PI;
 
+Window.options = {
+  rate: 1,
+  rateSetting: 3,
+  simRates: [0, 0.1, 0.5, 1, 2, 3, 5, 10],
+  targetFrames: 30,
+  header: false,
+  grid: true,
+  gridStep: 10,
+  gridCrossSize: 5,
+  headerKeys: true,
+  planetData: true,
+  craftData: true,
+  stop: false,
+  intercepts: true,
+  keyPanStep: 50,
+  isPaused: false,
+};
+const options = Window.options;
+let mapPan = {
+  x: 0,
+  y: 0,
+  xLast: 0,
+  yLast: 0,
+  zoom: 1,
+  zoomLast: 1,
+  cursOriginX: 0,
+  cursOriginY: 0,
+  mousePosX: 0,
+  mousePosY: 0,
+  zoomChange: 0,
+  interceptUpdated: true,
+  boxes: {
+    boxSettings: false,
+  },
+  selectIDs: {
+
+  }
+};
+
 const makeStar = (staro) => {
   return staro;
 };
 const makeBody = (inBodyo) => {
+  const iD = bodyIDer();
+  // console.log(iD);
   const bodyo = Object.assign(
     inBodyo,
     {
@@ -25,7 +66,8 @@ const makeBody = (inBodyo) => {
       owner: 'EMPIRE',
       orbitPointsArr: [],
       orbitDivLine: [],
-      primaryo: majObj[inBodyo.primary]
+      primaryo: majObj[inBodyo.primary],
+      iD: iD
     }
   );
   ind.initInd(bodyo);
@@ -44,16 +86,23 @@ const makeBody = (inBodyo) => {
       bodyo.orbitDivLine[1] = currCoord;
     }
   }
+  console.log('Made ' + bodyo.name + ' (' + iD + ')');
 
+  if (bodyo.type !== 'asteroid') {mapPan.selectIDs[iD] = bodyo;}
   return bodyo;
 };
-const rockNamer = () => {
+const iDerGenGen = (prefix) => {
   let id = 0;
   return () => {
     id += 1;
-    return id;
+    return prefix + '-' + id;
   };
 };
+const craftNamer = iDerGenGen('HULL');
+const craftIDer = iDerGenGen('C');
+const bodyIDer = iDerGenGen('O');
+const rockIDer = iDerGenGen('R');
+const rockNamer = iDerGenGen('ASTR');
 function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
   let max = mean + deviation > upper ? upper : mean + deviation;
   let min = mean - deviation < lower ? lower : mean - deviation;
@@ -68,6 +117,7 @@ function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
 const rock = (belto) => {
   return {
     name: rockNamer(),
+    id: rockIDer(),
     type: 'asteroid',
     primary: belto.primary,
     mass: rand(belto.mass, belto.massd),
@@ -110,44 +160,16 @@ const orientOnSun = (bodyo, newData) => {
 const makeManyCraft = (craftType, numberToMake, craftList, owner = undefined) => {
   for (let i = 0; i < numberToMake; i++) {
     const baseTemplate = hullTemps[craftType]();
-    craftList.push(craft.makeCraft(baseTemplate, owner));
+    const name = craftNamer();
+    const iD = craftIDer();
+    let newCrafto = craft.makeCraft(baseTemplate, name, iD, owner);
+    craftList.push(newCrafto);
+    mapPan.selectIDs[iD] = newCrafto;
+    console.log('Made ' + name + ' (' + iD + ')');
   }
 };
-Window.options = {
-  rate: 1,
-  rateSetting: 3,
-  simRates: [0, 0.1, 0.5, 1, 2, 3, 5, 10],
-  targetFrames: 30,
-  header: false,
-  grid: true,
-  gridStep: 10,
-  gridCrossSize: 5,
-  headerKeys: true,
-  planetData: true,
-  craftData: true,
-  stop: false,
-  intercepts: true,
-  keyPanStep: 50,
-  isPaused: false,
-  boxSettings: false,
-};
-const options = Window.options;
-let mapPan = {
-  x: 0,
-  y: 0,
-  xLast: 0,
-  yLast: 0,
-  zoom: 1,
-  zoomLast: 1,
-  cursOriginX: 0,
-  cursOriginY: 0,
-  mousePosX: 0,
-  mousePosY: 0,
-  zoomChange: 0,
-  interceptUpdated: true
-};
 const updatePan = (mapPan) => {
-  // Update Pan here
+  // Update Pan here, who woulda guessed
   if ((mapPan.x != mapPan.xLast) || (mapPan.y != mapPan.yLast)) {
     document.getElementById('map').setAttribute(
       'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
@@ -219,6 +241,8 @@ const main = async () => {
   makeManyCraft('mountain', 2, craftList);
   makeManyCraft('barlog', 1, craftList);
 
+  console.log(mapPan.selectIDs);
+
   craftStart(craftList);
 
   let renderStatic          = undefined;
@@ -234,23 +258,25 @@ const main = async () => {
   let renderBoxSettings     = undefined;
   let renderGridScaleBar    = undefined;
 
+  const mkRndr = (place) => {return renderer(document.getElementById(place));};
+
   const initRateRenderer = () => {
-    renderRateCounter     = renderer(document.getElementById('rateCounter'));
+    renderRateCounter     = mkRndr('rateCounter');
   };
   const initRenderers = () => {
-    renderStatic          = renderer(document.getElementById('content'));
+    renderStatic          = mkRndr('content');
     renderStatic(drawMap.drawStatic(options, stars));
-    renderStaticOrbits    = renderer(document.getElementById('staticOrbits'));
-    renderStars           = renderer(document.getElementById('stars'));
-    renderGrid            = renderer(document.getElementById('grid'));
-    renderMoving          = renderer(document.getElementById('moving'));
+    renderStaticOrbits    = mkRndr('staticOrbits');
+    renderStars           = mkRndr('stars');
+    renderGrid            = mkRndr('grid');
+    renderMoving          = mkRndr('moving');
 
-    rendererIntercept     = renderer(document.getElementById('intercept'));
+    rendererIntercept     = mkRndr('intercept');
 
-    rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
-    renderScreenFrame     = renderer(document.getElementById('screenFrame'));
-    renderBoxSettings     = renderer(document.getElementById('boxMainSettings'));
-    renderGridScaleBar    = renderer(document.getElementById('gridScaleBar'));
+    rendererMovingOrbits  = mkRndr('movingOrbits');
+    renderScreenFrame     = mkRndr('screenFrame');
+    renderBoxSettings     = mkRndr('boxMainSettings');
+    renderGridScaleBar    = mkRndr('gridScaleBar');
   };
 
 
@@ -276,9 +302,7 @@ const main = async () => {
 
   initRenderers();
   renderScreenFrame(drawMap.drawScreenFrame());
-  // initRateRenderer();
   renderAllResizedStatics(options, stars, planets, mapPan);
-  // updateRateCounter(options);
 
   const resizeWindow = () => {
     document.getElementById('allTheStuff').setAttribute('width', document.body.clientWidth);
@@ -287,13 +311,11 @@ const main = async () => {
       [0, 0, document.body.clientWidth + 1, document.body.clientHeight + 1].join(' ')
     );
     renderScreenFrame(drawMap.drawScreenFrame());
-    // updateRateCounter(options);
-    // ui.addRateListeners(options, updateRateCounter);
   };
   const placecheckBoxSettings = () => {
-    if (options.boxSettings) {
+    if (mapPan.boxes.boxSettings) {
       renderBoxSettings(drawMap.drawBoxSettings());
-      ui.addBoxSettingsListeners(options, renderBoxSettings);
+      ui.addBoxSettingsListeners(mapPan, renderBoxSettings);
       ui.addRateListeners(options, updateRateCounter);
       initRateRenderer();
       updateRateCounter(options);

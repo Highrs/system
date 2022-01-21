@@ -1,7 +1,6 @@
 'use strict';
 
 const addRateListeners = (options, updateRateCounter) => {
-  // console.log(document.getElementById('buttonStop'));
   document.getElementById('buttonStop').addEventListener('click', function () {
     options.rateSetting = 0;
     options.rate = options.simRates[options.rateSetting];
@@ -24,7 +23,7 @@ const addRateListeners = (options, updateRateCounter) => {
   });
 };
 exports.addRateListeners = addRateListeners;
-exports.addBoxSettingsListeners = (options, renderBoxSettings) => {
+exports.addBoxSettingsListeners = (mapPan, renderBoxSettings) => {
   let boxSettingsSettings = {
     isDragging: false,
     xTransform: 40,
@@ -61,17 +60,17 @@ exports.addBoxSettingsListeners = (options, renderBoxSettings) => {
     boxSettingsSettings.isDragging = false;
   });
   document.getElementById('boxSettingsCloser').addEventListener('click', function () {
-    options.boxSettings = false;
+    mapPan.boxes.boxSettings = false;
     renderBoxSettings([]);
   });
 };
 exports.addListeners = (options, mapPan, renderers) => {
   document.getElementById('buttonSettings').addEventListener('click', function () {
-    if (options.boxSettings === false) {
-      options.boxSettings = true;
+    if (mapPan.boxes.boxSettings === false) {
+      mapPan.boxes.boxSettings = true;
       renderers.boxSettings();
     } else {
-      options.boxSettings = false;
+      mapPan.boxes.boxSettings = false;
       renderers.boxSettings();
     }
   });
@@ -87,7 +86,13 @@ exports.addListeners = (options, mapPan, renderers) => {
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
   window.addEventListener('resize', function() {renderers.resizeWindow();});
-  // document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
+  // document.addEventListener('click', function () {console.log('Click!');});
+  const onClick = (event) => {
+    console.log(event.srcElement.id);
+    // console.log('here');
+  };
+  window.addEventListener('mousedown', onClick);
+
   document.onkeydown = checkKey;
   let isPanning = false;
   let pastOffsetX = 0;

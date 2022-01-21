@@ -177,3 +177,21 @@ html, body {
   stroke-width: 3px;
   stroke: #ffffffff;
 }
+
+.standardSelector {
+  fill: none;
+  stroke: none;
+}
+.standardSelector:hover {
+  stroke: #ffb500;
+  stroke-width: 2px;
+}
+.invisibleBox {
+  fill: rgba(175, 128, 168, 0);
+  stroke: none;
+}
+/* .selectBracket {
+  fill: none;
+  stroke-width: 0px;
+  stroke: ;
+} */

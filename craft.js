@@ -6,24 +6,16 @@ const ind = require('./industry.js');
 // Bezier Curve:
 // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
 
-const hullNamer = () => {
-  let id = 0;
-  return () => {
-    id += 1;
-    return id;
-  };
-};
-const namer = hullNamer();
-const makeCraft = (crafto, owner = 'EMPIRE') => {
-  const id = namer();
-  const initWait = id % 10;
+const makeCraft = (crafto, name, iD, owner = 'EMPIRE') => {
+  // const initWait = iD % 10;
+  const initWait = 10;
   let newCrafto = {};
   Object.assign(
     newCrafto,
     crafto,
     {
-      name: id,
-      id: id,
+      name: name,
+      id: iD,
       x: 0, y: 0, z: 0,
       vx: 0, vy: 0, vz: 0,
       speed: 0,
@@ -39,6 +31,8 @@ const makeCraft = (crafto, owner = 'EMPIRE') => {
       waitCycle: 0 + initWait
     }
   );
+
+  // console.log(newCrafto);
 
   return newCrafto;
 };

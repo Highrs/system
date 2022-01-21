@@ -87,24 +87,16 @@ const ind = require('./industry.js');
 // Bezier Curve:
 // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
 
-const hullNamer = () => {
-  let id = 0;
-  return () => {
-    id += 1;
-    return id;
-  };
-};
-const namer = hullNamer();
-const makeCraft = (crafto, owner = 'EMPIRE') => {
-  const id = namer();
-  const initWait = id % 10;
+const makeCraft = (crafto, name, iD, owner = 'EMPIRE') => {
+  // const initWait = iD % 10;
+  const initWait = 10;
   let newCrafto = {};
   Object.assign(
     newCrafto,
     crafto,
     {
-      name: id,
-      id: id,
+      name: name,
+      id: iD,
       x: 0, y: 0, z: 0,
       vx: 0, vy: 0, vz: 0,
       speed: 0,
@@ -120,6 +112,8 @@ const makeCraft = (crafto, owner = 'EMPIRE') => {
       waitCycle: 0 + initWait
     }
   );
+
+  // console.log(newCrafto);
 
   return newCrafto;
 };
@@ -614,6 +608,7 @@ const drawBodies = (bodies, options, mapPan) => {
       }
 
       partBody.push(icons.body(bodyo, mapPan));
+      partBody.push(icons.brackets(bodyo.id, bodyo.objectRadius));
       bodiesDrawn.push(partBody);
     }
   });
@@ -629,6 +624,7 @@ const drawStations = (stations, options, mapPan) => {
         if (options.planetData) {partStation.push(['g', {}, drawBodyData(stationo),]);}
 
         partStation.push(icons.station(stationo, mapPan));
+        partStation.push(icons.brackets(stationo.id, 5));
         stationsDrawn.push(partStation);
       }
     }
@@ -718,7 +714,8 @@ const drawCraft = (listOfCraft, options, mapPan) => {
           ['g', {},
             ['g', {transform: 'rotate(' + crafto.course + ')'},
               icons.craft(crafto)
-            ]
+            ],
+            icons.brackets(crafto.id)
           ]
         );
 
@@ -783,6 +780,16 @@ exports.drawScreenFrame = () => {
         ['path', {d:'M 8 -9 A 12 12 0 1 1 -8 -9', class:'UIcon'}],
         ['path', {d:'M 0, 0 L 0, -13', class:'UIcon'}]
       ]
+    ]
+  ]);
+  frame.push( ['g', tt(4,38),
+    ['g', tt(0, 0, {id:'button', class: 'standardBoxSelectable'}),
+      ['rect', {width: 30, height: 30}],
+    ]
+  ]);
+  frame.push( ['g', tt(4,72),
+    ['g', tt(0, 0, {id:'button', class: 'standardBoxSelectable'}),
+      ['rect', {width: 30, height: 30}],
     ]
   ]);
 
@@ -1019,7 +1026,7 @@ const tt = require('onml/tt.js');
 
 module.exports = {
 
-  body: (bodyo, mapPan) => {
+  body:         (bodyo, mapPan) => {
     let tempBod = ['g', {}];
 
     if (bodyo.industry) {
@@ -1044,8 +1051,7 @@ module.exports = {
 
     return tempBod;
   },
-
-  star: (staro, mapPan) => {
+  star:         (staro, mapPan) => {
     let drawnStar = ['g', tt(staro.x * mapPan.zoom, staro.y * mapPan.zoom)];
 
     drawnStar.push(
@@ -1072,8 +1078,7 @@ module.exports = {
 
     return drawnStar;
   },
-
-  intercept: (x, y) => (
+  intercept:    (x, y) => (
     ['g', tt(x, y),
       ['path', {d: 'M  5, 3 L  2, 2 L  3, 5 L  5, 5 Z', class: 'gridBold'}],
       ['path', {d: 'M  5,-3 L  2,-2 L  3,-5 L  5,-5 Z', class: 'gridBold'}],
@@ -1081,8 +1086,7 @@ module.exports = {
       ['path', {d: 'M -5,-3 L -2,-2 L -3,-5 L -5,-5 Z', class: 'gridBold'}]
     ]
   ),
-
-  marker: () => (
+  marker:       () => (
     ['g', {},
       ['path', {d: 'M  3, 3 L  1, 1', class: 'gridBold'}],
       ['path', {d: 'M  3,-3 L  1,-1', class: 'gridBold'}],
@@ -1091,8 +1095,7 @@ module.exports = {
       ['circle',{r: 1, class: 'gridBold'}]
     ]
   ),
-
-  apsis: (m = '') => (
+  apsis:        (m = '') => (
     ['g', {},
       ['path', {
         d: 'M -3,'+m+'10 L 0,0 L 3,'+m+'10 Z',
@@ -1104,8 +1107,7 @@ module.exports = {
       }]
     ]
   ),
-
-  craft: (crafto) => {
+  craft:        (crafto) => {
     const icono = {
       Brick:
 'M 0,0 L 2,-2 L 2,2 L 1,3 L -1,3 L -2,2 L -2,-2 Z',
@@ -1123,6 +1125,7 @@ module.exports = {
       'M 0,3 L 3,0 L 0,-3 L -3,0 Z';
 
     return ['g', {},
+
       ['circle', {
         r: 20,
         fill: "url(#EngineFlare)"
@@ -1134,8 +1137,7 @@ module.exports = {
       }]
     ];
   },
-
-  station: (stationo, mapPan) => {
+  station:      (stationo, mapPan) => {
     let retStat = ['g', {}];
 
     const icono = {
@@ -1169,7 +1171,6 @@ module.exports = {
 
     return retStat;
   },
-
   thrustVector: (crafto) => {
     let drawnVector = ['g', {
       transform: 'rotate(' + (crafto.accelStat === 1 ? crafto.course : crafto.course + 180) + ')'
@@ -1184,8 +1185,7 @@ module.exports = {
 
     return drawnVector;
   },
-
-  gridCross: (crossSize, x, y) => {
+  gridCross:    (crossSize, x, y) => {
     return ['g', {},
       ['line', {
         x1: x - crossSize, y1: y,
@@ -1199,9 +1199,25 @@ module.exports = {
       }]
     ];
   },
-
-  arrow: (hOffset = 0, mirror = false) => {
+  arrow:        (hOffset = 0, mirror = false) => {
     return ['path', tt(15 + hOffset, 15, {d: ('M '+(mirror?'+':'-')+'5, 10 L '+(mirror?'-':'+')+'5, 0 L '+(mirror?'+':'-')+'5, -10'), class: 'UIcon'})];
+  },
+  brackets:     (iD, margin = 0, offsetY = 0) => {
+    let corner = 10 + margin;
+    let sides = corner - 5;
+    return ['g', tt(0, offsetY, {class: 'standardSelector', id:iD}),
+      ['rect', {
+        x:-corner,
+        y:-corner,
+        height: corner*2,
+        width: corner*2,
+        class: 'invisibleBox'
+      }],
+      ['path', {d: 'M  '+corner+',  '+sides+' L  '+corner+',  '+corner+' L  '+sides+',  '+corner}],
+      ['path', {d: 'M -'+corner+', -'+sides+' L -'+corner+', -'+corner+' L -'+sides+', -'+corner}],
+      ['path', {d: 'M  '+corner+', -'+sides+' L  '+corner+', -'+corner+' L  '+sides+', -'+corner}],
+      ['path', {d: 'M -'+corner+',  '+sides+' L -'+corner+',  '+corner+' L -'+sides+',  '+corner}]
+    ];
   }
 };
 
@@ -1465,10 +1481,51 @@ const majObj = require('./majorObjects2.json');
 const ui = require('./ui.js');
 const PI = Math.PI;
 
+Window.options = {
+  rate: 1,
+  rateSetting: 3,
+  simRates: [0, 0.1, 0.5, 1, 2, 3, 5, 10],
+  targetFrames: 30,
+  header: false,
+  grid: true,
+  gridStep: 10,
+  gridCrossSize: 5,
+  headerKeys: true,
+  planetData: true,
+  craftData: true,
+  stop: false,
+  intercepts: true,
+  keyPanStep: 50,
+  isPaused: false,
+};
+const options = Window.options;
+let mapPan = {
+  x: 0,
+  y: 0,
+  xLast: 0,
+  yLast: 0,
+  zoom: 1,
+  zoomLast: 1,
+  cursOriginX: 0,
+  cursOriginY: 0,
+  mousePosX: 0,
+  mousePosY: 0,
+  zoomChange: 0,
+  interceptUpdated: true,
+  boxes: {
+    boxSettings: false,
+  },
+  selectIDs: {
+
+  }
+};
+
 const makeStar = (staro) => {
   return staro;
 };
 const makeBody = (inBodyo) => {
+  const iD = bodyIDer();
+  // console.log(iD);
   const bodyo = Object.assign(
     inBodyo,
     {
@@ -1480,7 +1537,8 @@ const makeBody = (inBodyo) => {
       owner: 'EMPIRE',
       orbitPointsArr: [],
       orbitDivLine: [],
-      primaryo: majObj[inBodyo.primary]
+      primaryo: majObj[inBodyo.primary],
+      iD: iD
     }
   );
   ind.initInd(bodyo);
@@ -1499,16 +1557,23 @@ const makeBody = (inBodyo) => {
       bodyo.orbitDivLine[1] = currCoord;
     }
   }
+  console.log('Made ' + bodyo.name + ' (' + iD + ')');
 
+  if (bodyo.type !== 'asteroid') {mapPan.selectIDs[iD] = bodyo;}
   return bodyo;
 };
-const rockNamer = () => {
+const iDerGenGen = (prefix) => {
   let id = 0;
   return () => {
     id += 1;
-    return id;
+    return prefix + '-' + id;
   };
 };
+const craftNamer = iDerGenGen('HULL');
+const craftIDer = iDerGenGen('C');
+const bodyIDer = iDerGenGen('O');
+const rockIDer = iDerGenGen('R');
+const rockNamer = iDerGenGen('ASTR');
 function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
   let max = mean + deviation > upper ? upper : mean + deviation;
   let min = mean - deviation < lower ? lower : mean - deviation;
@@ -1523,6 +1588,7 @@ function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
 const rock = (belto) => {
   return {
     name: rockNamer(),
+    id: rockIDer(),
     type: 'asteroid',
     primary: belto.primary,
     mass: rand(belto.mass, belto.massd),
@@ -1565,44 +1631,16 @@ const orientOnSun = (bodyo, newData) => {
 const makeManyCraft = (craftType, numberToMake, craftList, owner = undefined) => {
   for (let i = 0; i < numberToMake; i++) {
     const baseTemplate = hullTemps[craftType]();
-    craftList.push(craft.makeCraft(baseTemplate, owner));
+    const name = craftNamer();
+    const iD = craftIDer();
+    let newCrafto = craft.makeCraft(baseTemplate, name, iD, owner);
+    craftList.push(newCrafto);
+    mapPan.selectIDs[iD] = newCrafto;
+    console.log('Made ' + name + ' (' + iD + ')');
   }
 };
-Window.options = {
-  rate: 1,
-  rateSetting: 3,
-  simRates: [0, 0.1, 0.5, 1, 2, 3, 5, 10],
-  targetFrames: 30,
-  header: false,
-  grid: true,
-  gridStep: 10,
-  gridCrossSize: 5,
-  headerKeys: true,
-  planetData: true,
-  craftData: true,
-  stop: false,
-  intercepts: true,
-  keyPanStep: 50,
-  isPaused: false,
-  boxSettings: false,
-};
-const options = Window.options;
-let mapPan = {
-  x: 0,
-  y: 0,
-  xLast: 0,
-  yLast: 0,
-  zoom: 1,
-  zoomLast: 1,
-  cursOriginX: 0,
-  cursOriginY: 0,
-  mousePosX: 0,
-  mousePosY: 0,
-  zoomChange: 0,
-  interceptUpdated: true
-};
 const updatePan = (mapPan) => {
-  // Update Pan here
+  // Update Pan here, who woulda guessed
   if ((mapPan.x != mapPan.xLast) || (mapPan.y != mapPan.yLast)) {
     document.getElementById('map').setAttribute(
       'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
@@ -1674,6 +1712,8 @@ const main = async () => {
   makeManyCraft('mountain', 2, craftList);
   makeManyCraft('barlog', 1, craftList);
 
+  console.log(mapPan.selectIDs);
+
   craftStart(craftList);
 
   let renderStatic          = undefined;
@@ -1689,23 +1729,25 @@ const main = async () => {
   let renderBoxSettings     = undefined;
   let renderGridScaleBar    = undefined;
 
+  const mkRndr = (place) => {return renderer(document.getElementById(place));};
+
   const initRateRenderer = () => {
-    renderRateCounter     = renderer(document.getElementById('rateCounter'));
+    renderRateCounter     = mkRndr('rateCounter');
   };
   const initRenderers = () => {
-    renderStatic          = renderer(document.getElementById('content'));
+    renderStatic          = mkRndr('content');
     renderStatic(drawMap.drawStatic(options, stars));
-    renderStaticOrbits    = renderer(document.getElementById('staticOrbits'));
-    renderStars           = renderer(document.getElementById('stars'));
-    renderGrid            = renderer(document.getElementById('grid'));
-    renderMoving          = renderer(document.getElementById('moving'));
+    renderStaticOrbits    = mkRndr('staticOrbits');
+    renderStars           = mkRndr('stars');
+    renderGrid            = mkRndr('grid');
+    renderMoving          = mkRndr('moving');
 
-    rendererIntercept     = renderer(document.getElementById('intercept'));
+    rendererIntercept     = mkRndr('intercept');
 
-    rendererMovingOrbits  = renderer(document.getElementById('movingOrbits'));
-    renderScreenFrame     = renderer(document.getElementById('screenFrame'));
-    renderBoxSettings     = renderer(document.getElementById('boxMainSettings'));
-    renderGridScaleBar    = renderer(document.getElementById('gridScaleBar'));
+    rendererMovingOrbits  = mkRndr('movingOrbits');
+    renderScreenFrame     = mkRndr('screenFrame');
+    renderBoxSettings     = mkRndr('boxMainSettings');
+    renderGridScaleBar    = mkRndr('gridScaleBar');
   };
 
 
@@ -1731,9 +1773,7 @@ const main = async () => {
 
   initRenderers();
   renderScreenFrame(drawMap.drawScreenFrame());
-  // initRateRenderer();
   renderAllResizedStatics(options, stars, planets, mapPan);
-  // updateRateCounter(options);
 
   const resizeWindow = () => {
     document.getElementById('allTheStuff').setAttribute('width', document.body.clientWidth);
@@ -1742,13 +1782,11 @@ const main = async () => {
       [0, 0, document.body.clientWidth + 1, document.body.clientHeight + 1].join(' ')
     );
     renderScreenFrame(drawMap.drawScreenFrame());
-    // updateRateCounter(options);
-    // ui.addRateListeners(options, updateRateCounter);
   };
   const placecheckBoxSettings = () => {
-    if (options.boxSettings) {
+    if (mapPan.boxes.boxSettings) {
       renderBoxSettings(drawMap.drawBoxSettings());
-      ui.addBoxSettingsListeners(options, renderBoxSettings);
+      ui.addBoxSettingsListeners(mapPan, renderBoxSettings);
       ui.addRateListeners(options, updateRateCounter);
       initRateRenderer();
       updateRateCounter(options);
@@ -2282,7 +2320,6 @@ module.exports = (x, y, obj) => {
 'use strict';
 
 const addRateListeners = (options, updateRateCounter) => {
-  // console.log(document.getElementById('buttonStop'));
   document.getElementById('buttonStop').addEventListener('click', function () {
     options.rateSetting = 0;
     options.rate = options.simRates[options.rateSetting];
@@ -2305,7 +2342,7 @@ const addRateListeners = (options, updateRateCounter) => {
   });
 };
 exports.addRateListeners = addRateListeners;
-exports.addBoxSettingsListeners = (options, renderBoxSettings) => {
+exports.addBoxSettingsListeners = (mapPan, renderBoxSettings) => {
   let boxSettingsSettings = {
     isDragging: false,
     xTransform: 40,
@@ -2342,17 +2379,17 @@ exports.addBoxSettingsListeners = (options, renderBoxSettings) => {
     boxSettingsSettings.isDragging = false;
   });
   document.getElementById('boxSettingsCloser').addEventListener('click', function () {
-    options.boxSettings = false;
+    mapPan.boxes.boxSettings = false;
     renderBoxSettings([]);
   });
 };
 exports.addListeners = (options, mapPan, renderers) => {
   document.getElementById('buttonSettings').addEventListener('click', function () {
-    if (options.boxSettings === false) {
-      options.boxSettings = true;
+    if (mapPan.boxes.boxSettings === false) {
+      mapPan.boxes.boxSettings = true;
       renderers.boxSettings();
     } else {
-      options.boxSettings = false;
+      mapPan.boxes.boxSettings = false;
       renderers.boxSettings();
     }
   });
@@ -2368,7 +2405,13 @@ exports.addListeners = (options, mapPan, renderers) => {
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
   window.addEventListener('resize', function() {renderers.resizeWindow();});
-  // document.getElementById('content').addEventListener('click', function () {console.log('Click!');});
+  // document.addEventListener('click', function () {console.log('Click!');});
+  const onClick = (event) => {
+    console.log(event.srcElement.id);
+    // console.log('here');
+  };
+  window.addEventListener('mousedown', onClick);
+
   document.onkeydown = checkKey;
   let isPanning = false;
   let pastOffsetX = 0;
