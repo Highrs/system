@@ -9,18 +9,6 @@ const lists = require('./lists.js');
 
 function getPageWidth() {return document.body.clientWidth;}
 function getPageHeight() {return document.body.clientHeight;}
-const boundsCheck = (x, y, margin = 10) => {
-  if (
-    x + margin > 0 &&
-    x - margin < getPageWidth() &&
-    y + margin > 0 &&
-    y - margin < getPageHeight()
-  ) {
-    return true;
-  } else {
-    return false;
-  }
-};
 
 const drawGrid = (mapPan, options, reReRenderScaleBar) => {
   let grid = ['g', {}];
@@ -96,7 +84,8 @@ const drawOrbits = (bodies, mapPan) => {
   const zoom = mapPan.zoom;
 
   bodies.forEach(bodyo => {
-    let partOrbit = ['g', tt(bodyo.primaryo.x * zoom, bodyo.primaryo.y * zoom)];
+    // console.log(bodyo);
+    let partOrbit = ['g', {id: bodyo.mapID + '-ORB'}];
     let coords = 'M ';
 
     for (let i = 0; i < bodyo.orbitPointsArr.length; i++) {
@@ -131,87 +120,6 @@ const drawOrbits = (bodies, mapPan) => {
   return retGroup;
 };
 exports.drawOrbits = drawOrbits;
-const drawSimpleOrbit = (stations, mapPan) => {
-  if (stations.length < 1) {return ['g', {}];}
-
-  let retGroup = ['g', {}];
-
-  stations.forEach(e => {
-    retGroup.push(
-      ['g', tt(e.px * mapPan.zoom, e.py * mapPan.zoom),
-        ['circle', {r : e.a * mapPan.zoom, class: 'minorOrbit'}]
-      ]
-    );
-  });
-
-  return retGroup;
-};
-const drawBodyData = (bodyo) => {
-  let dataDisp = ['g', {}];
-
-  dataDisp.push(
-    ['path', {d: 'M 0,0 L 20, -20 L 80, -20', class: 'dataLine'}],
-    ['text', {x: 20, y: -22, class: 'dataText'}, bodyo.name],
-    ['text', {x: 20, y: -10, class: 'rangeText'},
-      (bodyo.x).toFixed(0) + ',' +
-      (bodyo.y).toFixed(0) + ',' +
-      (bodyo.z).toFixed(0)
-    ]
-  );
-
-  return dataDisp;
-};
-const drawBodies = (bodies, options, mapPan) => {
-  if (bodies.length < 1) {return ['g', {}];}
-  const bodiesDrawn = ['g', {}];
-  bodies.forEach (bodyo =>{
-    if (boundsCheck(bodyo.x * mapPan.zoom + mapPan.x, bodyo.y * mapPan.zoom + mapPan.y, bodyo.objectRadius * 3)) {
-      let partBody = ['g', tt(bodyo.x * mapPan.zoom, bodyo.y * mapPan.zoom)];
-      if (options.planetData) {
-        partBody.push(drawBodyData(bodyo));
-      }
-
-      partBody.push(icons.body(bodyo, mapPan));
-      partBody.push(icons.brackets(bodyo.id, bodyo.objectRadius));
-      bodiesDrawn.push(partBody);
-    }
-  });
-  return bodiesDrawn;
-};
-const drawStations = (stations, options, mapPan) => {
-  if (stations.length < 1) {return ['g', {}];}
-  const stationsDrawn = ['g', {}];
-  stations.forEach(stationo => {
-    if (boundsCheck(stationo.x * mapPan.zoom + mapPan.x, stationo.y * mapPan.zoom + mapPan.y, 30)) {
-      for (let i = 0; i < stations.length; i++) {
-        let partStation = ['g', tt((stationo.x * mapPan.zoom), (stationo.y * mapPan.zoom))];
-        if (options.planetData) {partStation.push(['g', {}, drawBodyData(stationo),]);}
-
-        partStation.push(icons.station(stationo, mapPan));
-        partStation.push(icons.brackets(stationo.id, 5));
-        stationsDrawn.push(partStation);
-      }
-    }
-  });
-
-
-  return stationsDrawn;
-};
-const drawBelts = (belts, mapPan) => {
-  let rocksDrawn = ['g', {}];
-
-  belts.forEach(e => {
-    e.rocks.forEach(rocko => {
-      if (boundsCheck(rocko.x * mapPan.zoom + mapPan.x, rocko.y * mapPan.zoom + mapPan.y, rocko.objectRadius * 3)) {
-        rocksDrawn.push(
-          ['g', tt(rocko.x * mapPan.zoom, rocko.y * mapPan.zoom), icons.body(rocko, mapPan)]
-        );
-      }
-    });
-  });
-
-  return rocksDrawn;
-};
 const drawStars = (stars, mapPan) =>{
   let drawnStars = ['g', {}];
   stars.forEach((staro) => {
@@ -221,119 +129,7 @@ const drawStars = (stars, mapPan) =>{
   return drawnStars;
 };
 exports.drawStars = drawStars;
-const drawCraftData = (crafto) =>{
-  let drawnData = ['g', {}];
 
-  drawnData.push(
-    ['path', {d: 'M 0,0 L 10, -10 L 25, -10', class: 'dataLine'}],
-    ['text', {x: 10, y: -11, class: 'dataText'}, crafto.name + ' ' + crafto.abr],
-    // ['text', {x: 10, y: -4, class: 'dataText'}, 'F:' + ((crafto.fuel / crafto.fuelCapacity) * 100).toFixed(0) + '%']
-  );
-
-  // let offset = 0;
-  // Object.keys(crafto.cargo).forEach(specCargo => {
-  //   if (crafto.cargo[specCargo] > 0) {
-  //     drawnData.push(
-  //       ['text', {x: 10, y: 8 * offset, class: 'dataText'}, specCargo + ':' + crafto.cargo[specCargo]]
-  //     );
-  //     offset++;
-  //   }
-  // });
-
-  return drawnData;
-};
-const drawCraft = (listOfCraft, options, mapPan) => {
-  let drawnCraft = ['g', {}];
-
-  listOfCraft.forEach(crafto => {
-    if (crafto.status === 'traveling' || crafto.status === 'drifting') {
-      if (boundsCheck(crafto.x * mapPan.zoom + mapPan.x, crafto.y * mapPan.zoom + mapPan.y, 30)) {
-        let partCraft = ['g', tt((crafto.x * mapPan.zoom), (crafto.y * mapPan.zoom))];
-
-        // Accel Indicator
-        partCraft.push(
-          icons.thrustVector(crafto)
-        );
-
-        // Vector Line
-        partCraft.push(
-          ['line', {
-            x1: 0,
-            y1: 0,
-            x2: crafto.vx,
-            y2: crafto.vy,
-            class: 'vector'
-          }],
-          ['g', tt(crafto.vx, crafto.vy), [
-            'circle',
-            {r : 2, class: 'vector'}
-          ]]
-        );
-
-        // Data Display
-        if (options.craftData) { partCraft.push(drawCraftData(crafto)); }
-
-        // Craft Icon Itself
-        partCraft.push(
-          ['g', {},
-            ['g', {transform: 'rotate(' + crafto.course + ')'},
-              icons.craft(crafto)
-            ],
-            icons.brackets(crafto.id)
-          ]
-        );
-
-        drawnCraft.push(partCraft);
-      }
-    }
-  });
-
-  return drawnCraft;
-};
-const drawRanges = (bodyArr, mapPan) => {
-  let rangesDrawn = ['g', {}];
-  let linesDrawn = ['g', {}];
-  let windowsDrawn = ['g', {}];
-
-  for (let i = 0; i < bodyArr.length; i++) {
-    if (bodyArr[i].industry) {
-      for (let j = i + 1; j < bodyArr.length; j++) {
-        if (bodyArr[j].industry) {
-          linesDrawn.push(['line', {
-            x1: bodyArr[i].x * mapPan.zoom,
-            y1: bodyArr[i].y * mapPan.zoom,
-            x2: bodyArr[j].x * mapPan.zoom,
-            y2: bodyArr[j].y * mapPan.zoom,
-            class: 'rangeLine'
-          }]);
-
-          let dist = mech.calcDist(bodyArr[i], bodyArr[j]);
-
-          windowsDrawn.push(['g',
-          tt((((bodyArr[j].x) + (bodyArr[i].x)) / 2) * mapPan.zoom,
-            (((bodyArr[j].y) + (bodyArr[i].y)) / 2) * mapPan.zoom),
-            ['circle', {r: 2, class: 'rangeWindow'}],
-            ['rect', {
-              width: 42,
-              height: 10,
-              class: 'rangeWindow'
-            }],
-            ['text', {
-              x: 2,
-              y: 8.5,
-              class: 'rangeText'}, (dist).toFixed(2)]
-          ]);
-        }
-      }
-    }
-  }
-  rangesDrawn.push(linesDrawn, windowsDrawn);
-
-  return rangesDrawn;
-};
-const drawMovingOrbits = (moons, mapPan) => {
-  return ['g', {}, drawOrbits(moons, mapPan)];
-};
 exports.drawScreenFrame = () => {
   let frame = ['g', {}];
 
@@ -440,22 +236,141 @@ exports.drawBoxSettings = () => {
   return box;
 };
 
-exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
-  let rangeCandidates = [...planets, ...moons, ...ast];
+//Moving elements rendered in /main
+exports.drawMovingOrbits = (moons, mapPan) => {
+  return ['g', {}, drawOrbits(moons, mapPan)];
+};
+exports.drawSimpleOrbit = (stationo, mapPan) => {
 
-  rendererMovingOrbits(drawMovingOrbits(moons, mapPan));
+  let retGroup = ['g', {}];
 
-  return ['g', {},
-    // drawHeader(clock, options),
-    drawBelts(belts, mapPan),
-    drawSimpleOrbit(stations, mapPan),
-    drawRanges(rangeCandidates, mapPan),
-    drawBodies(moons, options, mapPan),
-    drawBodies(planets, options, mapPan),
-    drawBodies(ast, options, mapPan),
-    drawStations(stations, options, mapPan),
-    drawCraft(craft, options, mapPan)
+  retGroup.push(
+    ['g', tt(stationo.px * mapPan.zoom, stationo.py * mapPan.zoom),
+      ['circle', {r : stationo.a * mapPan.zoom, class: 'minorOrbit'}]
+    ]
+  );
+
+  return retGroup;
+};
+exports.drawRanges = (bodyArr, mapPan) => {
+  let rangesDrawn = ['g', {}];
+  let linesDrawn = ['g', {}];
+  let windowsDrawn = ['g', {}];
+
+  for (let i = 0; i < bodyArr.length; i++) {
+    if (bodyArr[i].industry) {
+      for (let j = i + 1; j < bodyArr.length; j++) {
+        if (bodyArr[j].industry) {
+          linesDrawn.push(['line', {
+            x1: bodyArr[i].x * mapPan.zoom,
+            y1: bodyArr[i].y * mapPan.zoom,
+            x2: bodyArr[j].x * mapPan.zoom,
+            y2: bodyArr[j].y * mapPan.zoom,
+            class: 'rangeLine'
+          }]);
+
+          let dist = mech.calcDist(bodyArr[i], bodyArr[j]);
+
+          windowsDrawn.push(['g',
+          tt((((bodyArr[j].x) + (bodyArr[i].x)) / 2) * mapPan.zoom,
+            (((bodyArr[j].y) + (bodyArr[i].y)) / 2) * mapPan.zoom),
+            ['circle', {r: 2, class: 'rangeWindow'}],
+            ['rect', {
+              width: 42,
+              height: 10,
+              class: 'rangeWindow'
+            }],
+            ['text', {
+              x: 2,
+              y: 8.5,
+              class: 'rangeText'}, (dist).toFixed(2)]
+          ]);
+        }
+      }
+    }
+  }
+  rangesDrawn.push(linesDrawn, windowsDrawn);
+
+  return rangesDrawn;
+};
+exports.drawBody = (bodyo) => {
+  let drawnBody = ['g', {}];
+  // drawnBody.push(drawBodyData(bodyo));
+
+  drawnBody.push(icons.body(bodyo));
+  drawnBody.push(icons.brackets(bodyo.id, bodyo.objectRadius));
+
+  return drawnBody;
+};
+exports.drawStation = (stationo) => {
+  const drawnStation = ['g', {}];
+
+  // drawnStation.push(['g', {}, drawBodyData(stationo),]);
+
+  drawnStation.push(icons.station(stationo));
+  drawnStation.push(icons.brackets(stationo.id, 5));
+
+  return drawnStation;
+};
+exports.drawCraft = (crafto) => {
+  const drawnCraft = ['g', {},
+    ['g', {
+      transform: 'rotate(' + crafto.course + ')',
+      id: crafto.mapID + '-ROT'
+    },
+    ['path', {
+      d: 'M 0,0 L -2, '+(-crafto.accel*8)+' L 2, '+(-crafto.accel*8)+' Z',
+      class: 'vector'
+    }],
+    icons.craft(crafto),
+    ]
   ];
+
+  //
+  //
+  //   // ['g', {
+  //   //   transform: 'rotate(' + (crafto.accelStat === 1 ? crafto.course : crafto.course + 180) + ')'
+  //   // }, [
+  //   // ]],
+  //
+  //   ['line', {
+  //     x1: 0,
+  //     y1: 0,
+  //     x2: crafto.vx,
+  //     y2: crafto.vy,
+  //     class: 'vector'
+  //   }],
+  //   ['g', {
+  //     transform: 'translate('+crafto.vx+', '+crafto.vy+')'
+  //   }, [
+  //     'circle',
+  //     {r : 2, class: 'vector'}
+  //   ]],
+  //   icons.brackets(crafto.id)
+  // ]];
+
+  return drawnCraft;
+};
+exports.updateCraft = (crafto) => {
+  if (crafto.type === 'craft' && crafto.render) {
+    if (crafto.status === 'new' || crafto.status === 'parked') {
+      if (crafto.visible) {
+        document.getElementById(crafto.mapID).style.visibility = "hidden";
+        crafto.visible = false;
+      }
+    } else if (crafto.status === 'traveling' || crafto.status === 'drifting') {
+      if (!crafto.visible) {
+        document.getElementById(crafto.mapID).style.visibility = "visible";
+        crafto.visible = true;
+        // console.log('here');
+      }
+      let rotation = crafto.accelStat === -1 ? crafto.course : crafto.course + 180;
+
+      document.getElementById(crafto.mapID + '-ROT').setAttribute(
+        'transform', 'rotate(' + (rotation) + ')'
+      );
+    }
+  }
 };
 exports.drawIntercepts = (listOfcraft, mapPan) => {
   let intercepts = ['g', {}];
@@ -468,11 +383,12 @@ exports.drawIntercepts = (listOfcraft, mapPan) => {
 
   return intercepts;
 };
-exports.drawStatic = (options, stars) => {
+exports.drawStatic = () => {
+  let color = '#ff7800';
   return getSvg({w:getPageWidth(), h:getPageHeight(), i:'allTheStuff'}).concat([
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
-        ['stop', {offset: "0%", 'stop-color': stars[0].color, 'stop-opacity': 0.5 }],
+        ['stop', {offset: "0%", 'stop-color': color, 'stop-opacity': 0.5 }],
         ['stop', {offset: "100%", 'stop-color': "#363636", 'stop-opacity':    0 }]
       ],
       ['radialGradient', {id: "RadialGradient2", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
@@ -481,12 +397,12 @@ exports.drawStatic = (options, stars) => {
         ['stop', {offset: "100%", 'stop-color': "#363636", 'stop-opacity':  0 }]
       ],
       ['radialGradient', {id: "RadialGradient3", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
-        ['stop', {offset: "25%", 'stop-color': stars[0].color, 'stop-opacity':  1 }],
-        ['stop', {offset: "35%", 'stop-color': stars[0].color, 'stop-opacity':  0.3 }],
-        ['stop', {offset: "50%", 'stop-color': stars[0].color, 'stop-opacity':  0.1 }],
-        ['stop', {offset: "100%", 'stop-color': stars[0].color, 'stop-opacity': 0 }]
+        ['stop', {offset: "25%", 'stop-color': color, 'stop-opacity':  1 }],
+        ['stop', {offset: "35%", 'stop-color': color, 'stop-opacity':  0.3 }],
+        ['stop', {offset: "50%", 'stop-color': color, 'stop-opacity':  0.1 }],
+        ['stop', {offset: "100%", 'stop-color': color, 'stop-opacity': 0 }]
       ],
-      ['radialGradient', {id: "EngineFlare", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
+      ['radialGradient', {id: "EngineFlare",     cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
         ['stop', {offset: "25%", 'stop-color': "#ffffff", 'stop-opacity':  0.2 }],
         // ['stop', {offset: "35%", 'stop-color': "#ffffff", 'stop-opacity':  0.3 }],
         ['stop', {offset: "90%", 'stop-color': "#ffffff", 'stop-opacity':  0.01 }],
@@ -498,7 +414,18 @@ exports.drawStatic = (options, stars) => {
       ['g', {id: 'movingOrbits'}],
       ['g', {id: 'stars'}],
       ['g', {id: 'grid'}],
-      ['g', {id: 'moving'}],
+      ['g', {id: 'moving'},
+        // ['g', {id: 'majorOrbits'}],
+        ['g', {id: 'simpleOrbits'}],
+        ['g', {id: 'ranges'}],
+        ['g', {id: 'belts'}],
+        ['g', {id: 'bodies'}],
+        // ['g', {id: 'bodiesMoons'}],
+        // ['g', {id: 'bodiesPlanets'}],
+        // ['g', {id: 'bodiesAsts'}],
+        // ['g', {id: 'stations'}],
+        ['g', {id: 'crafts'}],
+      ],
       ['g', {id: 'intercept'}]
     ],
     ['g', {id: 'screenFrame'}],

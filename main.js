@@ -1,5 +1,6 @@
 'use strict';
 const renderer = require('onml/renderer.js');
+const advRenderer = require('./advRenderer.js');
 const drawMap = require('./drawMap.js');
 const mech = require('./mechanics.js');
 const ind = require('./industry.js');
@@ -9,6 +10,21 @@ const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
 const ui = require('./ui.js');
 const PI = Math.PI;
+
+function getPageWidth() {return document.body.clientWidth;}
+function getPageHeight() {return document.body.clientHeight;}
+const boundsCheck = (x, y, margin = 10) => {
+  if (
+    x + margin > 0 &&
+    x - margin < getPageWidth() &&
+    y + margin > 0 &&
+    y - margin < getPageHeight()
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+};
 
 Window.options = {
   rate: 1,
@@ -44,32 +60,50 @@ let mapPan = {
   boxes: {
     boxSettings: false,
   },
-  selectIDs: {
-
-  }
+  // selectIDs: {
+  //
+  // }
 };
 
 const makeStar = (staro) => {
   return staro;
 };
 const makeBody = (inBodyo) => {
-  const iD = bodyIDer();
-  // console.log(iD);
+  const id = bodyIDer();
+  const mapID = id + '-MID';
+  advRenderer.appendRend('bodies', (['g', {id: mapID}]));
   const bodyo = Object.assign(
     inBodyo,
     {
       x: 0, y: 0, z: 0,
       sphereOfInfluence: 10,
       orient: 90,
+      shouldOrient: false,
       inputsList: [],
       outputsList: [],
       owner: 'EMPIRE',
       orbitPointsArr: [],
       orbitDivLine: [],
       primaryo: majObj[inBodyo.primary],
-      iD: iD
+      id: id,
+      render: false,
+      renderer: undefined,
+      mapID: mapID
     }
   );
+let drwr = undefined;
+  if (bodyo.type === 'station') {
+    drwr = drawMap.drawStation(bodyo);
+    bodyo.shouldOrient = true;
+  } else {
+    drwr = drawMap.drawBody(bodyo);
+  }
+
+  bodyo.renderer = function (drw = drwr) {
+    advRenderer.normRend(mapID, drw);
+  };
+
+
   ind.initInd(bodyo);
 
   let points = 128;
@@ -86,9 +120,7 @@ const makeBody = (inBodyo) => {
       bodyo.orbitDivLine[1] = currCoord;
     }
   }
-  console.log('Made ' + bodyo.name + ' (' + iD + ')');
 
-  if (bodyo.type !== 'asteroid') {mapPan.selectIDs[iD] = bodyo;}
   return bodyo;
 };
 const iDerGenGen = (prefix) => {
@@ -98,11 +130,11 @@ const iDerGenGen = (prefix) => {
     return prefix + '-' + id;
   };
 };
-const craftNamer = iDerGenGen('HULL');
-const craftIDer = iDerGenGen('C');
-const bodyIDer = iDerGenGen('O');
-const rockIDer = iDerGenGen('R');
-const rockNamer = iDerGenGen('ASTR');
+const craftNamer  = iDerGenGen('HULL');
+const craftIDer   = iDerGenGen('C');
+const bodyIDer    = iDerGenGen('O');
+const rockIDer    = iDerGenGen('R');
+const rockNamer   = iDerGenGen('ASTR');
 function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
   let max = mean + deviation > upper ? upper : mean + deviation;
   let min = mean - deviation < lower ? lower : mean - deviation;
@@ -115,9 +147,12 @@ function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
   );
 }
 const rock = (belto) => {
-  return {
+  const id = rockIDer();
+  const mapID = id + '-MID';
+  advRenderer.appendRend('belts', (['g', {id: mapID}]));
+  let rocko = {
     name: rockNamer(),
-    id: rockIDer(),
+    id: id,
     type: 'asteroid',
     primary: belto.primary,
     mass: rand(belto.mass, belto.massd),
@@ -130,7 +165,17 @@ const rock = (belto) => {
     inc:  rand(belto.inc, belto.incd, 2),
     maz:  rand(belto.maz, belto.mazd, 2),
     objectRadius: rand(belto.objectRadius, belto.objectRadiusD, 1),
+    x: 0, y: 0, z: 0,
+    render: false,
+    renderer: undefined,
+    mapID: mapID
   };
+  let drwr = drawMap.drawBody(rocko);
+  rocko.renderer = function (drw = drwr) {
+    advRenderer.normRend(mapID, drw);
+  };
+
+  return rocko;
 };
 const makeBelt = (belto) => {
   const belt = Object.assign(
@@ -151,29 +196,41 @@ const craftStart = (craftList) => {
     crafto.lastStop = majObj[crafto.home];
   });
 };
-const orientOnSun = (bodyo, newData) => {
-  if (bodyo.orient) {
-    ['x', 'y', 'z'].forEach(e => {bodyo['p' + e] = newData['p' + e];});
-    bodyo.orient = (Math.atan2(bodyo.py - bodyo.y, bodyo.px - bodyo.x) * 180 / Math.PI) + 90;
+const orientOnPrimary = (bodyo) => {
+  if (bodyo.shouldOrient) {
+    bodyo.orient = (Math.atan2(bodyo.primaryo.y - bodyo.y, bodyo.primaryo.x - bodyo.x) * 180 / Math.PI) + 90;
+    document.getElementById(bodyo.mapID + '-ORIENT').setAttribute(
+      'transform', 'rotate(' + bodyo.orient + '), scale(1.5, 1.5)'
+    );
   }
 };
 const makeManyCraft = (craftType, numberToMake, craftList, owner = undefined) => {
   for (let i = 0; i < numberToMake; i++) {
     const baseTemplate = hullTemps[craftType]();
     const name = craftNamer();
-    const iD = craftIDer();
-    let newCrafto = craft.makeCraft(baseTemplate, name, iD, owner);
+    const id = craftIDer();
+    const mapID = id + '-MID';
+
+    advRenderer.appendRend('crafts', (['g', {id: mapID}]));
+    let newCrafto = craft.makeCraft(baseTemplate, name, id, owner);
+    let drwr = drawMap.drawCraft(newCrafto);
+    newCrafto.renderer = function (drw = drwr) {
+      advRenderer.normRend(newCrafto.mapID, drw);
+    };
     craftList.push(newCrafto);
-    mapPan.selectIDs[iD] = newCrafto;
-    console.log('Made ' + name + ' (' + iD + ')');
+    // mapPan.selectIDs[id] = newCrafto;
+    console.log('Made ' + name + ' (' + id + ')');
   }
+};
+const changeElementTT = (id, x, y) => {
+  document.getElementById(id).setAttribute(
+    'transform', 'translate(' + x + ', ' + y + ')'
+  );
 };
 const updatePan = (mapPan) => {
   // Update Pan here, who woulda guessed
   if ((mapPan.x != mapPan.xLast) || (mapPan.y != mapPan.yLast)) {
-    document.getElementById('map').setAttribute(
-      'transform', 'translate(' + mapPan.x + ', ' + mapPan.y + ')'
-    );
+    changeElementTT('map', mapPan.x, mapPan.y);
     mapPan.xLast = mapPan.x;
     mapPan.yLast = mapPan.y;
     return true;
@@ -193,12 +250,26 @@ const updateZoom = (mapPan) => {
     mapPan.x = mapPan.mousePosX + (mapPan.x - mapPan.mousePosX) * (mapPan.zoom / mapPan.zoomLast);
     mapPan.y = mapPan.mousePosY + (mapPan.y - mapPan.mousePosY) * (mapPan.zoom / mapPan.zoomLast);
 
-    // console.log(mapPan.x);
     mapPan.zoomChange = 0;
     mapPan.zoomLast = mapPan.zoom;
     return true;
   }
   return false;
+};
+const updateMovingOrbits = (moons, mapPan) => {
+  moons.forEach(bodyo => {
+    let id = bodyo.id + '-MID-ORB';
+    document.getElementById(id, changeElementTT(id, bodyo.primaryo.x * mapPan.zoom, bodyo.primaryo.y * mapPan.zoom));
+  });
+};
+const mkRndr = (place) => {
+  return renderer(document.getElementById(place));
+};
+const reDrawSimpOrbs = (stations) => {
+  [...stations].forEach(e => {
+    advRenderer.appendRend('staticOrbits', (['g', {id: e.mapID + '-ORB'}]));
+    advRenderer.normRend(e.mapID + '-ORB', drawMap.drawSimpleOrbit(e, mapPan));
+  });
 };
 const main = async () => {
   console.log('Giant alien spiders are no joke!');
@@ -210,9 +281,31 @@ const main = async () => {
   let asteroids = [];
   let indSites = [];
   let belts = [];
+  let beltRocks = [];
   let stations = [];
 
   let craftList = [];
+
+  let renderRateCounter     = undefined;
+  const initRateRenderer = () => {
+    renderRateCounter     = mkRndr('rateCounter');
+  };
+
+  let renderStatic          = mkRndr('content');
+  renderStatic(drawMap.drawStatic());
+
+  let renderStaticOrbits    = mkRndr('staticOrbits');
+  let renderStars           = mkRndr('stars');
+  let renderGrid            = mkRndr('grid');
+
+  let rendererIntercept     = mkRndr('intercept');
+
+  let rendererMovingOrbits  = mkRndr('movingOrbits');
+  let renderScreenFrame     = mkRndr('screenFrame');
+  let renderBoxSettings     = mkRndr('boxMainSettings');
+  let renderGridScaleBar    = mkRndr('gridScaleBar');
+  let renderRanges          = mkRndr('ranges');
+
 
   let sysObjects = {...majObj,...constructs};
 
@@ -232,8 +325,15 @@ const main = async () => {
     if (theObj.industry) { indSites.push(theObj); }
   });
 
+  belts.forEach(belt => {
+    belt.rocks.forEach(rok => {
+      beltRocks.push(rok);
+    });
+  });
+
   let movBod = [].concat(planets, moons, asteroids, stations);
   belts.forEach(e => (movBod = movBod.concat(e.rocks)));
+  let rangeCandidates = [...planets, ...moons, ...asteroids];
 
   // makeManyCraft('menace', 1, craftList, 'Pirate');
   makeManyCraft('brick', 4, craftList);
@@ -241,48 +341,12 @@ const main = async () => {
   makeManyCraft('mountain', 2, craftList);
   makeManyCraft('barlog', 1, craftList);
 
-  console.log(mapPan.selectIDs);
+  // console.log(mapPan.selectIDs);
 
   craftStart(craftList);
 
-  let renderStatic          = undefined;
-  let renderStaticOrbits    = undefined;
-  let renderStars           = undefined;
-  let renderGrid            = undefined;
-  let renderMoving          = undefined;
-  let rendererIntercept     = undefined;
-  let rendererMovingOrbits  = undefined;
-
-  let renderRateCounter     = undefined;
-  let renderScreenFrame     = undefined;
-  let renderBoxSettings     = undefined;
-  let renderGridScaleBar    = undefined;
-
-  const mkRndr = (place) => {return renderer(document.getElementById(place));};
-
-  const initRateRenderer = () => {
-    renderRateCounter     = mkRndr('rateCounter');
-  };
-  const initRenderers = () => {
-    renderStatic          = mkRndr('content');
-    renderStatic(drawMap.drawStatic(options, stars));
-    renderStaticOrbits    = mkRndr('staticOrbits');
-    renderStars           = mkRndr('stars');
-    renderGrid            = mkRndr('grid');
-    renderMoving          = mkRndr('moving');
-
-    rendererIntercept     = mkRndr('intercept');
-
-    rendererMovingOrbits  = mkRndr('movingOrbits');
-    renderScreenFrame     = mkRndr('screenFrame');
-    renderBoxSettings     = mkRndr('boxMainSettings');
-    renderGridScaleBar    = mkRndr('gridScaleBar');
-  };
-
-
-
-  mapPan.x = document.body.clientWidth / 2;
-  mapPan.y = document.body.clientHeight / 2;
+  mapPan.x = getPageWidth() / 2;
+  mapPan.y = getPageHeight() / 2;
 
   function reReRenderScaleBar(options, mapPan) {
     renderGridScaleBar(drawMap.drawGridScaleBar(options, mapPan));
@@ -300,15 +364,16 @@ const main = async () => {
     mapPan.interceptUpdated = false;
   };
 
-  initRenderers();
+
+
   renderScreenFrame(drawMap.drawScreenFrame());
   renderAllResizedStatics(options, stars, planets, mapPan);
 
   const resizeWindow = () => {
-    document.getElementById('allTheStuff').setAttribute('width', document.body.clientWidth);
-    document.getElementById('allTheStuff').setAttribute('height', document.body.clientHeight);
+    document.getElementById('allTheStuff').setAttribute('width', getPageWidth());
+    document.getElementById('allTheStuff').setAttribute('height', getPageHeight());
     document.getElementById('allTheStuff').setAttribute('viewBox',
-      [0, 0, document.body.clientWidth + 1, document.body.clientHeight + 1].join(' ')
+      [0, 0, getPageWidth() + 1, getPageHeight() + 1].join(' ')
     );
     renderScreenFrame(drawMap.drawScreenFrame());
   };
@@ -329,6 +394,8 @@ const main = async () => {
     boxSettings: placecheckBoxSettings
   };
 
+  reDrawSimpOrbs(stations);
+
   ui.addListeners(options, mapPan, renderers);
   // ui.addRateListeners(options, updateRateCounter);
 
@@ -338,6 +405,7 @@ const main = async () => {
   let clockZero = performance.now();
   let currentTime = Date.now();
 
+  rendererMovingOrbits(drawMap.drawMovingOrbits(moons, mapPan));
   const loop = () => {
     let time = performance.now();
     let timeDelta = time - clockZero;
@@ -347,28 +415,64 @@ const main = async () => {
       let workTime = (timeDelta * options.rate * simpRate);
       currentTime += workTime;
 
-      for (let i = 0; i < movBod.length; i++) {
-        movBod[i].t = currentTime;
-        let newData = mech.kepCalc(movBod[i]);
-        ['x', 'y', 'z'].forEach(e => {movBod[i][e] = newData[e];});
-        orientOnSun(movBod[i], newData);
-      }
+      movBod.forEach(bod => {
+        bod.t = currentTime;
+        let newData = mech.kepCalc(bod);
+        ['x', 'y', 'z'].forEach(e => {bod[e] = newData[e];});
+      });
 
       if (updateZoom(mapPan)) {
         mapPan.interceptUpdated = true;
         renderAllResizedStatics(options, stars, planets, mapPan);
+        rendererMovingOrbits(drawMap.drawMovingOrbits(moons, mapPan));
+        reDrawSimpOrbs(stations);
       }
+
       if (updatePan(mapPan)) {
         renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
       }
 
-      renderMoving(
-        drawMap.drawMoving(options, Date(currentTime), planets, moons, asteroids, belts,
-        craftList, stations, rendererMovingOrbits, mapPan)
-      );
+
+      updateMovingOrbits(moons, mapPan);
+      renderRanges(drawMap.drawRanges(rangeCandidates, mapPan));
 
       craftList.forEach(crafto => {
         craft.craftAI(crafto, indSites, craftList, workTime, stars[0], sysObjects, mapPan);
+      });
+
+      //render checker
+      [
+        ...planets,
+        ...moons,
+        ...asteroids,
+        ...beltRocks,
+        ...stations,
+        ...craftList
+      ].forEach(e => {
+        const inBounds = boundsCheck(e.x * mapPan.zoom + mapPan.x, e.y * mapPan.zoom + mapPan.y, 30);
+
+        if (!e.render && inBounds) {
+          e.render = true;
+          e.renderer();
+        } else if (e.render && !inBounds) {
+          e.render = false;
+          e.renderer([]);
+        } else if (e.render && inBounds) {
+          changeElementTT(e.mapID, e.x * mapPan.zoom, e.y * mapPan.zoom);
+        } else if (!e.render && !inBounds) {
+          // do nothing
+        } else {
+          console.log('Unknown render state for:');
+          console.log(e);
+        }
+
+        drawMap.updateCraft(e);
+      });
+
+      movBod.forEach(bod => {
+        if (bod.render) {
+          orientOnPrimary(bod);
+        }
       });
 
       if (mapPan.interceptUpdated) {interceptDraw();}

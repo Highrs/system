@@ -2,15 +2,17 @@ const tt = require('onml/tt.js');
 
 module.exports = {
 
-  body:         (bodyo, mapPan) => {
+  body:         (bodyo) => {
     let tempBod = ['g', {}];
 
     if (bodyo.industry) {
       tempBod.push(
-        ['circle', {
-          r: bodyo.sphereOfInfluence * mapPan.zoom,
-          class: 'bodyZone'
-        }]
+        ['g', {},
+          ['circle', {
+            r: 0,
+            class: 'bodyZone'
+          }]
+        ]
       );
     }
 
@@ -107,7 +109,7 @@ module.exports = {
         fill: "url(#EngineFlare)"
       }],
       ['path', {
-        transform: 'rotate( ' + (crafto.accelStat === 1 ? 0 : 180) + '), scale(2, 2)',
+        transform: 'scale(2, 2)',
         d: iconString,
         class: 'craft'
       }]
@@ -139,27 +141,15 @@ module.exports = {
 
     retStat.push(
       ['path', {
-        transform: 'rotate(' + stationo.orient + '), scale(2, 2)',
+        id: stationo.mapID + '-ORIENT',
+        transform: 'rotate(' + stationo.orient + '), scale(1.5, 1.5)',
+        // , scale(2, 2)
         d: iconString,
         class: 'station'
       }]
     );
 
     return retStat;
-  },
-  thrustVector: (crafto) => {
-    let drawnVector = ['g', {
-      transform: 'rotate(' + (crafto.accelStat === 1 ? crafto.course : crafto.course + 180) + ')'
-    }];
-
-    drawnVector.push(
-      ['path', {
-        d: 'M 0,0 L -2, '+(-crafto.accel*8)+' L 2, '+(-crafto.accel*8)+' Z',
-        class: 'vector'
-      }],
-    );
-
-    return drawnVector;
   },
   gridCross:    (crossSize, x, y) => {
     return ['g', {},

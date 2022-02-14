@@ -6,16 +6,17 @@ const ind = require('./industry.js');
 // Bezier Curve:
 // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
 
-const makeCraft = (crafto, name, iD, owner = 'EMPIRE') => {
-  // const initWait = iD % 10;
+const makeCraft = (crafto, name, id, owner = 'EMPIRE') => {
+  // const initWait = id % 10;
   const initWait = 10;
-  let newCrafto = {};
-  Object.assign(
-    newCrafto,
+  const mapID = id + '-MID';
+
+  const newCrafto = Object.assign(
     crafto,
     {
       name: name,
-      id: iD,
+      id: id,
+      type: 'craft',
       x: 0, y: 0, z: 0,
       vx: 0, vy: 0, vz: 0,
       speed: 0,
@@ -28,11 +29,13 @@ const makeCraft = (crafto, name, iD, owner = 'EMPIRE') => {
       cargo: {},
       fuel: crafto.fuelCapacity,
       owner: owner,
-      waitCycle: 0 + initWait
+      waitCycle: 0 + initWait,
+      render: false,
+      renderer: undefined,
+      mapID: mapID,
+      visible: true
     }
   );
-
-  // console.log(newCrafto);
 
   return newCrafto;
 };
@@ -93,6 +96,7 @@ const calcActiveMotion = (crafto, targeto, timeDelta) => {
   } else {
     crafto.accelStat = dir;
   }
+  // console.log(crafto.accelStat);
 };
 const calcDriftMotion = (crafto, timeDelta) => {
   // timeDelta passed down in SECONDS not ms
@@ -163,7 +167,7 @@ const calcIntercept = (crafto, bodyo, staro) => {
   return intercepto;
 };
 const calcCourse = (crafto, intercepto) => {
-  crafto.course = (Math.atan2(intercepto.py, intercepto.px) * 180 / Math.PI) - 90;
+  crafto.course = (Math.atan2(intercepto.py, intercepto.px) * 180 / Math.PI) + 90;
 };
 const buildWaypoint = (bodyo) => {
   let waypoint = {
@@ -183,10 +187,7 @@ const tryToMakeRoute = (crafto, indSites, staro, listOfcraft, mapPan) => {
       crafto['v' + e] = 0;
     });
   } else {
-    // console.log('here');
-    // rendererIntercept(drawMap.drawIntercepts(listOfcraft, mapPan));
     mapPan.interceptUpdated = true;
-    // console.log('here 2');
   }
 };
 const calcFuelNeeded = (crafto, routeArr = []) => {
@@ -195,7 +196,6 @@ const calcFuelNeeded = (crafto, routeArr = []) => {
   let counter = 0;
   let lastEl = {};
   routeArr.forEach(e => {
-    // console.log(e);
     if (e === undefined || !e.x) {
       console.log('[!] ERROR IN CALCFUEL ARR');
     } else if (counter === 0) {
@@ -342,8 +342,6 @@ const calcSolarDanger = (crafto, icpto, staro) => {
 
   let distCT = Math.cos(angleICS) * distCS;
   let distST = Math.sin(angleICS) * distCS;
-
-  // console.log(distST);
 
   if (distCT > distCI) {return Infinity;} else {return distST;}
 

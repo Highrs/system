@@ -15,6 +15,63 @@
 //   return polarGrid;
 // };
 
+
+// const drawCraftData = (crafto) =>{
+//   let drawnData = ['g', {}];
+//
+//   drawnData.push(
+//     ['path', {d: 'M 0,0 L 10, -10 L 25, -10', class: 'dataLine'}],
+//     ['text', {x: 10, y: -11, class: 'dataText'}, crafto.name + ' ' + crafto.abr],
+//     // ['text', {x: 10, y: -4, class: 'dataText'}, 'F:' + ((crafto.fuel / crafto.fuelCapacity) * 100).toFixed(0) + '%']
+//   );
+//
+//   // let offset = 0;
+//   // Object.keys(crafto.cargo).forEach(specCargo => {
+//   //   if (crafto.cargo[specCargo] > 0) {
+//   //     drawnData.push(
+//   //       ['text', {x: 10, y: 8 * offset, class: 'dataText'}, specCargo + ':' + crafto.cargo[specCargo]]
+//   //     );
+//   //     offset++;
+//   //   }
+//   // });
+//
+//   return drawnData;
+// };
+
+// const drawBodyData = (bodyo) => {
+//   let dataDisp = ['g', {}];
+//
+//   dataDisp.push(
+//     ['path', {d: 'M 0,0 L 20, -20 L 80, -20', class: 'dataLine'}],
+//     ['text', {x: 20, y: -22, class: 'dataText'}, bodyo.name],
+//     ['text', {x: 20, y: -10, class: 'rangeText'},
+//       (bodyo.x).toFixed(0) + ',' +
+//       (bodyo.y).toFixed(0) + ',' +
+//       (bodyo.z).toFixed(0)
+//     ]
+//   );
+//
+//   return dataDisp;
+// };
+
+// exports.drawMoving = (options, clock, planets, moons, ast, belts, craft, stations, rendererMovingOrbits, mapPan) => {
+//   let rangeCandidates = [...planets, ...moons, ...ast];
+//
+//   rendererMovingOrbits(drawMovingOrbits(moons, mapPan));
+//
+//   return ['g', {},
+//     // drawHeader(clock, options),
+//     drawBelts(belts, mapPan),
+//     drawSimpleOrbit(stations, mapPan),
+//     drawRanges(rangeCandidates, mapPan),
+//     drawBodies(moons, options, mapPan),
+//     drawBodies(planets, options, mapPan),
+//     drawBodies(ast, options, mapPan),
+//     drawStations(stations, options, mapPan),
+//     drawCraft(craft, options, mapPan)
+//   ];
+// };
+
 // const drawIndustryData = (body) => {
 //   let display = ['g', tt(10, -10)];
 //

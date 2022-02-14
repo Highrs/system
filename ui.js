@@ -86,12 +86,6 @@ exports.addListeners = (options, mapPan, renderers) => {
   window.addEventListener('blur', pause);
   window.addEventListener('focus', play);
   window.addEventListener('resize', function() {renderers.resizeWindow();});
-  // document.addEventListener('click', function () {console.log('Click!');});
-  const onClick = (event) => {
-    console.log(event.srcElement.id);
-    // console.log('here');
-  };
-  window.addEventListener('mousedown', onClick);
 
   document.onkeydown = checkKey;
   let isPanning = false;

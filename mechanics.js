@@ -110,6 +110,7 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
     ax: bodyCoords.x,
     ay: bodyCoords.y,
     az: bodyCoords.z,
+
     // focalShift: focalShift
   };
 };
