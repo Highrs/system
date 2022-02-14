@@ -91,7 +91,8 @@ const makeBody = (inBodyo) => {
       mapID: mapID
     }
   );
-let drwr = undefined;
+
+  let drwr = undefined;
   if (bodyo.type === 'station') {
     drwr = drawMap.drawStation(bodyo);
     bodyo.shouldOrient = true;
@@ -267,7 +268,7 @@ const mkRndr = (place) => {
 };
 const reDrawSimpOrbs = (stations) => {
   [...stations].forEach(e => {
-    advRenderer.appendRend('staticOrbits', (['g', {id: e.mapID + '-ORB'}]));
+    advRenderer.appendRend('simpleOrbits', (['g', {id: e.mapID + '-ORB'}]));
     advRenderer.normRend(e.mapID + '-ORB', drawMap.drawSimpleOrbit(e, mapPan));
   });
 };
@@ -363,10 +364,11 @@ const main = async () => {
     rendererIntercept(drawMap.drawIntercepts(craftList, mapPan));
     mapPan.interceptUpdated = false;
   };
+  const reRendScreenFrame = (mapPan, renderers) => {
+    renderScreenFrame(drawMap.drawScreenFrame());
+    ui.addFrameListeners(mapPan, renderers);
+  };
 
-
-
-  renderScreenFrame(drawMap.drawScreenFrame());
   renderAllResizedStatics(options, stars, planets, mapPan);
 
   const resizeWindow = () => {
@@ -375,7 +377,7 @@ const main = async () => {
     document.getElementById('allTheStuff').setAttribute('viewBox',
       [0, 0, getPageWidth() + 1, getPageHeight() + 1].join(' ')
     );
-    renderScreenFrame(drawMap.drawScreenFrame());
+    reRendScreenFrame(mapPan, renderers);
   };
   const placecheckBoxSettings = () => {
     if (mapPan.boxes.boxSettings) {
@@ -393,6 +395,8 @@ const main = async () => {
     resizeWindow: resizeWindow,
     boxSettings: placecheckBoxSettings
   };
+
+  reRendScreenFrame(mapPan, renderers);
 
   reDrawSimpOrbs(stations);
 
@@ -464,6 +468,11 @@ const main = async () => {
         } else {
           console.log('Unknown render state for:');
           console.log(e);
+        }
+
+        if (e.type === 'station' && e.primary !== 'prime') {
+          advRenderer.normRend(e.mapID + '-ORB', drawMap.drawSimpleOrbit(e, mapPan));
+          // console.log('here');
         }
 
         drawMap.updateCraft(e);

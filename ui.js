@@ -64,7 +64,7 @@ exports.addBoxSettingsListeners = (mapPan, renderBoxSettings) => {
     renderBoxSettings([]);
   });
 };
-exports.addListeners = (options, mapPan, renderers) => {
+exports.addFrameListeners = (mapPan, renderers) => {
   document.getElementById('buttonSettings').addEventListener('click', function () {
     if (mapPan.boxes.boxSettings === false) {
       mapPan.boxes.boxSettings = true;
@@ -74,6 +74,8 @@ exports.addListeners = (options, mapPan, renderers) => {
       renderers.boxSettings();
     }
   });
+};
+exports.addListeners = (options, mapPan, renderers) => {
   const checkKey = (e) => {
     if      (e.keyCode == '38') {/* up arrow */     mapPan.y += options.keyPanStep;}
     else if (e.keyCode == '40') {/* down arrow */   mapPan.y -= options.keyPanStep;}

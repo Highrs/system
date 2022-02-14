@@ -245,8 +245,11 @@ exports.drawSimpleOrbit = (stationo, mapPan) => {
   let retGroup = ['g', {}];
 
   retGroup.push(
-    ['g', tt(stationo.px * mapPan.zoom, stationo.py * mapPan.zoom),
-      ['circle', {r : stationo.a * mapPan.zoom, class: 'minorOrbit'}]
+    ['g', tt(stationo.primaryo.x * mapPan.zoom, stationo.primaryo.y * mapPan.zoom),
+      ['circle', {
+        r : stationo.a * mapPan.zoom,
+        class: 'minorOrbit'}
+      ]
     ]
   );
 
@@ -412,6 +415,7 @@ exports.drawStatic = () => {
     ['g', {id: 'map'},
       ['g', {id: 'staticOrbits'}],
       ['g', {id: 'movingOrbits'}],
+      ['g', {id: 'simpleOrbits'}],
       ['g', {id: 'stars'}],
       ['g', {id: 'grid'}],
       ['g', {id: 'moving'},
