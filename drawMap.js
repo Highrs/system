@@ -129,7 +129,6 @@ const drawStars = (stars, mapPan) =>{
   return drawnStars;
 };
 exports.drawStars = drawStars;
-
 exports.drawScreenFrame = () => {
   let frame = ['g', {}];
 
@@ -300,10 +299,32 @@ exports.drawBody = (bodyo) => {
   let drawnBody = ['g', {}];
   // drawnBody.push(drawBodyData(bodyo));
 
+  if (bodyo.shadow) {drawnBody.push(drawShadow(bodyo));}
   drawnBody.push(icons.body(bodyo));
   drawnBody.push(icons.brackets(bodyo.id, bodyo.objectRadius));
 
   return drawnBody;
+};
+const drawShadow = (bodyo) => {
+  let shadow = ['g', {
+    id: bodyo.mapID + '-SHAD',
+    transform: 'rotate(0)'
+  }];
+
+  let rad = bodyo.objectRadius * 2;
+
+  let coords = 'M '+rad+',0 L 0,'+rad*50+' L -'+rad+',0 Z';
+
+  shadow.push(
+    ['path', {
+      d: coords,
+      // class: 'shadow',
+      fill: 'url(#ShadowGrad)'
+    }]
+  );
+
+
+  return shadow;
 };
 exports.drawStation = (stationo) => {
   const drawnStation = ['g', {}];
@@ -407,10 +428,13 @@ exports.drawStatic = () => {
       ],
       ['radialGradient', {id: "EngineFlare",     cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
         ['stop', {offset: "25%", 'stop-color': "#ffffff", 'stop-opacity':  0.2 }],
-        // ['stop', {offset: "35%", 'stop-color': "#ffffff", 'stop-opacity':  0.3 }],
         ['stop', {offset: "90%", 'stop-color': "#ffffff", 'stop-opacity':  0.01 }],
         ['stop', {offset: "100%", 'stop-color': "#ffffff", 'stop-opacity': 0 }]
-      ]
+      ],
+      ['linearGradient', {id: "ShadowGrad",     x1: 0, x2: 0, y1: 0, y2: 1 },
+        ['stop', {offset: "0%", 'stop-color': "#000000", 'stop-opacity':  0.5 }],
+        ['stop', {offset: "50%", 'stop-color': "#000000", 'stop-opacity': 0 }]
+      ],
     ],
     ['g', {id: 'map'},
       ['g', {id: 'staticOrbits'}],

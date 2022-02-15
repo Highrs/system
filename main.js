@@ -88,12 +88,14 @@ const makeBody = (inBodyo) => {
       id: id,
       render: false,
       renderer: undefined,
-      mapID: mapID
+      mapID: mapID,
+      shadow: true
     }
   );
 
   let drwr = undefined;
   if (bodyo.type === 'station') {
+    bodyo.shadow = false;
     drwr = drawMap.drawStation(bodyo);
     bodyo.shouldOrient = true;
   } else {
@@ -397,11 +399,8 @@ const main = async () => {
   };
 
   reRendScreenFrame(mapPan, renderers);
-
   reDrawSimpOrbs(stations);
-
   ui.addListeners(options, mapPan, renderers);
-  // ui.addRateListeners(options, updateRateCounter);
 
 // <---------LOOP---------->
   let simpRate = 1 / 1000;
@@ -473,6 +472,14 @@ const main = async () => {
         if (e.type === 'station' && e.primary !== 'prime') {
           advRenderer.normRend(e.mapID + '-ORB', drawMap.drawSimpleOrbit(e, mapPan));
           // console.log('here');
+        }
+
+        if (e.shadow) {
+          // console.log('here');
+          let angle = (Math.atan2(0 - e.y, 0 - e.x) * 180 / Math.PI) + 90;
+          document.getElementById(e.mapID + '-SHAD').setAttribute(
+            'transform', 'rotate(' + angle + ')'
+          );
         }
 
         drawMap.updateCraft(e);
