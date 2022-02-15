@@ -474,7 +474,7 @@ const main = async () => {
           // console.log('here');
         }
 
-        if (e.shadow) {
+        if (e.shadow && e.render) {
           // console.log('here');
           let angle = (Math.atan2(0 - e.y, 0 - e.x) * 180 / Math.PI) + 90;
           document.getElementById(e.mapID + '-SHAD').setAttribute(
