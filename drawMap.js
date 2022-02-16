@@ -312,12 +312,25 @@ const drawShadow = (bodyo) => {
   }];
 
   let rad = bodyo.objectRadius * 2;
+  let shadLeng = rad*100;
+  let shadWidth = rad*10;
 
-  let coords = 'M '+rad+',0 L 0,'+rad*50+' L -'+rad+',0 Z';
+
+  let coords1 = 'M '+rad+',0 L 0,'+shadLeng+' L -'+rad+',0 Z';
+  let coords2 = 'M '+rad+',0 L '+shadWidth+','+shadLeng+' L -'+shadWidth+','+shadLeng+' L -'+rad+',0 Z';
+
 
   shadow.push(
     ['path', {
-      d: coords,
+      d: coords1,
+      // class: 'shadow',
+      fill: 'url(#ShadowGrad)'
+    }]
+  );
+
+  shadow.push(
+    ['path', {
+      d: coords2,
       // class: 'shadow',
       fill: 'url(#ShadowGrad)'
     }]
@@ -401,18 +414,25 @@ exports.drawIntercepts = (listOfcraft, mapPan) => {
 
   listOfcraft.forEach(crafto => {
     if (crafto.intercept && (crafto.status === 'traveling')) {
-      intercepts.push(['g', tt(crafto.intercept.x * mapPan.zoom, crafto.intercept.y * mapPan.zoom), icons.marker()]);
+      intercepts.push(
+        ['g',
+        tt(crafto.intercept.x * mapPan.zoom, crafto.intercept.y * mapPan.zoom),
+        ['g', {transform: 'scale(2,2)'},
+          icons.marker()]
+        ]
+      );
     }
   });
 
   return intercepts;
 };
 exports.drawStatic = () => {
-  let color = '#ff7800';
+  let starColor = '#ff7800';
+  let shadowColor = "#363636";
   return getSvg({w:getPageWidth(), h:getPageHeight(), i:'allTheStuff'}).concat([
     ['defs',
       ['radialGradient', {id: "RadialGradient1", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
-        ['stop', {offset: "0%", 'stop-color': color, 'stop-opacity': 0.5 }],
+        ['stop', {offset: "0%", 'stop-color': starColor, 'stop-opacity': 0.5 }],
         ['stop', {offset: "100%", 'stop-color': "#363636", 'stop-opacity':    0 }]
       ],
       ['radialGradient', {id: "RadialGradient2", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
@@ -421,19 +441,19 @@ exports.drawStatic = () => {
         ['stop', {offset: "100%", 'stop-color': "#363636", 'stop-opacity':  0 }]
       ],
       ['radialGradient', {id: "RadialGradient3", cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
-        ['stop', {offset: "25%", 'stop-color': color, 'stop-opacity':  1 }],
-        ['stop', {offset: "35%", 'stop-color': color, 'stop-opacity':  0.3 }],
-        ['stop', {offset: "50%", 'stop-color': color, 'stop-opacity':  0.1 }],
-        ['stop', {offset: "100%", 'stop-color': color, 'stop-opacity': 0 }]
+        ['stop', {offset: "25%", 'stop-color': starColor, 'stop-opacity':  1 }],
+        ['stop', {offset: "35%", 'stop-color': starColor, 'stop-opacity':  0.3 }],
+        ['stop', {offset: "50%", 'stop-color': starColor, 'stop-opacity':  0.1 }],
+        ['stop', {offset: "100%", 'stop-color': starColor, 'stop-opacity': 0 }]
       ],
       ['radialGradient', {id: "EngineFlare",     cx: 0.5, cy: 0.5, r: .5, fx: 0.5, fy: 0.5},
-        ['stop', {offset: "25%", 'stop-color': "#ffffff", 'stop-opacity':  0.2 }],
+        ['stop', {offset: "25%", 'stop-color': "#ffffff", 'stop-opacity':  0.1 }],
         ['stop', {offset: "90%", 'stop-color': "#ffffff", 'stop-opacity':  0.01 }],
         ['stop', {offset: "100%", 'stop-color': "#ffffff", 'stop-opacity': 0 }]
       ],
       ['linearGradient', {id: "ShadowGrad",     x1: 0, x2: 0, y1: 0, y2: 1 },
-        ['stop', {offset: "0%", 'stop-color': "#000000", 'stop-opacity':  0.5 }],
-        ['stop', {offset: "50%", 'stop-color': "#000000", 'stop-opacity': 0 }]
+        ['stop', {offset: "0%", 'stop-color': shadowColor, 'stop-opacity':  0.5 }],
+        ['stop', {offset: "50%", 'stop-color': shadowColor, 'stop-opacity': 0 }]
       ],
     ],
     ['g', {id: 'map'},

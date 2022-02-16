@@ -29,7 +29,7 @@ const boundsCheck = (x, y, margin = 10) => {
 Window.options = {
   rate: 1,
   rateSetting: 3,
-  simRates: [0, 0.1, 0.5, 1, 2, 3, 5, 10],
+  simRates: [0, 0.1, 0.5, 1, 2, 3, 4],
   targetFrames: 30,
   header: false,
   grid: true,
