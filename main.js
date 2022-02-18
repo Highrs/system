@@ -482,7 +482,9 @@ const main = async () => {
           );
         }
 
-        drawMap.updateCraft(e);
+        if (e.type === 'craft' && e.render) {
+          drawMap.updateCraft(e);
+        }
       });
 
       movBod.forEach(bod => {

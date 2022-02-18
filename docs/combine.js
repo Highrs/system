@@ -818,62 +818,63 @@ exports.drawStation = (stationo) => {
 };
 exports.drawCraft = (crafto) => {
   const drawnCraft = ['g', {},
-    ['g', {
-      transform: 'rotate(' + crafto.course + ')',
-      id: crafto.mapID + '-ROT'
-    },
-    ['path', {
-      d: 'M 0,0 L -2, '+(-crafto.accel*8)+' L 2, '+(-crafto.accel*8)+' Z',
+    ['line', {
+      id: crafto.mapID + '-VECT_LINE',
+      x1: 0,
+      y1: 0,
+      x2: crafto.vx,
+      y2: crafto.vy,
       class: 'vector'
     }],
-    icons.craft(crafto),
+    ['g', {
+      transform: 'translate('+crafto.vx+', '+crafto.vy+')',
+      id: crafto.mapID + '-VECT_DOT'
+    }, [
+      'circle',
+      {r : 2, class: 'vector'}
+    ]],
+    ['g', {
+        transform: 'rotate(' + crafto.course + ')',
+        id: crafto.mapID + '-ROT'
+      },
+      ['path', {
+        d: 'M 0,0 L -2, '+(-crafto.accel*8)+' L 2, '+(-crafto.accel*8)+' Z',
+        class: 'vector'
+      }],
+      icons.craft(crafto)
     ]
   ];
-
-  //
-  //
-  //   // ['g', {
-  //   //   transform: 'rotate(' + (crafto.accelStat === 1 ? crafto.course : crafto.course + 180) + ')'
-  //   // }, [
-  //   // ]],
-  //
-  //   ['line', {
-  //     x1: 0,
-  //     y1: 0,
-  //     x2: crafto.vx,
-  //     y2: crafto.vy,
-  //     class: 'vector'
-  //   }],
-  //   ['g', {
-  //     transform: 'translate('+crafto.vx+', '+crafto.vy+')'
-  //   }, [
-  //     'circle',
-  //     {r : 2, class: 'vector'}
-  //   ]],
-  //   icons.brackets(crafto.id)
-  // ]];
 
   return drawnCraft;
 };
 exports.updateCraft = (crafto) => {
-  if (crafto.type === 'craft' && crafto.render) {
-    if (crafto.status === 'new' || crafto.status === 'parked') {
-      if (crafto.visible) {
-        document.getElementById(crafto.mapID).style.visibility = "hidden";
-        crafto.visible = false;
-      }
-    } else if (crafto.status === 'traveling' || crafto.status === 'drifting') {
-      if (!crafto.visible) {
-        document.getElementById(crafto.mapID).style.visibility = "visible";
-        crafto.visible = true;
-        // console.log('here');
-      }
-      let rotation = crafto.accelStat === -1 ? crafto.course : crafto.course + 180;
-
-      document.getElementById(crafto.mapID + '-ROT').setAttribute(
-        'transform', 'rotate(' + (rotation) + ')'
-      );
+  if (crafto.status === 'new' || crafto.status === 'parked') {
+    if (crafto.visible) {
+      document.getElementById(crafto.mapID).style.visibility = "hidden";
+      crafto.visible = false;
     }
+  } else if (crafto.status === 'traveling' || crafto.status === 'drifting') {
+    if (!crafto.visible) {
+      document.getElementById(crafto.mapID).style.visibility = "visible";
+      crafto.visible = true;
+      // console.log('here');
+    }
+    let rotation = crafto.accelStat === -1 ? crafto.course : crafto.course + 180;
+
+    document.getElementById(crafto.mapID + '-ROT').setAttribute(
+      'transform', 'rotate(' + (rotation) + ')'
+    );
+
+    document.getElementById(crafto.mapID + '-VECT_LINE').setAttribute(
+      'x2', '' + crafto.vx
+    );
+    document.getElementById(crafto.mapID + '-VECT_LINE').setAttribute(
+      'y2', '' + crafto.vy
+    );
+
+    document.getElementById(crafto.mapID + '-VECT_DOT').setAttribute(
+      'transform', 'translate('+crafto.vx+', '+crafto.vy+')'
+    );
   }
 };
 exports.drawIntercepts = (listOfcraft, mapPan) => {
@@ -1949,7 +1950,9 @@ const main = async () => {
           );
         }
 
-        drawMap.updateCraft(e);
+        if (e.type === 'craft' && e.render) {
+          drawMap.updateCraft(e);
+        }
       });
 
       movBod.forEach(bod => {
