@@ -299,15 +299,14 @@ exports.drawBody = (bodyo) => {
   let drawnBody = ['g', {}];
   // drawnBody.push(drawBodyData(bodyo));
 
-  if (bodyo.shadow) {drawnBody.push(drawShadow(bodyo));}
   drawnBody.push(icons.body(bodyo));
   drawnBody.push(icons.brackets(bodyo.id, bodyo.objectRadius));
 
   return drawnBody;
 };
-const drawShadow = (bodyo) => {
+exports.drawShadow = (bodyo) => {
   let shadow = ['g', {
-    id: bodyo.mapID + '-SHAD',
+    id: bodyo.mapID + '-SHAD-ROT',
     transform: 'rotate(0)'
   }];
 
@@ -335,7 +334,6 @@ const drawShadow = (bodyo) => {
       fill: 'url(#ShadowGrad)'
     }]
   );
-
 
   return shadow;
 };
@@ -374,7 +372,8 @@ exports.drawCraft = (crafto) => {
         d: 'M 0,0 L -2, '+(-crafto.accel*8)+' L 2, '+(-crafto.accel*8)+' Z',
         class: 'vector'
       }],
-      icons.craft(crafto)
+      icons.craft(crafto),
+      icons.brackets(crafto.id, 2)
     ]
   ];
 
@@ -390,7 +389,6 @@ exports.updateCraft = (crafto) => {
     if (!crafto.visible) {
       document.getElementById(crafto.mapID).style.visibility = "visible";
       crafto.visible = true;
-      // console.log('here');
     }
     let rotation = crafto.accelStat === -1 ? crafto.course : crafto.course + 180;
 
@@ -462,6 +460,7 @@ exports.drawStatic = () => {
       ['g', {id: 'movingOrbits'}],
       ['g', {id: 'simpleOrbits'}],
       ['g', {id: 'stars'}],
+      ['g', {id: 'shadows'}],
       ['g', {id: 'grid'}],
       ['g', {id: 'moving'},
         // ['g', {id: 'majorOrbits'}],

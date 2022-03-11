@@ -72,6 +72,10 @@ const makeBody = (inBodyo) => {
   const id = bodyIDer();
   const mapID = id + '-MID';
   advRenderer.appendRend('bodies', (['g', {id: mapID}]));
+  advRenderer.appendRend('shadows', (['g', {
+    id: mapID + '-SHAD-CRD',
+    transform: 'translate(0, 0)'
+  }]));
   const bodyo = Object.assign(
     inBodyo,
     {
@@ -88,6 +92,7 @@ const makeBody = (inBodyo) => {
       id: id,
       render: false,
       renderer: undefined,
+      rendererShadow: undefined,
       mapID: mapID,
       shadow: true
     }
@@ -105,6 +110,11 @@ const makeBody = (inBodyo) => {
   bodyo.renderer = function (drw = drwr) {
     advRenderer.normRend(mapID, drw);
   };
+  if (bodyo.shadow) {
+    bodyo.rendererShadow = function (drw) {
+      advRenderer.normRend(mapID + '-SHAD-CRD', drw);
+    };
+  }
 
 
   ind.initInd(bodyo);
@@ -457,11 +467,18 @@ const main = async () => {
         if (!e.render && inBounds) {
           e.render = true;
           e.renderer();
+          if (e.shadow) {
+            e.rendererShadow(drawMap.drawShadow(e));
+          }
         } else if (e.render && !inBounds) {
           e.render = false;
           e.renderer([]);
+          if (e.shadow) {e.rendererShadow([]);}
         } else if (e.render && inBounds) {
           changeElementTT(e.mapID, e.x * mapPan.zoom, e.y * mapPan.zoom);
+          if (e.shadow) {
+            changeElementTT(e.mapID + '-SHAD-CRD', e.x * mapPan.zoom, e.y * mapPan.zoom);
+          }
         } else if (!e.render && !inBounds) {
           // do nothing
         } else {
@@ -477,7 +494,7 @@ const main = async () => {
         if (e.shadow && e.render) {
           // console.log('here');
           let angle = (Math.atan2(0 - e.y, 0 - e.x) * 180 / Math.PI) + 90;
-          document.getElementById(e.mapID + '-SHAD').setAttribute(
+          document.getElementById(e.mapID + '-SHAD-ROT').setAttribute(
             'transform', 'rotate(' + angle + ')'
           );
         }

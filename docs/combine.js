@@ -766,15 +766,14 @@ exports.drawBody = (bodyo) => {
   let drawnBody = ['g', {}];
   // drawnBody.push(drawBodyData(bodyo));
 
-  if (bodyo.shadow) {drawnBody.push(drawShadow(bodyo));}
   drawnBody.push(icons.body(bodyo));
   drawnBody.push(icons.brackets(bodyo.id, bodyo.objectRadius));
 
   return drawnBody;
 };
-const drawShadow = (bodyo) => {
+exports.drawShadow = (bodyo) => {
   let shadow = ['g', {
-    id: bodyo.mapID + '-SHAD',
+    id: bodyo.mapID + '-SHAD-ROT',
     transform: 'rotate(0)'
   }];
 
@@ -802,7 +801,6 @@ const drawShadow = (bodyo) => {
       fill: 'url(#ShadowGrad)'
     }]
   );
-
 
   return shadow;
 };
@@ -841,7 +839,8 @@ exports.drawCraft = (crafto) => {
         d: 'M 0,0 L -2, '+(-crafto.accel*8)+' L 2, '+(-crafto.accel*8)+' Z',
         class: 'vector'
       }],
-      icons.craft(crafto)
+      icons.craft(crafto),
+      icons.brackets(crafto.id, 2)
     ]
   ];
 
@@ -857,7 +856,6 @@ exports.updateCraft = (crafto) => {
     if (!crafto.visible) {
       document.getElementById(crafto.mapID).style.visibility = "visible";
       crafto.visible = true;
-      // console.log('here');
     }
     let rotation = crafto.accelStat === -1 ? crafto.course : crafto.course + 180;
 
@@ -929,6 +927,7 @@ exports.drawStatic = () => {
       ['g', {id: 'movingOrbits'}],
       ['g', {id: 'simpleOrbits'}],
       ['g', {id: 'stars'}],
+      ['g', {id: 'shadows'}],
       ['g', {id: 'grid'}],
       ['g', {id: 'moving'},
         // ['g', {id: 'majorOrbits'}],
@@ -1540,6 +1539,10 @@ const makeBody = (inBodyo) => {
   const id = bodyIDer();
   const mapID = id + '-MID';
   advRenderer.appendRend('bodies', (['g', {id: mapID}]));
+  advRenderer.appendRend('shadows', (['g', {
+    id: mapID + '-SHAD-CRD',
+    transform: 'translate(0, 0)'
+  }]));
   const bodyo = Object.assign(
     inBodyo,
     {
@@ -1556,6 +1559,7 @@ const makeBody = (inBodyo) => {
       id: id,
       render: false,
       renderer: undefined,
+      rendererShadow: undefined,
       mapID: mapID,
       shadow: true
     }
@@ -1573,6 +1577,11 @@ const makeBody = (inBodyo) => {
   bodyo.renderer = function (drw = drwr) {
     advRenderer.normRend(mapID, drw);
   };
+  if (bodyo.shadow) {
+    bodyo.rendererShadow = function (drw) {
+      advRenderer.normRend(mapID + '-SHAD-CRD', drw);
+    };
+  }
 
 
   ind.initInd(bodyo);
@@ -1925,11 +1934,18 @@ const main = async () => {
         if (!e.render && inBounds) {
           e.render = true;
           e.renderer();
+          if (e.shadow) {
+            e.rendererShadow(drawMap.drawShadow(e));
+          }
         } else if (e.render && !inBounds) {
           e.render = false;
           e.renderer([]);
+          if (e.shadow) {e.rendererShadow([]);}
         } else if (e.render && inBounds) {
           changeElementTT(e.mapID, e.x * mapPan.zoom, e.y * mapPan.zoom);
+          if (e.shadow) {
+            changeElementTT(e.mapID + '-SHAD-CRD', e.x * mapPan.zoom, e.y * mapPan.zoom);
+          }
         } else if (!e.render && !inBounds) {
           // do nothing
         } else {
@@ -1945,7 +1961,7 @@ const main = async () => {
         if (e.shadow && e.render) {
           // console.log('here');
           let angle = (Math.atan2(0 - e.y, 0 - e.x) * 180 / Math.PI) + 90;
-          document.getElementById(e.mapID + '-SHAD').setAttribute(
+          document.getElementById(e.mapID + '-SHAD-ROT').setAttribute(
             'transform', 'rotate(' + angle + ')'
           );
         }
