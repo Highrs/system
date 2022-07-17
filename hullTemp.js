@@ -44,6 +44,17 @@ module.exports = {
     home: 'beta'
   }),
 
+  arrow: () => ({
+    class: 'Arrow',
+    abr: 'ARR',
+    type: 'combat',
+    cargoCap: 1,
+    fuelCapacity: 50,
+    fuelConsumption: 0.1,
+    accel: 5,
+    home: 'astroDeltaB'
+  }),
+
   menace: () => ({
     class: 'Menace',
     abr: 'MNC',

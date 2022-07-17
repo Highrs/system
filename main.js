@@ -116,7 +116,6 @@ const makeBody = (inBodyo) => {
     };
   }
 
-
   ind.initInd(bodyo);
 
   let points = 128;
@@ -225,7 +224,7 @@ const makeManyCraft = (craftType, numberToMake, craftList, owner = undefined) =>
     const mapID = id + '-MID';
 
     advRenderer.appendRend('crafts', (['g', {id: mapID}]));
-    let newCrafto = craft.makeCraft(baseTemplate, name, id, owner);
+    let newCrafto = craft.makeCraft(baseTemplate, name, id, mapID, owner);
     let drwr = drawMap.drawCraft(newCrafto);
     newCrafto.renderer = function (drw = drwr) {
       advRenderer.normRend(newCrafto.mapID, drw);
@@ -424,6 +423,8 @@ const main = async () => {
     let timeDelta = time - clockZero;
     clockZero = time;
 
+    if (options.stop) {return;}
+
     if ( !(options.isPaused) ) {
       let workTime = (timeDelta * options.rate * simpRate);
       currentTime += workTime;
@@ -518,8 +519,6 @@ const main = async () => {
         });
       });
     }
-
-    if (options.stop) {return;}
 
     setTimeout(loop, 1000/options.targetFrames);
   };

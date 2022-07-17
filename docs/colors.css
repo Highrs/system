@@ -49,7 +49,7 @@ html, body {
   fill: none;
   stroke-width: 2px;
   stroke: #a3a3a3ff;
-  fill: #363636;
+  /* fill: #363636; */
 }
 .grid {
   stroke-width: 0.5px;

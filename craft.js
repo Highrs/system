@@ -6,10 +6,10 @@ const ind = require('./industry.js');
 // Bezier Curve:
 // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
 
-const makeCraft = (crafto, name, id, owner = 'EMPIRE') => {
+const makeCraft = (crafto, name, id, mapID, owner = 'EMPIRE') => {
   // const initWait = id % 10;
   const initWait = 10;
-  const mapID = id + '-MID';
+  //const mapID = id + '-MID';
 
   const newCrafto = Object.assign(
     crafto,

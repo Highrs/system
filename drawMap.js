@@ -425,6 +425,7 @@ exports.drawIntercepts = (listOfcraft, mapPan) => {
 
   return intercepts;
 };
+
 exports.drawStatic = () => {
   let starColor = '#ff7800';
   let shadowColor = "#363636";
