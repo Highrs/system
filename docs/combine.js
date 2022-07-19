@@ -120,10 +120,10 @@ const ind = require('./industry.js');
 // Bezier Curve:
 // B(t) = (1-t) * ((1-t) * p0 + t * p1) + t * ((1-t) * p1 + t * p2)
 
-const makeCraft = (crafto, name, id, owner = 'EMPIRE') => {
+const makeCraft = (crafto, name, id, mapID, owner = 'EMPIRE') => {
   // const initWait = id % 10;
   const initWait = 10;
-  const mapID = id + '-MID';
+  //const mapID = id + '-MID';
 
   const newCrafto = Object.assign(
     crafto,
@@ -892,6 +892,7 @@ exports.drawIntercepts = (listOfcraft, mapPan) => {
 
   return intercepts;
 };
+
 exports.drawStatic = () => {
   let starColor = '#ff7800';
   let shadowColor = "#363636";
@@ -1012,6 +1013,17 @@ module.exports = {
     fuelConsumption: 0.1,
     accel: 2,
     home: 'beta'
+  }),
+
+  arrow: () => ({
+    class: 'Arrow',
+    abr: 'ARR',
+    type: 'combat',
+    cargoCap: 1,
+    fuelCapacity: 50,
+    fuelConsumption: 0.1,
+    accel: 5,
+    home: 'astroDeltaB'
   }),
 
   menace: () => ({
@@ -1476,6 +1488,7 @@ const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
 const ui = require('./ui.js');
+const Stats = require('stats.js');
 const PI = Math.PI;
 
 function getPageWidth() {return document.body.clientWidth;}
@@ -1497,7 +1510,7 @@ Window.options = {
   rate: 1,
   rateSetting: 3,
   simRates: [0, 0.1, 0.5, 1, 2, 3, 4],
-  targetFrames: 30,
+  targetFrames: 60,
   header: false,
   grid: true,
   gridStep: 10,
@@ -1582,7 +1595,6 @@ const makeBody = (inBodyo) => {
       advRenderer.normRend(mapID + '-SHAD-CRD', drw);
     };
   }
-
 
   ind.initInd(bodyo);
 
@@ -1692,7 +1704,7 @@ const makeManyCraft = (craftType, numberToMake, craftList, owner = undefined) =>
     const mapID = id + '-MID';
 
     advRenderer.appendRend('crafts', (['g', {id: mapID}]));
-    let newCrafto = craft.makeCraft(baseTemplate, name, id, owner);
+    let newCrafto = craft.makeCraft(baseTemplate, name, id, mapID, owner);
     let drwr = drawMap.drawCraft(newCrafto);
     newCrafto.renderer = function (drw = drwr) {
       advRenderer.normRend(newCrafto.mapID, drw);
@@ -1785,7 +1797,6 @@ const main = async () => {
   let renderBoxSettings     = mkRndr('boxMainSettings');
   let renderGridScaleBar    = mkRndr('gridScaleBar');
   let renderRanges          = mkRndr('ranges');
-
 
   let sysObjects = {...majObj,...constructs};
 
@@ -1886,10 +1897,23 @@ const main = async () => {
   let currentTime = Date.now();
 
   rendererMovingOrbits(drawMap.drawMovingOrbits(moons, mapPan));
+
+  var stats = new Stats();
+  stats.dom.style.left = "";
+  stats.dom.style.right = '0px';
+  console.log(stats.dom);
+  stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+  document.body.appendChild( stats.dom );
+
   const loop = () => {
+
+    stats.begin(); //Stats FPS tracking
+
     let time = performance.now();
     let timeDelta = time - clockZero;
     clockZero = time;
+
+    if (options.stop) {return;}
 
     if ( !(options.isPaused) ) {
       let workTime = (timeDelta * options.rate * simpRate);
@@ -1986,7 +2010,7 @@ const main = async () => {
       });
     }
 
-    if (options.stop) {return;}
+    stats.end(); //Stats FPS tracking
 
     setTimeout(loop, 1000/options.targetFrames);
   };
@@ -1995,7 +2019,7 @@ const main = async () => {
 
 window.onload = main;
 
-},{"./advRenderer.js":1,"./constructs.json":2,"./craft.js":3,"./drawMap.js":4,"./hullTemp.js":6,"./industry.js":8,"./majorObjects2.json":12,"./mechanics.js":13,"./ui.js":17,"onml/renderer.js":14}],12:[function(require,module,exports){
+},{"./advRenderer.js":1,"./constructs.json":2,"./craft.js":3,"./drawMap.js":4,"./hullTemp.js":6,"./industry.js":8,"./majorObjects2.json":12,"./mechanics.js":13,"./ui.js":18,"onml/renderer.js":14,"stats.js":17}],12:[function(require,module,exports){
 module.exports={
   "prime": {
     "name": "Prime",
@@ -2208,6 +2232,13 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   // let maz  = bodyo.maz;  // mean anomaly at zero (maz)
   // time (days) (t)
 
+  let itter = 1; //Number of itterations to run for solution
+  // 1 intteration appears to be enough, and entirely functional
+  // Look out for errors caused by inaccuracy due to low itter.
+  // if (bodyo.type == 'asteroid') {
+  //   itter = 1;
+  // }
+
   const calcMAT = () => {
     a = a * Math.pow(10, 9);
     const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
@@ -2235,7 +2266,7 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
 
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
 
-  const itter = 3;
+
   let eat = mat;
   for (let i = 0; i < itter; i++) {
     eat = eat - ( (eat - ( e * sin(eat) ) - mat) / ( 1 - e * cos(eat) ) );
@@ -2453,6 +2484,13 @@ module.exports = (x, y, obj) => {
 };
 
 },{}],17:[function(require,module,exports){
+// stats.js - http://github.com/mrdoob/stats.js
+(function(f,e){"object"===typeof exports&&"undefined"!==typeof module?module.exports=e():"function"===typeof define&&define.amd?define(e):f.Stats=e()})(this,function(){var f=function(){function e(a){c.appendChild(a.dom);return a}function u(a){for(var d=0;d<c.children.length;d++)c.children[d].style.display=d===a?"block":"none";l=a}var l=0,c=document.createElement("div");c.style.cssText="position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000";c.addEventListener("click",function(a){a.preventDefault();
+u(++l%c.children.length)},!1);var k=(performance||Date).now(),g=k,a=0,r=e(new f.Panel("FPS","#0ff","#002")),h=e(new f.Panel("MS","#0f0","#020"));if(self.performance&&self.performance.memory)var t=e(new f.Panel("MB","#f08","#201"));u(0);return{REVISION:16,dom:c,addPanel:e,showPanel:u,begin:function(){k=(performance||Date).now()},end:function(){a++;var c=(performance||Date).now();h.update(c-k,200);if(c>g+1E3&&(r.update(1E3*a/(c-g),100),g=c,a=0,t)){var d=performance.memory;t.update(d.usedJSHeapSize/
+1048576,d.jsHeapSizeLimit/1048576)}return c},update:function(){k=this.end()},domElement:c,setMode:u}};f.Panel=function(e,f,l){var c=Infinity,k=0,g=Math.round,a=g(window.devicePixelRatio||1),r=80*a,h=48*a,t=3*a,v=2*a,d=3*a,m=15*a,n=74*a,p=30*a,q=document.createElement("canvas");q.width=r;q.height=h;q.style.cssText="width:80px;height:48px";var b=q.getContext("2d");b.font="bold "+9*a+"px Helvetica,Arial,sans-serif";b.textBaseline="top";b.fillStyle=l;b.fillRect(0,0,r,h);b.fillStyle=f;b.fillText(e,t,v);
+b.fillRect(d,m,n,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d,m,n,p);return{dom:q,update:function(h,w){c=Math.min(c,h);k=Math.max(k,h);b.fillStyle=l;b.globalAlpha=1;b.fillRect(0,0,r,m);b.fillStyle=f;b.fillText(g(h)+" "+e+" ("+g(c)+"-"+g(k)+")",t,v);b.drawImage(q,d+a,m,n-a,p,d,m,n-a,p);b.fillRect(d+n-a,m,a,p);b.fillStyle=l;b.globalAlpha=.9;b.fillRect(d+n-a,m,a,g((1-h/w)*p))}}};return f});
+
+},{}],18:[function(require,module,exports){
 'use strict';
 
 const addRateListeners = (options, updateRateCounter) => {

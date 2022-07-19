@@ -14,6 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "onml": "^2.1.0",
+    "stats.js": "^0.17.0",
     "tspan": "^0.4.0",
     "winbox": "^0.2.1"
   },

@@ -22,6 +22,13 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   // let maz  = bodyo.maz;  // mean anomaly at zero (maz)
   // time (days) (t)
 
+  let itter = 1; //Number of itterations to run for solution
+  // 1 intteration appears to be enough, and entirely functional
+  // Look out for errors caused by inaccuracy due to low itter.
+  // if (bodyo.type == 'asteroid') {
+  //   itter = 1;
+  // }
+
   const calcMAT = () => {
     a = a * Math.pow(10, 9);
     const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
@@ -49,7 +56,7 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
 
   // Kepler's Equasion: M = E - e * sin(E)= with M(at t) and e(ccentricity)
 
-  const itter = 3;
+
   let eat = mat;
   for (let i = 0; i < itter; i++) {
     eat = eat - ( (eat - ( e * sin(eat) ) - mat) / ( 1 - e * cos(eat) ) );

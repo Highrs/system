@@ -9,6 +9,7 @@ const constructs = require('./constructs.json');
 const craft = require('./craft.js');
 const majObj = require('./majorObjects2.json');
 const ui = require('./ui.js');
+const Stats = require('stats.js');
 const PI = Math.PI;
 
 function getPageWidth() {return document.body.clientWidth;}
@@ -30,7 +31,7 @@ Window.options = {
   rate: 1,
   rateSetting: 3,
   simRates: [0, 0.1, 0.5, 1, 2, 3, 4],
-  targetFrames: 30,
+  targetFrames: 60,
   header: false,
   grid: true,
   gridStep: 10,
@@ -318,7 +319,6 @@ const main = async () => {
   let renderGridScaleBar    = mkRndr('gridScaleBar');
   let renderRanges          = mkRndr('ranges');
 
-
   let sysObjects = {...majObj,...constructs};
 
   Object.keys(sysObjects).forEach(objName => {
@@ -418,7 +418,18 @@ const main = async () => {
   let currentTime = Date.now();
 
   rendererMovingOrbits(drawMap.drawMovingOrbits(moons, mapPan));
+
+  var stats = new Stats();
+  stats.dom.style.left = "";
+  stats.dom.style.right = '0px';
+  console.log(stats.dom);
+  stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+  document.body.appendChild( stats.dom );
+
   const loop = () => {
+
+    stats.begin(); //Stats FPS tracking
+
     let time = performance.now();
     let timeDelta = time - clockZero;
     clockZero = time;
@@ -519,6 +530,8 @@ const main = async () => {
         });
       });
     }
+
+    stats.end(); //Stats FPS tracking
 
     setTimeout(loop, 1000/options.targetFrames);
   };
