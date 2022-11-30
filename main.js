@@ -30,7 +30,7 @@ const boundsCheck = (x, y, margin = 10) => {
 Window.options = {
   rate: 1,
   rateSetting: 3,
-  simRates: [0, 0.1, 0.5, 1, 2, 3, 4],
+  simRates: [0, 0.1, 0.2, 0.5, 1, 2, 3, 4],
   targetFrames: 60,
   header: false,
   grid: true,
@@ -154,8 +154,8 @@ function rand(mean, deviation, prec = 0, upper = Infinity, lower = 0) {
 
   return (
     ( Math.round(
-      (Math.random() * (max - min) + min) * Math.pow(10, prec)
-      ) / Math.pow(10, prec)
+      (Math.random() * (max - min) + min) * (10 ** prec)
+    ) / (10 ** prec)
     )
   );
 }
@@ -363,11 +363,6 @@ const main = async () => {
   function reReRenderScaleBar(options, mapPan) {
     renderGridScaleBar(drawMap.drawGridScaleBar(options, mapPan));
   }
-  const renderAllResizedStatics = (options, stars, planets, mapPan) => {
-    renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
-    renderStars(drawMap.drawStars(stars, mapPan));
-    renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
-  };
   const updateRateCounter = (options) => {
     renderRateCounter(drawMap.drawRateCounter(options));
   };
@@ -380,7 +375,9 @@ const main = async () => {
     ui.addFrameListeners(mapPan, renderers);
   };
 
-  renderAllResizedStatics(options, stars, planets, mapPan);
+  renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
+  renderStars(drawMap.drawStars(stars, mapPan));
+  renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
 
   const resizeWindow = () => {
     document.getElementById('allTheStuff').setAttribute('width', getPageWidth());
@@ -448,7 +445,9 @@ const main = async () => {
 
       if (updateZoom(mapPan)) {
         mapPan.interceptUpdated = true;
-        renderAllResizedStatics(options, stars, planets, mapPan);
+        renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
+        renderStars(drawMap.drawStars(stars, mapPan));
+        renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
         rendererMovingOrbits(drawMap.drawMovingOrbits(moons, mapPan));
         reDrawSimpOrbs(stations);
       }

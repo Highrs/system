@@ -1842,11 +1842,6 @@ const main = async () => {
   function reReRenderScaleBar(options, mapPan) {
     renderGridScaleBar(drawMap.drawGridScaleBar(options, mapPan));
   }
-  const renderAllResizedStatics = (options, stars, planets, mapPan) => {
-    renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
-    renderStars(drawMap.drawStars(stars, mapPan));
-    renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
-  };
   const updateRateCounter = (options) => {
     renderRateCounter(drawMap.drawRateCounter(options));
   };
@@ -1859,7 +1854,9 @@ const main = async () => {
     ui.addFrameListeners(mapPan, renderers);
   };
 
-  renderAllResizedStatics(options, stars, planets, mapPan);
+  renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
+  renderStars(drawMap.drawStars(stars, mapPan));
+  renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
 
   const resizeWindow = () => {
     document.getElementById('allTheStuff').setAttribute('width', getPageWidth());
@@ -1927,7 +1924,9 @@ const main = async () => {
 
       if (updateZoom(mapPan)) {
         mapPan.interceptUpdated = true;
-        renderAllResizedStatics(options, stars, planets, mapPan);
+        renderStaticOrbits(drawMap.drawOrbits(planets, mapPan));
+        renderStars(drawMap.drawStars(stars, mapPan));
+        renderGrid(drawMap.drawGrid(mapPan, options, reReRenderScaleBar));
         rendererMovingOrbits(drawMap.drawMovingOrbits(moons, mapPan));
         reDrawSimpOrbs(stations);
       }

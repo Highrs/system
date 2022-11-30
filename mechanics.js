@@ -30,21 +30,21 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
   // }
 
   const calcMAT = () => {
-    a = a * Math.pow(10, 9);
-    const g = 6.674 * Math.pow(10, -11); // Gravitational constant G
-    const mass = primaryo.mass * Math.pow(10, 20); // Central object mass, approximately sol
+    a = a * (10 ** 9);
+    const g = 6.674 * (10 ** -11); // Gravitational constant G
+    const mass = primaryo.mass * (10 ** 20); // Central object mass, approximately sol
     const u = g * mass; // Standard gravitational parameter u
 
     // const calcMinorAxis = (a, e) => {return ( a * sqrt(1 - e * e) );};
     // const b = (calcMinorAxis(a, e)); // minorAxis b[m]
 
     // distance of focus from center
-    // focalShift = ( sqrt(Math.pow(a, 2) - Math.pow(b, 2)) );
+    // focalShift = ( sqrt((a ** 2) - (b ** 2)) );
 
     // const epoch = t0; //epoch (given) (days)
 
     let tdiff = ( 86400 * ( time - t0 ) );
-    mat = maz + ( tdiff * sqrt( u / Math.pow(a, 3) ) );
+    mat = maz + ( tdiff * sqrt( u / (a ** 3) ) );
     while (mat < 0) {
       mat += PI * 2;
     }
@@ -88,7 +88,7 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
 
   if (mode === 'n') {
     ['x', 'y', 'z'].forEach(e => {
-      bodyCoords[e] = bodyCoords[e] / Math.pow(10, 9);
+      bodyCoords[e] = bodyCoords[e] / (10 ** 9);
     });
   }
 
@@ -123,14 +123,14 @@ const kepCalc = (bodyo, time = bodyo.t, mode = 'n', mat  = 0) => {
 };
 const calcDist = (body1, body2) => {
   return sqrt(
-            Math.pow( (body1.x - body2.x), 2 )
-          + Math.pow( (body1.y - body2.y), 2 )
-          + Math.pow( (body1.z - body2.z), 2 ) );
+            ( (body1.x - body2.x) ** 2 )
+          + ( (body1.y - body2.y) ** 2 )
+          + ( (body1.z - body2.z) ** 2 ) );
 };
 const calcDistSq = (body1, body2) => {
-  return (  Math.pow( (body1.x - body2.x), 2 )
-          + Math.pow( (body1.y - body2.y), 2 )
-          + Math.pow( (body1.z - body2.z), 2 )
+  return (  ( (body1.x - body2.x) ** 2 )
+          + ( (body1.y - body2.y) ** 2 )
+          + ( (body1.z - body2.z) ** 2 )
          );
 };
 const calcTravelTime = (dist, accel) => {
